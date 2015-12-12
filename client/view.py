@@ -6,17 +6,17 @@ from playingfield import *
 
 class PlayingFieldWidget(QWidget):
 
-	def __setupGui(self):
+	def _setupGui(self):
 		self.resize(400, 400)
 
 	def paintEvent(self, event):
 		painter = QPainter()
 		painter.begin(self)
-		self.__drawPlayingField(painter)
+		self._drawPlayingField(painter)
 		painter.end()
 
-	def __drawPlayingField(self, painter):
-		playingField = self.__backend.getOwnPlayingField()
+	def _drawPlayingField(self, painter):
+		playingField = self._backend.getOwnPlayingField()
 
 		# draw each field
 		for i in range(1, len(playingField) + 1):
@@ -27,47 +27,73 @@ class PlayingFieldWidget(QWidget):
 					painter.setBrush(QColor(139, 35, 35))
 				else:
 					painter.setBrush(QColor(0, 191, 255))
-				painter.drawRect(i*self.__fieldSize, j*self.__fieldSize, self.__fieldSize, self.__fieldSize)
+				painter.drawRect(i*self._fieldSize, j*self._fieldSize, self._fieldSize, self._fieldSize)
 
 		# draw horizontal and vertical enumeration
 		painter.setPen(QColor(0, 0, 0))
 
 		for i in range(1, len(playingField) + 1):
-			box = QRectF(i*self.__fieldSize, 0, self.__fieldSize, self.__fieldSize)
+			box = QRectF(i*self._fieldSize, 0, self._fieldSize, self._fieldSize)
 			painter.drawText(box, Qt.AlignCenter, str(i))
 
 		for i in range(1, len(playingField) + 1):
-			box = QRectF(0, i*self.__fieldSize, self.__fieldSize, self.__fieldSize)
+			box = QRectF(0, i*self._fieldSize, self._fieldSize, self._fieldSize)
 			painter.drawText(box, Qt.AlignCenter, chr(64+i))
 
-	def __mapClickToField(self, x, y):
+	def _mapClickToField(self, x, y):
 		return (chr(64+y) + str(x))
 
-	def mousePressEvent(self, mouseEvent):
-		x, y  = mouseEvent.x() // self.__fieldSize, mouseEvent.y() // self.__fieldSize
-		field = self.__mapClickToField(x, y)
-		print("Click event at: %s | %s" % (field, self.__backend.getOwnField(field).status))
-
 	def __init__(self, backend):
-		self.__backend = backend
-		self.__fieldSize = 25
+		self._backend = backend
+		self._fieldSize = 25
 
 		super(PlayingFieldWidget, self).__init__()
-		self.__setupGui()
+		self._setupGui()
+
+class OwnPlayingFieldWidget(PlayingFieldWidget):
+
+	def _getField(self, field):
+		return self._backend.getOwnField(field)
+
+	def mousePressEvent(self, mouseEvent):
+		x, y  = mouseEvent.x() // self._fieldSize, mouseEvent.y() // self._fieldSize
+		field = self._mapClickToField(x, y)
+		print("Click event at own field: %s | %s" % (field, self._getField(field).status))
+
+	def __init__(self, backend):
+		PlayingFieldWidget.__init__(self, backend)
+
+class EnemeysPlayingFieldWidget(PlayingFieldWidget):
+
+	def _getField(self, field):
+		return self._backend.getEnemeysField(field)
+
+	def mousePressEvent(self, mouseEvent):
+		x, y  = mouseEvent.x() // self._fieldSize, mouseEvent.y() // self._fieldSize
+		field = self._mapClickToField(x, y)
+		print("Click event at enemey's field: %s | %s" % (field, self._getField(field).status))
+
+	def __init__(self, backend):
+		PlayingFieldWidget.__init__(self, backend)
 
 class MainForm(QWidget):
 
 	def __setupGui(self):
-		headLbl = QLabel("Welcome to Battleship++!")
-		playingFieldWgt = PlayingFieldWidget(self.__backend)
+		ownPlayingFieldLbl = QLabel("Your own playing field")
+		ownPlayingFieldWgt = OwnPlayingFieldWidget(self.__backend)
+
+		enemeysPlayingFieldLbl = QLabel("Your enemey's playing field")
+		enemeysPlayingFieldWgt = EnemeysPlayingFieldWidget(self.__backend)
 
 		layout = QGridLayout()
-		layout.addWidget(headLbl, 0, 0)
-		layout.addWidget(playingFieldWgt, 1, 0, 6, 3)
+		layout.addWidget(ownPlayingFieldLbl, 0, 0)
+		layout.addWidget(ownPlayingFieldWgt, 1, 0, 12, 6)
+		layout.addWidget(enemeysPlayingFieldLbl, 0, 9)
+		layout.addWidget(enemeysPlayingFieldWgt, 1, 9, 12, 6)
 
 		self.setLayout(layout)
 		self.setWindowTitle("Battleship++")
-		self.resize(550, 550)
+		self.resize(950, 550)
 		self.show()
 
 	def __init__(self, backend):
