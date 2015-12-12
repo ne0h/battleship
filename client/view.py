@@ -4,13 +4,21 @@ from PyQt5.QtWidgets import *
 
 from playingfield import *
 
+class ViewModel:
+
+	def __init__(self):
+		self.waitForShipPlacement = False
+		self.newShipBow = None
+
+
 class PlayingFieldWidget(QWidget):
 	"""
 	Shows a playing field.
 	"""
 
 	def _setupGui(self):
-		self.resize(400, 400)
+		self.setMaximumWidth(self._fieldSize*17+1)
+		self.setMaximumHeight(self._fieldSize*17+1)
 
 	def paintEvent(self, event):
 		"""
@@ -50,10 +58,12 @@ class PlayingFieldWidget(QWidget):
 			box = QRectF(0, i*self._fieldSize, self._fieldSize, self._fieldSize)
 			painter.drawText(box, Qt.AlignCenter, chr(64+i))
 
-	def _mapClickToField(self, x, y):
-		return (chr(64+y) + str(x))
+	def _mapClickToField(self, mouseEvent):
+		x, y  = mouseEvent.x() // self._fieldSize, mouseEvent.y() // self._fieldSize		
+		return FieldAddress(x - 1, y - 1)
 
-	def __init__(self, backend):
+	def __init__(self, backend, viewModel):
+		self._viewModel = viewModel
 		self._backend = backend
 		self._fieldSize = 25
 
@@ -76,12 +86,21 @@ class OwnPlayingFieldWidget(PlayingFieldWidget):
 			mouseEvent -- information about the mouse event
 		"""
 
-		x, y  = mouseEvent.x() // self._fieldSize, mouseEvent.y() // self._fieldSize
-		field = self._mapClickToField(x, y)
-		print("Click event at own field: %s | %s" % (field, self._getField(field).status))
+		fieldAddress = self._mapClickToField(mouseEvent)
+		print("Click event at own field: %s | %s" % (fieldAddress.toString(), self._getField(fieldAddress).status))
 
-	def __init__(self, backend):
-		PlayingFieldWidget.__init__(self, backend)
+		if self._viewModel.waitForShipPlacement:
+			if self._viewModel.newShipBow is None:
+				self._viewModel.newShipBow = fieldAddress
+			else:
+				ship = self._backend.placeShip(self._viewModel.newShipBow, fieldAddress)
+
+				self.repaint()
+				self._viewModel.waitForShipPlacement = False
+				self._viewModel.newShipBow = None
+
+	def __init__(self, backend, viewModel):
+		PlayingFieldWidget.__init__(self, backend, viewModel)
 
 class EnemeysPlayingFieldWidget(PlayingFieldWidget):
 	"""
@@ -99,30 +118,36 @@ class EnemeysPlayingFieldWidget(PlayingFieldWidget):
 			mouseEvent -- information about the mouse event
 		"""
 
-		x, y  = mouseEvent.x() // self._fieldSize, mouseEvent.y() // self._fieldSize
-		field = self._mapClickToField(x, y)
+		field = self._mapClickToField(mouseEvent)
 		print("Click event at enemey's field: %s | %s" % (field, self._getField(field).status))
 
-	def __init__(self, backend):
-		PlayingFieldWidget.__init__(self, backend)
+	def __init__(self, backend, viewModel):
+		PlayingFieldWidget.__init__(self, backend, viewModel)
 
 class MainForm(QWidget):
 	"""
 	The main form that shows the complete user interface.
 	"""
 
+	def __startPlaceShip(self):
+		self.__viewModel.waitForShipPlacement = True
+
 	def __setupGui(self):
+		placeShipBtn = QPushButton("Place Ship")
+		placeShipBtn.clicked.connect(self.__startPlaceShip)
+
 		ownPlayingFieldLbl = QLabel("Your own playing field")
-		ownPlayingFieldWgt = OwnPlayingFieldWidget(self.__backend)
+		ownPlayingFieldWgt = OwnPlayingFieldWidget(self.__backend, self.__viewModel)
 
 		enemeysPlayingFieldLbl = QLabel("Your enemey's playing field")
-		enemeysPlayingFieldWgt = EnemeysPlayingFieldWidget(self.__backend)
+		enemeysPlayingFieldWgt = EnemeysPlayingFieldWidget(self.__backend, self.__viewModel)
 
 		layout = QGridLayout()
-		layout.addWidget(ownPlayingFieldLbl, 0, 0)
-		layout.addWidget(ownPlayingFieldWgt, 1, 0, 12, 6)
-		layout.addWidget(enemeysPlayingFieldLbl, 0, 9)
-		layout.addWidget(enemeysPlayingFieldWgt, 1, 9, 12, 6)
+		layout.addWidget(placeShipBtn, 14, 0)
+		layout.addWidget(ownPlayingFieldLbl, 1, 0)
+		layout.addWidget(ownPlayingFieldWgt, 2, 0, 12, 6)
+		layout.addWidget(enemeysPlayingFieldLbl, 1, 9)
+		layout.addWidget(enemeysPlayingFieldWgt, 2, 9, 12, 6)
 
 		self.setLayout(layout)
 		self.setWindowTitle("Battleship++")
@@ -131,6 +156,7 @@ class MainForm(QWidget):
 
 	def __init__(self, backend):
 		self.__backend = backend
+		self.__viewModel = ViewModel()
 
 		super(MainForm, self).__init__()
 		self.__setupGui()

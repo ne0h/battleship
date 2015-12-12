@@ -8,17 +8,32 @@ class FieldStatus(Enum):
 	SHIP = "ship",
 	SHIPDAMAGED = "damaged ship"
 
-class Field:
-	"""Describes a single field on the playing field.
+class FieldAddress:
+	"""Describes the address of a single field on the playing field.
 
 	Args:
 		x -- horizontal coordinate starting in the top left corner
 		y -- vertical coordinate starting in the top left corner
 	"""
 
-	def __init__(self, x, y, status):
+	def toString(self):
+		return chr(self.y + 65) + str(self.x + 1)
+
+	def __init__(self, x, y):
 		self.x = x
 		self.y = y
+
+class Field:
+	"""Describes a single field on the playing field.
+
+	Args:
+		x -- horizontal coordinate starting in the top left corner
+		y -- vertical coordinate starting in the top left corner
+		status -- the status of the field
+	"""
+
+	def __init__(self, x, y, status):
+		FieldAddress.__init__(self, x, y)
 		self.status = status
 
 class Ship:
@@ -44,7 +59,7 @@ class Battleship(Ship):
 	"""
 
 	def __init__(self, bow, rear):
-		super(bow, rear, 5)
+		Ship.__init__(self, bow, rear, 5)
 
 class Cruiser(Ship):
 	"""A cruiser.
@@ -55,7 +70,7 @@ class Cruiser(Ship):
 	"""
 
 	def __init__(self, bow, rear):
-		super(bow, rear, 4)
+		Ship.__init__(self, bow, rear, 4)
 
 class Destroyer(Ship):
 	"""A destroyer.
@@ -66,7 +81,7 @@ class Destroyer(Ship):
 	"""
 
 	def __init__(self, bow, rear):
-		super(bow, rear, 3)
+		Ship.__init__(self, bow, rear, 3)
 
 class Submarine(Ship):
 	"""
@@ -78,7 +93,7 @@ class Submarine(Ship):
 	"""
 
 	def __init__(self, bow, rear):
-		super(bow, rear, 2)
+		Ship.__init__(self, bow, rear, 2)
 
 class PlayingField:
 	"""
@@ -88,18 +103,18 @@ class PlayingField:
 		length -- the dimension of playing field
 	"""
 
-	def getField(self, field):
+	def getField(self, fieldAddress):
 		"""
 		Returns a single field.
 
 		Args:
-			field -- the field
+			fieldAddress -- the field
 
 		Returns:
 			A single field
 		"""
 
-		return self.__fields[ord(field[0])-65][int(field[1])-1]
+		return self.__fields[fieldAddress.y - 1][fieldAddress.x - 1]
 
 	def getPlayingField(self):
 		"""
@@ -111,6 +126,9 @@ class PlayingField:
 
 		return self.__fields
 
+	def __updateField(self, field):
+		self.__fields[field.x][field.y].status = field.status
+
 	def placeShip(self, ship):
 		"""
 		Places a ship on the playing field.
@@ -119,7 +137,23 @@ class PlayingField:
 			ship -- the ship to place
 		"""
 
-		pass
+		if ship.bow.x is ship.rear.x:
+			print("| " + int(ship.bow.x))
+			if ship.bow.y > ship.rear.y:
+				for i in range(ship.bow.y, ship.rear.y):
+					self.__updateField(FieldAddress(ship.box.x, i, FieldStatus.SHIP))
+			else:
+				for i in range(ship.rear.y, ship.bow.y):
+					print("fu: " + str(i) + ":" + str(ship.bow.y))
+					self.__updateField(FieldAddress(ship.box.x, i, FieldStatus.SHIP))
+		else:
+			if ship.bow.x > ship.rear.x:
+				for i in range(ship.bow.x, ship.rear.x):
+					self.__updateField(FieldAddress(i, ship.bow.y, FieldStatus.SHIP))
+			else:
+				for i in range(ship.rear.x, ship.bow.x):
+					self.__updateField(FieldAddress(i, ship.bow.y, FieldStatus.SHIP))
+		
 
 
 	def __init__(self, length):
