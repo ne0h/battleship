@@ -5,11 +5,21 @@ from PyQt5.QtWidgets import *
 from playingfield import *
 
 class PlayingFieldWidget(QWidget):
+	"""
+	Shows a playing field.
+	"""
 
 	def _setupGui(self):
 		self.resize(400, 400)
 
 	def paintEvent(self, event):
+		"""
+		Paints the playing field when an event occurs.
+
+		Args:
+			event -- information about the event that occored
+		"""
+
 		painter = QPainter()
 		painter.begin(self)
 		self._drawPlayingField(painter)
@@ -51,11 +61,21 @@ class PlayingFieldWidget(QWidget):
 		self._setupGui()
 
 class OwnPlayingFieldWidget(PlayingFieldWidget):
+	"""
+	Shows the playing field of the user.
+	"""
 
 	def _getField(self, field):
 		return self._backend.getOwnField(field)
 
 	def mousePressEvent(self, mouseEvent):
+		"""
+		This method is called when a mouse event occurs.
+
+		Args:
+			mouseEvent -- information about the mouse event
+		"""
+
 		x, y  = mouseEvent.x() // self._fieldSize, mouseEvent.y() // self._fieldSize
 		field = self._mapClickToField(x, y)
 		print("Click event at own field: %s | %s" % (field, self._getField(field).status))
@@ -64,11 +84,21 @@ class OwnPlayingFieldWidget(PlayingFieldWidget):
 		PlayingFieldWidget.__init__(self, backend)
 
 class EnemeysPlayingFieldWidget(PlayingFieldWidget):
+	"""
+	Shows the playing field of the enemey.
+	"""
 
 	def _getField(self, field):
 		return self._backend.getEnemeysField(field)
 
 	def mousePressEvent(self, mouseEvent):
+		"""
+		This method is called when a mouse event occurs.
+
+		Args:
+			mouseEvent -- information about the mouse event
+		"""
+
 		x, y  = mouseEvent.x() // self._fieldSize, mouseEvent.y() // self._fieldSize
 		field = self._mapClickToField(x, y)
 		print("Click event at enemey's field: %s | %s" % (field, self._getField(field).status))
@@ -77,6 +107,9 @@ class EnemeysPlayingFieldWidget(PlayingFieldWidget):
 		PlayingFieldWidget.__init__(self, backend)
 
 class MainForm(QWidget):
+	"""
+	The main form that shows the complete user interface.
+	"""
 
 	def __setupGui(self):
 		ownPlayingFieldLbl = QLabel("Your own playing field")

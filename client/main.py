@@ -8,6 +8,9 @@ from view import MainForm
 from backend import Backend
 
 if __name__ == '__main__':
+	"""
+	Starts the game client.
+	"""
 	app = QApplication(sys.argv)
 	screen = MainForm(Backend())
 	screen.show()
