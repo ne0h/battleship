@@ -168,7 +168,7 @@ class PlayingField:
 		return self.__fields
 
 	def __updateField(self, field, fieldStatus):
-		self.__fields[field.x][field.y].status = fieldStatus
+		self.__fields[field.y][field.x].status = fieldStatus
 
 	def __splitPotentialShip(self, bow, rear):
 		result = []

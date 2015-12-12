@@ -60,7 +60,7 @@ class PlayingFieldWidget(QWidget):
 
 	def _mapClickToField(self, mouseEvent):
 		x, y  = mouseEvent.x() // self._fieldSize, mouseEvent.y() // self._fieldSize		
-		return FieldAddress(x - 1, y - 1)
+		return FieldAddress(y - 1, x - 1)
 
 	def __init__(self, backend, viewModel):
 		self._viewModel = viewModel
