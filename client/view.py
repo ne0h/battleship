@@ -1,3 +1,4 @@
+import abc
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
@@ -33,8 +34,12 @@ class PlayingFieldWidget(QWidget):
 		self._drawPlayingField(painter)
 		painter.end()
 
+	@abc.abstractmethod
+	def _getPlayingField(self):
+		return
+
 	def _drawPlayingField(self, painter):
-		playingField = self._backend.getOwnPlayingField()
+		playingField = self._getPlayingField()
 
 		# draw each field
 		for i in range(1, len(playingField) + 1):
@@ -99,6 +104,9 @@ class OwnPlayingFieldWidget(PlayingFieldWidget):
 				self._viewModel.waitForShipPlacement = False
 				self._viewModel.newShipBow = None
 
+	def _getPlayingField(self):
+		return self._backend.getOwnPlayingField()
+
 	def __init__(self, backend, viewModel):
 		PlayingFieldWidget.__init__(self, backend, viewModel)
 
@@ -120,6 +128,9 @@ class EnemeysPlayingFieldWidget(PlayingFieldWidget):
 
 		field = self._mapClickToField(mouseEvent)
 		print("Click event at enemey's field: %s | %s" % (field, self._getField(field).status))
+
+	def _getPlayingField(self):
+		return self._backend.getEnemeysPlayingField()
 
 	def __init__(self, backend, viewModel):
 		PlayingFieldWidget.__init__(self, backend, viewModel)
