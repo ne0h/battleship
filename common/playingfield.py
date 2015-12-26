@@ -1,15 +1,37 @@
 from enum import Enum
 
-class FieldStatus(Enum):
-	"""Desribes the status of a field.
+class OrientationDirection(Enum):
+	"""
+	The different directions.
 	"""
 
-	WATER = "water",
-	SHIP = "ship",
-	SHIPDAMAGED = "damaged ship"
+	NORTH = "north",
+	WEST  = "west",
+	SOUTH = "south",
+	EAST  = "east"
 
-class FieldAddress:
-	"""Describes the address of a single field on the playing field.
+class Orientation:
+
+	def invert(self):
+		"""
+		Inverts the current orientation orientationDirection.
+		"""
+
+		if self.__orientationDirection is OrientationDirection.NORTH:
+			self.__orientationDirection = OrientationDirection.SOUTH
+		elif self.__orientationDirection is OrientationDirection.WEST:
+			self.__orientationDirection = OrientationDirection.EAST
+		elif self.__orientationDirection.OrientationDirection.SOUTH:
+			self.__orientationDirection = OrientationDirection.NORTH
+		else:
+			self.__orientationDirection = OrientationDirection.WEST
+
+	def __init__(self, orientationDirection):
+		self.__orientationDirection = orientationDirection
+
+class Field:
+	"""
+	Describes a single field on the playing field.
 
 	Args:
 		x -- horizontal coordinate starting in the top left corner
@@ -19,25 +41,43 @@ class FieldAddress:
 	def toString(self):
 		return chr(self.y + 65) + str(self.x + 1)
 
+	def equals(self, otherField):
+		"""
+		Standard equals method.
+		"""
+
+		return (otherField.x is self.x and otherField.y is y)
+
 	def __init__(self, x, y):
 		self.x = x
 		self.y = y
 
-class Field:
-	"""Describes a single field on the playing field.
+def splitShip(bow, rear):
+	result = []
 
-	Args:
-		x -- horizontal coordinate starting in the top left corner
-		y -- vertical coordinate starting in the top left corner
-		status -- the status of the field
-	"""
+	# horizontal orientation
+	if bow.y is rear.y:
+		if rear.x > bow.x:
+			for i in range(bow.x, rear.x + 1):
+				result.append(Field(i, bow.y))
+		else:
+			for i in range(rear.x, bow.x + 1):
+				result.append(Field(i, bow.y))
 
-	def __init__(self, x, y, status):
-		FieldAddress.__init__(self, x, y)
-		self.status = status
+	# vertical orientation
+	if bow.x is rear.x:
+		if rear.y > bow.y:
+			for i in range(bow.y, rear.y + 1):
+				result.append(Field(bow.x, i))
+		else:
+			for i in range(rear.y, bow.y + 1):
+				result.append(Field(bow.x, i))
+
+	return result
 
 class Ship:
-	"""Describes a ship.
+	"""
+	Describes a ship.
 
 	Args:
 		bow -- the starting field of the ship
@@ -50,8 +90,11 @@ class Ship:
 		self.rear = rear
 		self.size = size
 
+		self.parts = splitShip(bow, rear)
+
 class Battleship(Ship):
-	"""A battleship.
+	"""
+	A battleship.
 
 	Args:
 		bow -- field where the ship starts
@@ -62,7 +105,8 @@ class Battleship(Ship):
 		Ship.__init__(self, bow, rear, 5)
 
 class Cruiser(Ship):
-	"""A cruiser.
+	"""
+	A cruiser.
 
 	Args:
 		bow -- field where the ship starts
@@ -73,7 +117,8 @@ class Cruiser(Ship):
 		Ship.__init__(self, bow, rear, 4)
 
 class Destroyer(Ship):
-	"""A destroyer.
+	"""
+	A destroyer.
 
 	Args:
 		bow -- field where the ship starts
@@ -96,32 +141,84 @@ class Submarine(Ship):
 		Ship.__init__(self, bow, rear, 2)
 
 class ShipList:
+	"""
+	Manages all ships on the playing field.
+	"""
 
-	def add(self, ship):
-		if type(ship).__name__ is "Battleship":
-			if len(self.__battleships) < self.__maxBattleshipCount:
-				self.__battleships.append(ship)
-				return True
-			else:
-				return False
-		elif type(ship).__name__ is "Destroyer":
-			if len(self.__destroyers) < self.__maxDestroyerCount:
-				self.__destroyers.append(ship)
-				return True
-			else:
-				return False
-		elif type(ship).__name__ is "Cruiser":
-			if len(self.__cruisers) < self.__maxCruiserCount:
-				self.__cruisers.append(ship)
-				return True
-			else:
-				return False
+	def __checkForCollision(self, field):
+		"""
+		Validates that there is no collision with an existing Ship.
+
+		Args:
+			field -- the field to validate
+
+		Return:
+			Returns true if there is no collision or false if not.
+		"""
+
+		for ship in self.getShips():
+			parts = self.__splitShip(ship)
+			for part in parts:
+				if field.equals(part):
+					return False
+
+		return True
+
+	def getShips(self):
+		"""
+		Returns a list of all Ships.
+
+		Return:
+			Returns a list of all Ships.
+		"""
+		result = []
+
+		result.extend(self.__battleships)
+		result.extend(self.__destroyers)
+		result.extend(self.__cruisers)
+		result.extend(self.__submarines)
+
+		return result
+
+	def add(self, bow, rear):
+		"""
+		Adds a new Ship to the playing field. Validates if the maximum count of this kind of ship is reached.
+
+		Args:
+			ship -- the Ship to add
+		"""
+
+		import math
+
+		# check if bow and rear form a valid ship
+		if not (bow.x is rear.x or bow.y is bow.y):
+			return None
+
+		# check if the length of the potential ship is valid
+		if bow.x is rear.x:
+			length = int(math.fabs(bow.y - rear.y)) + 1
 		else:
-			if len(self.__submarines) < self.__maxSubmarineCount:
-				self.__submarines.append(ship)
-				return True
-			else:
-				return False
+			length = int(math.fabs(bow.x - rear.x)) + 1
+		
+		if length < 2 or length > 5:
+			return None
+		
+		# check for collisions with previously placed ships
+		#if not self.__ships.
+
+		# check playing field borders
+
+		# all checks done - build ship
+		if length is 5:
+			self.__battleships.append(Battleship(bow, rear))
+		elif length is 4:
+			self.__destroyers.append(Destroyer(bow, rear))
+		elif length is 3:
+			self.__cruisers.append(Cruiser(bow, rear))
+		else:
+			self.__submarines.append(Submarine(bow, rear))
+
+		return True
 
 	def __init__(self, maxBattleshipCount=1, maxDestroyerCount=2, maxCruiserCount=3, maxSubmarineCount=4):
 		self.__battleships = []
@@ -144,109 +241,19 @@ class PlayingField:
 		length -- the dimension of playing field
 	"""
 
-	def getField(self, fieldAddress):
-		"""
-		Returns a single field.
-
-		Args:
-			fieldAddress -- the field
-
-		Returns:
-			A single field
-		"""
-
-		return self.__fields[fieldAddress.y - 1][fieldAddress.x - 1]
-
-	def getPlayingField(self):
-		"""
-		Returns the complete playing field.
-
-		Returns:
-			the complete playing field
-		"""
-
-		return self.__fields
-
-	def __updateField(self, field, fieldStatus):
-		self.__fields[field.y][field.x].status = fieldStatus
-
-	def __splitPotentialShip(self, bow, rear):
-		result = []
-
-		# horizontal orientation
-		if bow.y is rear.y:
-			if rear.x > bow.x:
-				for i in range(bow.x, rear.x + 1):
-					result.append(FieldAddress(i, bow.y))
-			else:
-				for i in range(rear.x, bow.x + 1):
-					result.append(FieldAddress(i, bow.y))
-
-		# vertical orientation
-		if bow.x is rear.x:
-			if rear.y > bow.y:
-				for i in range(bow.y, rear.y + 1):
-					result.append(FieldAddress(bow.x, i))
-			else:
-				for i in range(rear.y, bow.y + 1):
-					result.append(FieldAddress(bow.x, i))
-
-		return result
+	def getShips(self):
+		return self.__ships.getShips()
 
 	def placeShip(self, bow, rear):
 		"""
 		Places a ship on the playing field.
 
 		Args:
-			ship -- the ship to place
-			shipParts -- a list with field addresses where the ship is located
+
 		"""
-		import math
 
-		# check if bow and rear form a valid ship
-		if not (bow.x is rear.x or bow.y is bow.y):
-			return None
-
-		# check if the length of the potential ship is valid
-		if bow.x is rear.x:
-			length = int(math.fabs(bow.y - rear.y)) + 1
-		else:
-			length = int(math.fabs(bow.x - rear.x)) + 1
-		
-		if length < 2 or length > 5:
-			return None
-		
-		# check for collisions with previously placed ships
-		shipParts = self.__splitPotentialShip(bow, rear)
-		for fieldAddress in shipParts:
-			if self.getField(fieldAddress).status is not FieldStatus.WATER:
-				return None
-
-		# check playing field borders
-
-		# all checks done - build ship
-		if length is 5:
-			ship = Battleship(bow, rear)
-		elif length is 4:
-			ship = Destroyer(bow, rear)
-		elif length is 3:
-			ship = Cruiser(bow, rear)
-		else:
-			ship = Submarine(bow, rear)
-
-		# updates fields and add ship to list of ships
-		if not self.__ships.add(ship):
-			return None
-		for fieldAddress in shipParts:
-			self.__updateField(fieldAddress, FieldStatus.SHIP)
-
-		return ship
+		return self.__ships.add(bow, rear)
 
 	def __init__(self, length):
 		self.__ships = ShipList()
 		self.__length = length
-
-		self.__fields = [[0 for x in range(length)] for x in range(length)]
-		for i in range(length):
-			for j in range(length):
-				self.__fields[i][j] = Field(i, j, FieldStatus.WATER)

@@ -5,54 +5,29 @@ class Backend:
 	Game client backend that does all kind of controller stuff.
 	"""
 
-	def getOwnPlayingField(self):
+	def getOwnShips(self):
 		"""
-		Returns the complete player's playing field.
+		Returns the player's ship.
 
 		Returns:
-			A two-dimensional array of the own playing field.
+			Returns the player's ship.
 		"""
 
-		return self.__ownPlayingField.getPlayingField()
+		return self.__ownPlayingField.getShips()
 
-	def getOwnField(self, fieldAddress):
+	def getEnemeysShips(self):
 		"""
-		Returns a single field from the players own playing field.
-
-		Args:
-			fieldAddress -- the address of the field
+		Returns the enemey's ships.
 
 		Returns:
-			The field.
-		"""
-		return self.__ownPlayingField.getField(fieldAddress)
-
-	def getEnemeysPlayingField(self):
-		"""
-		Returns the complete playing field of the enemey.
-
-		Returns:
-			The complete playing field of the enemey.
+			Returns the enemey's ships.
 		"""
 
-		return self.__enemeysPlayingField.getPlayingField()
-
-	def getEnemeysField(self, fieldAddress):
-		"""
-		Returns a single field of the enemey's playing field.
-
-		Args:
-			fieldAddress -- the address of the field
-
-		Returns:
-			The field.
-		"""
-
-		return self.__enemeysPlayingField.getField(fieldAddress)
+		return self.__enemeysPlayingField.getShips()
 
 	def placeShip(self, bow, rear):
 		"""
-		Validates if bow and rear make a valid ship and checks for collisions with other ships.
+		Places a new Ship on the own playing field.
 
 		Args:
 			bow -- address of the bow
@@ -64,6 +39,6 @@ class Backend:
 		
 		return self.__ownPlayingField.placeShip(bow, rear)
 
-	def __init__(self):
-		self.__ownPlayingField = PlayingField(16)
-		self.__enemeysPlayingField = PlayingField(16)
+	def __init__(self, length):
+		self.__ownPlayingField = PlayingField(length)
+		self.__enemeysPlayingField = PlayingField(length)

@@ -21,6 +21,10 @@ class PlayingFieldWidget(QWidget):
 		self.setMaximumWidth(self._fieldSize*17+1)
 		self.setMaximumHeight(self._fieldSize*17+1)
 
+	@abc.abstractmethod
+	def _getShips(self):
+		pass
+
 	def paintEvent(self, event):
 		"""
 		Paints the playing field when an event occurs.
@@ -34,43 +38,41 @@ class PlayingFieldWidget(QWidget):
 		self._drawPlayingField(painter)
 		painter.end()
 
-	@abc.abstractmethod
-	def _getPlayingField(self):
-		return
-
 	def _drawPlayingField(self, painter):
-		playingField = self._getPlayingField()
 
-		# draw each field
-		for i in range(1, len(playingField) + 1):
-			for j in range(1, len(playingField) + 1):
-				if playingField[i-1][j-1].status is FieldStatus.SHIP:
-					painter.setBrush(QColor(210, 105, 30))
-				elif playingField[i-1][j-1].status is FieldStatus.SHIPDAMAGED:
-					painter.setBrush(QColor(139, 35, 35))
-				else:
-					painter.setBrush(QColor(0, 191, 255))
+		# fill each field with water
+		for i in range(1, self._fieldLength + 1):
+			for j in range(1, self._fieldLength + 1):
+				painter.setBrush(QColor(0, 191, 255))
 				painter.drawRect(i*self._fieldSize, j*self._fieldSize, self._fieldSize, self._fieldSize)
+
+		# add ships
+		painter.setBrush(QColor(210, 105, 30))
+		for ship in self._getShips():
+			for part in ship.parts:
+				painter.drawRect((part.y + 1) * self._fieldSize, (part.x + 1) * self._fieldSize,
+					self._fieldSize, self._fieldSize)
 
 		# draw horizontal and vertical enumeration
 		painter.setPen(QColor(0, 0, 0))
 
-		for i in range(1, len(playingField) + 1):
+		for i in range(1, self._fieldLength + 1):
 			box = QRectF(i*self._fieldSize, 0, self._fieldSize, self._fieldSize)
 			painter.drawText(box, Qt.AlignCenter, str(i))
 
-		for i in range(1, len(playingField) + 1):
+		for i in range(1, self._fieldLength + 1):
 			box = QRectF(0, i*self._fieldSize, self._fieldSize, self._fieldSize)
-			painter.drawText(box, Qt.AlignCenter, chr(64+i))
+			painter.drawText(box, Qt.AlignCenter, chr(64 + i))
 
 	def _mapClickToField(self, mouseEvent):
 		x, y  = mouseEvent.x() // self._fieldSize, mouseEvent.y() // self._fieldSize		
-		return FieldAddress(y - 1, x - 1)
+		return Field(y - 1, x - 1)
 
-	def __init__(self, backend, viewModel):
+	def __init__(self, backend, viewModel, fieldLength, fieldSize=25):
 		self._viewModel = viewModel
 		self._backend = backend
-		self._fieldSize = 25
+		self._fieldSize = fieldSize
+		self._fieldLength = fieldLength
 
 		super(PlayingFieldWidget, self).__init__()
 		self._setupGui()
@@ -79,9 +81,6 @@ class OwnPlayingFieldWidget(PlayingFieldWidget):
 	"""
 	Shows the playing field of the user.
 	"""
-
-	def _getField(self, field):
-		return self._backend.getOwnField(field)
 
 	def mousePressEvent(self, mouseEvent):
 		"""
@@ -92,7 +91,7 @@ class OwnPlayingFieldWidget(PlayingFieldWidget):
 		"""
 
 		fieldAddress = self._mapClickToField(mouseEvent)
-		print("Click event at own field: %s | %s" % (fieldAddress.toString(), self._getField(fieldAddress).status))
+		print("Click event at own field: %s" % (fieldAddress.toString()))
 
 		if self._viewModel.waitForShipPlacement:
 			if self._viewModel.newShipBow is None:
@@ -104,19 +103,16 @@ class OwnPlayingFieldWidget(PlayingFieldWidget):
 				self._viewModel.waitForShipPlacement = False
 				self._viewModel.newShipBow = None
 
-	def _getPlayingField(self):
-		return self._backend.getOwnPlayingField()
+	def _getShips(self):
+		return self._backend.getOwnShips()
 
-	def __init__(self, backend, viewModel):
-		PlayingFieldWidget.__init__(self, backend, viewModel)
+	def __init__(self, backend, viewModel, fieldLength):
+		PlayingFieldWidget.__init__(self, backend, viewModel, fieldLength)
 
 class EnemeysPlayingFieldWidget(PlayingFieldWidget):
 	"""
 	Shows the playing field of the enemey.
 	"""
-
-	def _getField(self, field):
-		return self._backend.getEnemeysField(field)
 
 	def mousePressEvent(self, mouseEvent):
 		"""
@@ -129,11 +125,11 @@ class EnemeysPlayingFieldWidget(PlayingFieldWidget):
 		field = self._mapClickToField(mouseEvent)
 		print("Click event at enemey's field: %s | %s" % (field, self._getField(field).status))
 
-	def _getPlayingField(self):
-		return self._backend.getEnemeysPlayingField()
+	def _getShips(self):
+		return self._backend.getEnemeysShips()
 
-	def __init__(self, backend, viewModel):
-		PlayingFieldWidget.__init__(self, backend, viewModel)
+	def __init__(self, backend, viewModel, fieldLength):
+		PlayingFieldWidget.__init__(self, backend, viewModel, fieldLength)
 
 class MainForm(QWidget):
 	"""
@@ -148,10 +144,10 @@ class MainForm(QWidget):
 		placeShipBtn.clicked.connect(self.__startPlaceShip)
 
 		ownPlayingFieldLbl = QLabel("Your own playing field")
-		ownPlayingFieldWgt = OwnPlayingFieldWidget(self.__backend, self.__viewModel)
+		ownPlayingFieldWgt = OwnPlayingFieldWidget(self.__backend, self.__viewModel, self.__fieldLength)
 
 		enemeysPlayingFieldLbl = QLabel("Your enemey's playing field")
-		enemeysPlayingFieldWgt = EnemeysPlayingFieldWidget(self.__backend, self.__viewModel)
+		enemeysPlayingFieldWgt = EnemeysPlayingFieldWidget(self.__backend, self.__viewModel, self.__fieldLength)
 
 		layout = QGridLayout()
 		layout.addWidget(placeShipBtn, 14, 0)
@@ -165,9 +161,10 @@ class MainForm(QWidget):
 		self.resize(950, 550)
 		self.show()
 
-	def __init__(self, backend):
+	def __init__(self, backend, fieldLength):
 		self.__backend = backend
 		self.__viewModel = ViewModel()
+		self.__fieldLength = fieldLength
 
 		super(MainForm, self).__init__()
 		self.__setupGui()

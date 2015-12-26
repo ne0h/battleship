@@ -11,7 +11,10 @@ if __name__ == '__main__':
 	"""
 	Starts the game client.
 	"""
+
+	fieldLength = 16
+
 	app = QApplication(sys.argv)
-	screen = MainForm(Backend())
+	screen = MainForm(Backend(fieldLength), fieldLength)
 	screen.show()
 	sys.exit(app.exec_())
