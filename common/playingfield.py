@@ -212,7 +212,11 @@ class ShipList:
 		Adds a new Ship to the playing field. Validates if the maximum count of this kind of ship is reached.
 
 		Args:
-			ship -- the Ship to add
+			bow -- the bow of the Ship to add
+			rear -- the rear of the Ship to add
+
+		Return:
+			Returns the newly built ship or None if there was any game rule violation
 		"""
 
 		import math
@@ -249,16 +253,18 @@ class ShipList:
 			return None
 
 		# all checks done - add ship to specific list
-		if length is 5:
+		if length is 5 and len(self.__battleships) < self.__maxBattleshipCount:
 			self.__battleships.append(ship)
-		elif length is 4:
+		elif length is 4 and len(self.__destroyers) < self.__maxDestroyerCount:
 			self.__destroyers.append(ship)
-		elif length is 3:
+		elif length is 3 and len(self.__cruisers) < self.__maxCruiserCount:
 			self.__cruisers.append(ship)
-		else:
+		elif length is 2 and len(self.__submarines) < self.__maxSubmarineCount:
 			self.__submarines.append(ship)
+		else:
+			return None
 
-		return True
+		return ship
 
 	def __init__(self, fieldLength, maxBattleshipCount=1, maxDestroyerCount=2, maxCruiserCount=3, maxSubmarineCount=4):
 		self.__fieldLength = fieldLength
