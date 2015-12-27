@@ -46,13 +46,24 @@ class Field:
 		Standard equals method.
 		"""
 
-		return (otherField.x is self.x and otherField.y is y)
+		return (otherField.x is self.x and otherField.y is self.y)
 
 	def __init__(self, x, y):
 		self.x = x
 		self.y = y
 
 def splitShip(bow, rear):
+	"""
+	Splits a ship up.
+
+	Args:
+		bow -- the bow of the ship
+		rear -- the rear of the ship
+
+	Return:
+		Returns a list of fields.
+	"""
+
 	result = []
 
 	# horizontal orientation
@@ -85,10 +96,9 @@ class Ship:
 		size -- the size of the ship
 	"""
 
-	def __init__(self, bow, rear, size):
+	def __init__(self, bow, rear):
 		self.bow  = bow
 		self.rear = rear
-		self.size = size
 
 		self.parts = splitShip(bow, rear)
 
@@ -102,7 +112,7 @@ class Battleship(Ship):
 	"""
 
 	def __init__(self, bow, rear):
-		Ship.__init__(self, bow, rear, 5)
+		Ship.__init__(self, bow, rear)
 
 class Cruiser(Ship):
 	"""
@@ -114,7 +124,7 @@ class Cruiser(Ship):
 	"""
 
 	def __init__(self, bow, rear):
-		Ship.__init__(self, bow, rear, 4)
+		Ship.__init__(self, bow, rear)
 
 class Destroyer(Ship):
 	"""
@@ -126,7 +136,7 @@ class Destroyer(Ship):
 	"""
 
 	def __init__(self, bow, rear):
-		Ship.__init__(self, bow, rear, 3)
+		Ship.__init__(self, bow, rear)
 
 class Submarine(Ship):
 	"""
@@ -138,14 +148,14 @@ class Submarine(Ship):
 	"""
 
 	def __init__(self, bow, rear):
-		Ship.__init__(self, bow, rear, 2)
+		Ship.__init__(self, bow, rear)
 
 class ShipList:
 	"""
 	Manages all ships on the playing field.
 	"""
 
-	def __checkForCollision(self, field):
+	def __checkForCollisionWithOtherShips(self, ship):
 		"""
 		Validates that there is no collision with an existing Ship.
 
@@ -156,13 +166,30 @@ class ShipList:
 			Returns true if there is no collision or false if not.
 		"""
 
-		for ship in self.getShips():
-			parts = self.__splitShip(ship)
-			for part in parts:
-				if field.equals(part):
-					return False
+		for part in splitShip(ship.bow, ship.rear):
+			for s in self.getShips():
+				parts = splitShip(s.bow, s.rear)
+				for p in parts:
+					if part.equals(p):
+						return False
 
 		return True
+
+	def __checkForCollisionsWithBorders(self, ship):
+		"""
+		Validates that the Ship does not collides of any of the game border.
+
+		Args:
+			ship -- the ship to validate
+
+		Return:
+			Returns true if there is no collision or false if not.
+		"""
+
+		return (ship.bow.x  >= 0 and ship.bow.x  < self.__fieldLength
+			and ship.bow.y  >= 0 and ship.bow.y  < self.__fieldLength
+			and ship.rear.x >= 0 and ship.rear.x < self.__fieldLength
+			and ship.rear.y >= 0 and ship.rear.y < self.__fieldLength)
 
 	def getShips(self):
 		"""
@@ -202,25 +229,40 @@ class ShipList:
 		
 		if length < 2 or length > 5:
 			return None
+
+		# build ship
+		if length is 5:
+			ship = Battleship(bow, rear)
+		elif length is 4:
+			ship = Destroyer(bow, rear)
+		elif length is 3:
+			ship = Cruiser(bow, rear)
+		else:
+			ship = Submarine(bow, rear)
 		
 		# check for collisions with previously placed ships
-		#if not self.__ships.
+		if not self.__checkForCollisionWithOtherShips(ship):
+			return None
 
 		# check playing field borders
+		if not self.__checkForCollisionsWithBorders(ship):
+			return None
 
-		# all checks done - build ship
+		# all checks done - add ship to specific list
 		if length is 5:
-			self.__battleships.append(Battleship(bow, rear))
+			self.__battleships.append(ship)
 		elif length is 4:
-			self.__destroyers.append(Destroyer(bow, rear))
+			self.__destroyers.append(ship)
 		elif length is 3:
-			self.__cruisers.append(Cruiser(bow, rear))
+			self.__cruisers.append(ship)
 		else:
-			self.__submarines.append(Submarine(bow, rear))
+			self.__submarines.append(ship)
 
 		return True
 
-	def __init__(self, maxBattleshipCount=1, maxDestroyerCount=2, maxCruiserCount=3, maxSubmarineCount=4):
+	def __init__(self, fieldLength, maxBattleshipCount=1, maxDestroyerCount=2, maxCruiserCount=3, maxSubmarineCount=4):
+		self.__fieldLength = fieldLength
+
 		self.__battleships = []
 		self.__maxBattleshipCount = maxBattleshipCount
 
@@ -249,11 +291,15 @@ class PlayingField:
 		Places a ship on the playing field.
 
 		Args:
+			bow -- bow of the ship
+			rear -- rear of the ship
 
+		Return:
+			Returns the newly built ship or None of the Ship could not be placed, because of violation of a game rule.
 		"""
 
 		return self.__ships.add(bow, rear)
 
-	def __init__(self, length):
-		self.__ships = ShipList()
-		self.__length = length
+	def __init__(self, fieldLength):
+		self.__ships = ShipList(fieldLength)
+		self.__fieldLength = fieldLength
