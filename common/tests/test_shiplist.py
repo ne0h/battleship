@@ -31,23 +31,23 @@ class TestShipList(unittest.TestCase):
 		self.assertIsNone(ships.add(Field(1, 4), Field(3, 4)))
 		self.assertIsNone(ships.add(Field(3, 2), Field(3, 4)))
 
-	def test_addToManyBattleships(self):
+	def test_addToManyCarriers(self):
 		ships = ShipList(self.FIELDLENGTH)
 
 		ship1 = ships.add(Field(0, 0), Field(0, 4))
-		self.assertIsInstance(ship1, Battleship)
+		self.assertIsInstance(ship1, Carrier)
 
 		ship2 = ships.add(Field(1, 0), Field(1, 4))
 		self.assertIsNone(ship2)
 
-	def test_addToManyDestroyers(self):
+	def test_addToManyBattleships(self):
 		ships = ShipList(self.FIELDLENGTH)
 
 		ship1 = ships.add(Field(0, 0), Field(0, 3))
-		self.assertIsInstance(ship1, Destroyer)
+		self.assertIsInstance(ship1, Battleship)
 
 		ship2 = ships.add(Field(1, 0), Field(1, 3))
-		self.assertIsInstance(ship2, Destroyer)
+		self.assertIsInstance(ship2, Battleship)
 
 		ship3 = ships.add(Field(2, 0), Field(2, 3))
 		self.assertIsNone(ship3)
@@ -67,20 +67,20 @@ class TestShipList(unittest.TestCase):
 		ship4 = ships.add(Field(3, 0), Field(3, 2))
 		self.assertIsNone(ship4)
 
-	def test_addToManySubmarines(self):
+	def test_addToManyDestroyers(self):
 		ships = ShipList(self.FIELDLENGTH)
 
 		ship1 = ships.add(Field(0, 0), Field(0, 1))
-		self.assertIsInstance(ship1, Submarine)
+		self.assertIsInstance(ship1, Destroyer)
 
 		ship2 = ships.add(Field(1, 0), Field(1, 1))
-		self.assertIsInstance(ship2, Submarine)
+		self.assertIsInstance(ship2, Destroyer)
 
 		ship3 = ships.add(Field(2, 0), Field(2, 1))
-		self.assertIsInstance(ship3, Submarine)
+		self.assertIsInstance(ship3, Destroyer)
 
 		ship4 = ships.add(Field(3, 0), Field(3, 1))
-		self.assertIsInstance(ship4, Submarine)
+		self.assertIsInstance(ship4, Destroyer)
 
 		ship5 = ships.add(Field(4, 0), Field(4, 1))
 		self.assertIsNone(ship5)

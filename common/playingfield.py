@@ -1,6 +1,6 @@
 from enum import Enum
 
-class OrientationDirection(Enum):
+class Orientation(Enum):
 	"""
 	The different directions.
 	"""
@@ -9,25 +9,6 @@ class OrientationDirection(Enum):
 	WEST  = "west",
 	SOUTH = "south",
 	EAST  = "east"
-
-class Orientation:
-
-	def invert(self):
-		"""
-		Inverts the current orientation orientationDirection.
-		"""
-
-		if self.__orientationDirection is OrientationDirection.NORTH:
-			self.__orientationDirection = OrientationDirection.SOUTH
-		elif self.__orientationDirection is OrientationDirection.WEST:
-			self.__orientationDirection = OrientationDirection.EAST
-		elif self.__orientationDirection.OrientationDirection.SOUTH:
-			self.__orientationDirection = OrientationDirection.NORTH
-		else:
-			self.__orientationDirection = OrientationDirection.WEST
-
-	def __init__(self, orientationDirection):
-		self.__orientationDirection = orientationDirection
 
 class Field:
 	"""
@@ -93,14 +74,43 @@ class Ship:
 	Args:
 		bow -- the starting field of the ship
 		rear -- the ending field of the ship
-		size -- the size of the ship
 	"""
+
+	def getLength(self):
+		return len(self.parts)
 
 	def __init__(self, bow, rear):
 		self.bow  = bow
 		self.rear = rear
 
 		self.parts = splitShip(bow, rear)
+
+		# calculate orientation
+		if bow.y < rear.y:
+			self.orientation = Orientation.NORTH
+		elif bow.y > rear.y:
+			self.orientation = Orientation.SOUTH
+		elif bow.x < rear.x:
+			self.orientation = Orientation.EAST
+		elif bow.x > rear.x:
+			self.orientation = Orientation.WEST
+
+		# calculate middle elements
+		self.middles = []
+		for i in range(1, len(self.parts) - 1):
+			self.middles.append(self.parts[i])
+
+class Carrier(Ship):
+	"""
+	A Carrier.
+
+	Args:
+		bow -- field where the ship starts
+		rear -- field where the ship ends
+	"""
+
+	def __init__(self, bow, rear):
+		Ship.__init__(self, bow, rear)
 
 class Battleship(Ship):
 	"""
@@ -129,18 +139,6 @@ class Cruiser(Ship):
 class Destroyer(Ship):
 	"""
 	A destroyer.
-
-	Args:
-		bow -- field where the ship starts
-		rear -- field where the ship ends
-	"""
-
-	def __init__(self, bow, rear):
-		Ship.__init__(self, bow, rear)
-
-class Submarine(Ship):
-	"""
-	A submarine.
 
 	Args:
 		bow -- field where the ship starts
@@ -200,10 +198,10 @@ class ShipList:
 		"""
 		result = []
 
+		result.extend(self.__carriers)
 		result.extend(self.__battleships)
-		result.extend(self.__destroyers)
 		result.extend(self.__cruisers)
-		result.extend(self.__submarines)
+		result.extend(self.__destroyers)
 
 		return result
 
@@ -221,10 +219,6 @@ class ShipList:
 
 		import math
 
-		# check if bow and rear form a valid ship
-		if not (bow.x is rear.x or bow.y is bow.y):
-			return None
-
 		# check if the length of the potential ship is valid
 		if bow.x is rear.x:
 			length = int(math.fabs(bow.y - rear.y)) + 1
@@ -232,54 +226,58 @@ class ShipList:
 			length = int(math.fabs(bow.x - rear.x)) + 1
 		
 		if length < 2 or length > 5:
+			print("To small!")
 			return None
 
 		# build ship
 		if length is 5:
-			ship = Battleship(bow, rear)
+			ship = Carrier(bow, rear)
 		elif length is 4:
-			ship = Destroyer(bow, rear)
+			ship = Battleship(bow, rear)
 		elif length is 3:
 			ship = Cruiser(bow, rear)
 		else:
-			ship = Submarine(bow, rear)
+			ship = Destroyer(bow, rear)
 		
 		# check for collisions with previously placed ships
 		if not self.__checkForCollisionWithOtherShips(ship):
+			print("Collision with ship!")
 			return None
 
 		# check playing field borders
 		if not self.__checkForCollisionsWithBorders(ship):
+			print("Collision with border!")
 			return None
 
 		# all checks done - add ship to specific list
-		if length is 5 and len(self.__battleships) < self.__maxBattleshipCount:
+		if length is 5 and len(self.__carriers) < self.__maxCarrierCount:
+			self.__carriers.append(ship)
+		elif length is 4 and len(self.__battleships) < self.__maxBattleshipCount:
 			self.__battleships.append(ship)
-		elif length is 4 and len(self.__destroyers) < self.__maxDestroyerCount:
-			self.__destroyers.append(ship)
 		elif length is 3 and len(self.__cruisers) < self.__maxCruiserCount:
 			self.__cruisers.append(ship)
-		elif length is 2 and len(self.__submarines) < self.__maxSubmarineCount:
-			self.__submarines.append(ship)
+		elif length is 2 and len(self.__destroyers) < self.__maxDestroyerCount:
+			self.__destroyers.append(ship)
 		else:
+			print("Last shit")
 			return None
 
 		return ship
 
-	def __init__(self, fieldLength, maxBattleshipCount=1, maxDestroyerCount=2, maxCruiserCount=3, maxSubmarineCount=4):
+	def __init__(self, fieldLength, maxCarrierCount=1, maxBattleshipCount=2, maxCruiserCount=3, maxDestroyerCount=4):
 		self.__fieldLength = fieldLength
+
+		self.__carriers = []
+		self.__maxCarrierCount = maxCarrierCount
 
 		self.__battleships = []
 		self.__maxBattleshipCount = maxBattleshipCount
 
-		self.__destroyers = []
-		self.__maxDestroyerCount = maxDestroyerCount
-
 		self.__cruisers = []
 		self.__maxCruiserCount = maxCruiserCount
 
-		self.__submarines = []
-		self.__maxSubmarineCount = maxSubmarineCount
+		self.__destroyers = []
+		self.__maxDestroyerCount = maxDestroyerCount
 
 class PlayingField:
 	"""
