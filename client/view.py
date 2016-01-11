@@ -49,21 +49,21 @@ class PlayingFieldWidget(QWidget):
 		# add ships
 		painter.setBrush(QColor(210, 105, 30))
 		for ship in self._getShips():
-			
+
 			# draw bow
 			bow = ship.bow
 			painter.drawPixmap((bow.x + 1) * self._fieldSize, (bow.y + 1) * self._fieldSize, self._fieldSize,
-				self._fieldSize, QPixmap("./img/bow_" + ship.orientation.value[0] + ".png"))
+				self._fieldSize, QPixmap("./img/bow_" + ship.orientation.value + ".png"))
 			
 			# draw rear
 			rear = ship.rear
 			painter.drawPixmap((rear.x + 1) * self._fieldSize, (rear.y + 1) * self._fieldSize, self._fieldSize,
-				self._fieldSize, QPixmap("./img/rear_" + ship.orientation.value[0] + ".png"))
+				self._fieldSize, QPixmap("./img/rear_" + ship.orientation.value + ".png"))
 			
 			# draw the rest
 			for middle in ship.middles:
 				painter.drawPixmap((middle.x + 1) * self._fieldSize, (middle.y + 1) * self._fieldSize, self._fieldSize,
-					self._fieldSize, QPixmap("./img/middle_" + ship.orientation.value[0] + ".png"))
+					self._fieldSize, QPixmap("./img/middle_" + ship.orientation.value + ".png"))
 
 		# draw horizontal and vertical enumeration
 		painter.setPen(QColor(0, 0, 0))
@@ -109,7 +109,7 @@ class OwnPlayingFieldWidget(PlayingFieldWidget):
 			if self._viewModel.newShipBow is None:
 				self._viewModel.newShipBow = fieldAddress
 			else:
-				ship = self._backend.placeShip(self._viewModel.newShipBow, fieldAddress)
+				ship = self._backend.placeShip(fieldAddress, self._viewModel.newShipBow)
 
 				self.repaint()
 				self._viewModel.waitForShipPlacement = False

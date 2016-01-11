@@ -5,9 +5,9 @@ class Orientation(Enum):
 	The different directions.
 	"""
 
-	NORTH = "north",
-	WEST  = "west",
-	SOUTH = "south",
+	NORTH = "north"
+	WEST  = "west"
+	SOUTH = "south"
 	EAST  = "east"
 
 class Field:
@@ -91,9 +91,9 @@ class Ship:
 		elif bow.y > rear.y:
 			self.orientation = Orientation.SOUTH
 		elif bow.x < rear.x:
-			self.orientation = Orientation.EAST
-		elif bow.x > rear.x:
 			self.orientation = Orientation.WEST
+		elif bow.x > rear.x:
+			self.orientation = Orientation.EAST
 
 		# calculate middle elements
 		self.middles = []
@@ -259,7 +259,6 @@ class ShipList:
 		elif length is 2 and len(self.__destroyers) < self.__maxDestroyerCount:
 			self.__destroyers.append(ship)
 		else:
-			print("Last shit")
 			return None
 
 		return ship
