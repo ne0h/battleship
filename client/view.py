@@ -135,7 +135,7 @@ class EnemeysPlayingFieldWidget(PlayingFieldWidget):
 		"""
 
 		field = self._mapClickToField(mouseEvent)
-		print("Click event at enemey's field: %s | %s" % (field, self._getField(field).status))
+		print("Click event at enemey's field: %s" % (field.toString()))
 
 	def _getShips(self):
 		return self._backend.getEnemeysShips()
