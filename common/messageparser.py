@@ -16,10 +16,10 @@ class MessageParser:
 		"""
 		
 		result = "type:%s;" % (type)
-		for param, value in params.iteritems():
+		for param, value in params.items():
 			result = "%s%s:%s;" % (result, param, value)
 
-		return hex(len(result)), result
+		return ("%s" + result) % (str(hex(len(result)))[2:])
 
 	def decode(self, message):
 		"""

@@ -7,10 +7,11 @@ from messageparser import *
 class TestMessageParser(unittest.TestCase):
 
 	def test_encoding(self):
-		size, msg = MessageParser().encode("attack", {"coordinate_x": "5", "coordinate_y": "14"})
+		msg = MessageParser().encode("attack", {"coordinate_x": "5", "coordinate_y": "14"})
 
-		self.assertEqual(size, "0x2b")
-		self.assertEqual(msg, "type:attack;coordinate_y:14;coordinate_x:5;")
+		# order of parameters is not deterministic
+		self.assertTrue(msg == "2btype:attack;coordinate_y:14;coordinate_x:5;"
+			or "2btype:attack;coordinate_x:5;coordinate_y:14;")
 
 	def test_decoding(self):
 		messageType, params = MessageParser().decode("2Dtype:attack; coordinate_x:5; coordinate_y:14;")
