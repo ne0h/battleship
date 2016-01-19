@@ -1,5 +1,12 @@
 from playingfield import *
 
+class ClientStatus(Enum):
+
+	NOGAMERUNNING = "nogamerunning"
+	PREPARATIONS = "preparations"
+	OWNTURN = "ownturn"
+	OPPONENTSTURN = "oppenentsturn"
+
 class Backend:
 	"""
 	Game client backend that does all kind of controller stuff.
@@ -39,6 +46,10 @@ class Backend:
 		
 		return self.__ownPlayingField.placeShip(bow, rear)
 
+	def getClientStatus(self):
+		return self.__clientStatus
+
 	def __init__(self, length):
 		self.__ownPlayingField = PlayingField(length)
 		self.__enemeysPlayingField = PlayingField(length)
+		self.__clientStatus = ClientStatus.NOGAMERUNNING

@@ -20,6 +20,7 @@ class PlayingFieldWidget(QWidget):
 	def _setupGui(self):
 		self.setMaximumWidth(self._fieldSize  * 17 + 1)
 		self.setMaximumHeight(self._fieldSize * 17 + 1)
+		self.setStyleSheet("border: 1px solid red")
 
 	@abc.abstractmethod
 	def _getShips(self):
@@ -151,26 +152,65 @@ class MainForm(QWidget):
 	def __startPlaceShip(self):
 		self.__viewModel.waitForShipPlacement = True
 
+	def __updateClientStatus(self):
+		from backend import ClientStatus
+
+		status = self.__backend.getClientStatus()
+
+		if status is ClientStatus.NOGAMERUNNING:
+			self.__statusLbl.setText("No game running, please use the lobby to connect to a game.")
+		elif status is ClientStatus.PREPARATIONS:
+			self.__statusLbl.setText("Please place your ships.")
+		elif status is ClientStatus.OWNTURN:
+			self.__status.setText("It is your turn.")
+		elif status is ClientStatus.OPPONENTSTURN:
+			self.__statusLbl.setText("Please wait for your opponent.")
+
 	def __setupGui(self):
+
+		# own playing field stuff
+		ownPlayingFieldBox = QGroupBox("Your own playing field")
+		ownPlayingFieldWgt = OwnPlayingFieldWidget(self.__backend, self.__viewModel, self.__fieldLength)
+		ownPlayingFieldLayout = QVBoxLayout()
+		ownPlayingFieldLayout.addWidget(ownPlayingFieldWgt)
+		ownPlayingFieldBox.setLayout(ownPlayingFieldLayout)
+
+		# enemies playing field stuff
+		enemeysPlayingFieldBox = QGroupBox("Your enemey's playing field")
+		enemeysPlayingFieldWgt = EnemeysPlayingFieldWidget(self.__backend, self.__viewModel, self.__fieldLength)
+		enemiesPlayingFieldLayout = QVBoxLayout()
+		enemiesPlayingFieldLayout.addWidget(enemeysPlayingFieldWgt)
+		enemeysPlayingFieldBox.setLayout(enemiesPlayingFieldLayout)
+
+		# buttons
 		placeShipBtn = QPushButton("Place Ship")
 		placeShipBtn.clicked.connect(self.__startPlaceShip)
 
-		ownPlayingFieldLbl = QLabel("Your own playing field")
-		ownPlayingFieldWgt = OwnPlayingFieldWidget(self.__backend, self.__viewModel, self.__fieldLength)
+		# status line
+		self.__statusLbl = QLabel()
+		self.__statusLbl.setStyleSheet("color: #b00")
+		self.__updateClientStatus()
 
-		enemeysPlayingFieldLbl = QLabel("Your enemey's playing field")
-		enemeysPlayingFieldWgt = EnemeysPlayingFieldWidget(self.__backend, self.__viewModel, self.__fieldLength)
+		"""
+		  column------->
+		r
+		o
+		w
+		|
+		|
+		V
 
+													row		column	height 	width
+		"""
 		layout = QGridLayout()
-		layout.addWidget(placeShipBtn, 14, 0)
-		layout.addWidget(ownPlayingFieldLbl, 1, 0)
-		layout.addWidget(ownPlayingFieldWgt, 2, 0, 12, 6)
-		layout.addWidget(enemeysPlayingFieldLbl, 1, 9)
-		layout.addWidget(enemeysPlayingFieldWgt, 2, 9, 12, 6)
+		layout.addWidget(self.__statusLbl,            0,        0,     5,      80)
+		layout.addWidget(ownPlayingFieldBox,         10,        0,    48,      38)
+		layout.addWidget(enemeysPlayingFieldBox,     10,       41,    48,      48)
+		layout.addWidget(placeShipBtn,              100,        0,     1,       1)
 
 		self.setLayout(layout)
 		self.setWindowTitle("Battleship++")
-		self.resize(950, 550)
+		#self.resize(600, 550)
 		self.show()
 
 	def __init__(self, backend, fieldLength):

@@ -9,10 +9,10 @@ class MessageParser:
 
 		Args:
 			type - the type of the message
-			params - a map of parameters that will be encoding separately
+			params - a dictonary of parameters that will be encoded separately
 
 		Returns:
-			The exadecimal encoded message size and the message itself as a utf-8 string
+			Returns the exadecimal encoded message size and the message itself as a utf-8 string.
 		"""
 		
 		result = "type:%s;" % (type)
@@ -22,6 +22,16 @@ class MessageParser:
 		return hex(len(result)), result
 
 	def decode(self, message):
+		"""
+		Decodes a message.
+
+		Args:
+			message - a string representative of the message
+
+		Returns:
+			Returns the type of the message and the parameters as a dictonary.
+		"""
+
 		size = int(message[:2], 16)
 
 		messageType = None
