@@ -238,6 +238,7 @@ class MainForm(QWidget):
 
 		self.setLayout(layout)
 		self.setWindowTitle("Battleship++")
+		self.resize(1100, 600)
 		self.show()
 
 	def __init__(self, backend, fieldLength):
