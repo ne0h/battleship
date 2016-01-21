@@ -14,8 +14,24 @@ class Observer:
 
 class GameInformation:
 
-	def __init__(self):
-		pass
+	def toString(self):
+		result = ("%s: %s vs.") % (self.name, self.players[0])
+		if len(self.players) > 1:
+			result = ("%s %s") % (result, self.players[1])
+		return result
+
+	def __init__(self, name, firstPlayer):
+		self.name = name
+		self.players = [firstPlayer]
+
+class PlayerInformation:
+
+	def toString(self):
+		return "%s(%s)" % (self.id, self.nickname)
+
+	def __init__(self, id, nickname):
+		self.id = id
+		self.nickname = nickname
 
 class Lobby:
 
@@ -68,7 +84,7 @@ class Backend:
 		self.__lobbyObservers.append(observer)
 		print("Observer added")
 
-	def lobbyProgress(self):
+	def lobbyProgress(self, players, games):
 		for observer in self.__lobbyObservers:
 			observer.onAction()
 
