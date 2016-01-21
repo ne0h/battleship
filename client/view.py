@@ -5,6 +5,25 @@ from PyQt5.QtWidgets import *
 
 from playingfield import *
 
+class LobbyDialog(QDialog):
+
+	def __setupGui(self):
+		pass
+
+	def __onAction(self):
+		print("Action!")
+
+	def __init__(self, backend):
+		from backend import Observer
+
+		self.__backend = backend
+		observer = Observer()
+		observer.onAction = lambda: self.__onAction()
+		self.__backend.registerLobbyObserver(observer)
+
+		super(LobbyDialog, self).__init__()
+		self.__setupGui()
+
 class ViewModel:
 
 	def __init__(self):
@@ -31,7 +50,7 @@ class PlayingFieldWidget(QWidget):
 		Paints the playing field when an event occurs.
 
 		Args:
-			event -- information about the event that occored
+			event -- information about the event that occured
 		"""
 
 		painter = QPainter()
@@ -152,6 +171,11 @@ class MainForm(QWidget):
 	def __startPlaceShip(self):
 		self.__viewModel.waitForShipPlacement = True
 
+	def __openLobby(self):
+		import sys
+
+		LobbyDialog(self.__backend).exec_()
+
 	def __updateClientStatus(self):
 		from backend import ClientStatus
 
@@ -186,6 +210,9 @@ class MainForm(QWidget):
 		placeShipBtn = QPushButton("Place Ship")
 		placeShipBtn.clicked.connect(self.__startPlaceShip)
 
+		lobbyBtn = QPushButton("Lobby")
+		lobbyBtn.clicked.connect(self.__openLobby)
+
 		# status line
 		self.__statusLbl = QLabel()
 		self.__statusLbl.setStyleSheet("color: #b00")
@@ -206,11 +233,11 @@ class MainForm(QWidget):
 		layout.addWidget(self.__statusLbl,            0,        0,     5,      80)
 		layout.addWidget(ownPlayingFieldBox,         10,        0,    48,      38)
 		layout.addWidget(enemeysPlayingFieldBox,     10,       41,    48,      48)
-		layout.addWidget(placeShipBtn,              100,        0,     1,       1)
+		layout.addWidget(placeShipBtn,              100,        1,     1,       1)
+		layout.addWidget(lobbyBtn,                  100,        0,     1,       1)
 
 		self.setLayout(layout)
 		self.setWindowTitle("Battleship++")
-		#self.resize(600, 550)
 		self.show()
 
 	def __init__(self, backend, fieldLength):

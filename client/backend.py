@@ -7,6 +7,21 @@ class ClientStatus(Enum):
 	OWNTURN = "ownturn"
 	OPPONENTSTURN = "oppenentsturn"
 
+class Observer:
+
+	def onAction(self):
+		pass
+
+class GameInformation:
+
+	def __init__(self):
+		pass
+
+class Lobby:
+
+	def __init__(self):
+		pass
+
 class Backend:
 	"""
 	Game client backend that does all kind of controller stuff.
@@ -49,7 +64,21 @@ class Backend:
 	def getClientStatus(self):
 		return self.__clientStatus
 
+	def registerLobbyObserver(self, observer):
+		self.__lobbyObservers.append(observer)
+		print("Observer added")
+
+	def lobbyProgress(self):
+		for observer in self.__lobbyObservers:
+			observer.onAction()
+
 	def __init__(self, length):
+		from serverhandler import ServerHandler
+
 		self.__ownPlayingField = PlayingField(length)
 		self.__enemeysPlayingField = PlayingField(length)
 		self.__clientStatus = ClientStatus.NOGAMERUNNING
+
+		self.__lobbyObservers = []
+
+		self.__serverHandler = ServerHandler(self, "localhost", 11000)
