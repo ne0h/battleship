@@ -99,9 +99,6 @@ class ServerHandler:
 
 				games.append(game)
 
-		for g in games:
-			print(g.toString())
-
 		self.__backend.lobbyProgress(players, games)
 
 	def __receiveLoop(self):
@@ -123,8 +120,7 @@ class ServerHandler:
 			if messageType == "Update_Lobby":
 				self.__setUpdateLobby(params)
 
-			break
-			time.sleep(10)
+			time.sleep(1)
 
 
 	def __init__(self, backend, host, port):

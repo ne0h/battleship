@@ -5,31 +5,78 @@ from PyQt5.QtWidgets import *
 
 from playingfield import *
 
-class LobbyDialog(QDialog):
-
-	def __setupGui(self):
-		pass
-
-	def __onAction(self):
-		print("Action!")
-
-	def __init__(self, backend):
-		from backend import Observer
-
-		self.__backend = backend
-		observer = Observer()
-		observer.onAction = lambda: self.__onAction()
-		self.__backend.registerLobbyObserver(observer)
-
-		super(LobbyDialog, self).__init__()
-		self.__setupGui()
-
 class ViewModel:
 
 	def __init__(self):
 		self.waitForShipPlacement = False
 		self.newShipBow = None
 
+class LobbyDialog(QDialog):
+
+	def __chooseGameOnClick(self):
+		gameId = self.__gamesWidget.currentItem().text().split(":")[0]
+		print(gameId)
+
+	def __setupGui(self):
+		self.__statusLbl = QLabel()
+		self.__gamesWidget = QListWidget()
+		self.__gamesWidget.setSortingEnabled(True)
+		self.__chooseGameBtn = QPushButton("Connect")
+		self.__chooseGameBtn.clicked.connect(self.__chooseGameOnClick)
+
+		layout = QVBoxLayout()
+		layout.addWidget(self.__statusLbl)
+		layout.addWidget(self.__gamesWidget)
+		layout.addWidget(self.__chooseGameBtn)
+
+		self.setLayout(layout)
+		self.setWindowTitle("Lobby")
+		self.resize(500, 300)
+		self.show()
+
+	def __onUpdate(self, players, games):
+		self.__statusLbl.setText("%s players currently online and %s games are open!" % (len(players), len(games)))
+
+		# only add new games
+		for game in games:
+			found = -1
+			for i in range(0, self.__gamesWidget.count()):
+				# this validation is sufficient, because colons are not allowed as values in the protocol
+				if self.__gamesWidget.item(i).text().startswith("%s:" % (game.name)):
+					found = i
+					break;
+
+			text = game.name
+			if game.players[0] == "":
+				text = ": %s" % ("An unnamed player")
+			else:
+				text = "%s: %s" % (text, game.players[0])
+			if len(game.players) is 1:
+				text = "%s is waiting for an oppenent" % (text)
+			else:
+				text = "%s vs. %s" % (text, game.players[1])
+
+			# is there an update? if yes - update corresponding item
+			# if not - add the new item
+			if found is not -1:
+				self.__gamesWidget.item(i).text = text
+			else:
+				self.__gamesWidget.addItem(text)
+	
+	def closeEvent(self, event):
+		self.__backend.removeLobbyCallback(self.__callback)
+
+	def __init__(self, backend):
+		from backend import Callback
+
+		self.__backend = backend
+		self.__callback = Callback()
+		self.__callback.onAction = lambda players, games: self.__onUpdate(players, games)
+		players, games = self.__backend.registerLobbyCallback(self.__callback)
+
+		super(LobbyDialog, self).__init__()
+		self.__setupGui()
+		self.__onUpdate(players, games)
 
 class PlayingFieldWidget(QWidget):
 	"""

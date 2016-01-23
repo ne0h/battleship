@@ -7,7 +7,7 @@ class ClientStatus(Enum):
 	OWNTURN = "ownturn"
 	OPPONENTSTURN = "oppenentsturn"
 
-class Observer:
+class Callback:
 
 	def onAction(self):
 		pass
@@ -80,13 +80,26 @@ class Backend:
 	def getClientStatus(self):
 		return self.__clientStatus
 
-	def registerLobbyObserver(self, observer):
-		self.__lobbyObservers.append(observer)
-		print("Observer added")
+	def registerLobbyCallback(self, callback):
+		self.__lobbyCallbacks.append(callback)
+		print("Lobby callback added")
+		return self.__lobbyCurrentPlayers, self.__lobbyCurrentGames
+
+	def removeLobbyCallback(self, callback):
+		for cb in self.__lobbyCallbacks:
+			if cb is callback:
+				self.__lobbyCallbacks.remove(callback)
+		print("Lobby observer removed")
 
 	def lobbyProgress(self, players, games):
-		for observer in self.__lobbyObservers:
-			observer.onAction()
+		self.__lobbyCurrentPlayers = players
+		self.__lobbyCurrentGames = games
+
+		for callback in self.__lobbyCallbacks:
+			callback.onAction(players, games)
+
+	def chooseGameCallback(self, callback):
+		pass
 
 	def __init__(self, length):
 		from serverhandler import ServerHandler
@@ -95,6 +108,8 @@ class Backend:
 		self.__enemeysPlayingField = PlayingField(length)
 		self.__clientStatus = ClientStatus.NOGAMERUNNING
 
-		self.__lobbyObservers = []
+		self.__lobbyCurrentPlayers = []
+		self.__lobbyCurrentGames = []
+		self.__lobbyCallbacks = []
 
 		self.__serverHandler = ServerHandler(self, "localhost", 11000)
