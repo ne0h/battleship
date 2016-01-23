@@ -98,8 +98,14 @@ class Backend:
 		for callback in self.__lobbyUpdateGamesCallbacks:
 			callback.onAction(players, games)
 
-	def joinGameCallback(self, callback):
-		pass
+	def joinGame(self, gameId, callback):
+		self.__joinGameCallbacks.append(callback)
+		self.__serverHandler.joinGame(gameId)
+
+	def joinGameResponse(self, success):
+		for cb in self.__joinGameCallbacks:
+			cb.onAction(success)
+		self.__joinGameCallbacks = []
 
 	def __init__(self, length):
 		from serverhandler import ServerHandler
@@ -108,8 +114,11 @@ class Backend:
 		self.__enemeysPlayingField = PlayingField(length)
 		self.__clientStatus = ClientStatus.NOGAMERUNNING
 
+		# callback stuff
 		self.__lobbyCurrentPlayers = []
 		self.__lobbyCurrentGames = []
 		self.__lobbyUpdateGamesCallbacks = []
+
+		self.__joinGameCallbacks = []
 
 		self.__serverHandler = ServerHandler(self, "localhost", 11000)

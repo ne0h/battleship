@@ -13,12 +13,22 @@ class ViewModel:
 
 class LobbyDialog(QDialog):
 
+	def __interfaceEnabled(self, value):
+		self.__gamesWidget.setEnabled(value)
+		self.__joinGameBtn.setEnabled(value)
+		self.__createGameBtn.setEnabled(value)
+
 	def __joinGameOnClick(self):
 		from backend import Callback
 
 		gameId = self.__gamesWidget.currentItem().text().split(":")[0]
 		cb = Callback()
-		self.__backend.joinGameCallback(cb)
+		cb.onAction = lambda success: self.__joinGameCallback(success)
+		self.__backend.joinGame(gameId, cb)
+		self.__interfaceEnabled(False)
+
+	def __joinGameCallback(self, success):
+		print("Game joined? " + str(success))
 
 	def __createGameOnClick(self):
 		pass
@@ -235,7 +245,9 @@ class MainForm(QWidget):
 	def __openLobby(self):
 		import sys
 
-		LobbyDialog(self.__backend).exec_()
+		if not self.__lobbyAlreadyOpen:
+			self.__lobbyAlreadyOpen = True
+			LobbyDialog(self.__backend).exec_()
 
 	def __updateClientStatus(self):
 		from backend import ClientStatus
@@ -306,6 +318,7 @@ class MainForm(QWidget):
 		self.__backend = backend
 		self.__viewModel = ViewModel()
 		self.__fieldLength = fieldLength
+		self.__lobbyAlreadyOpen = False
 
 		super(MainForm, self).__init__()
 		self.__setupGui()

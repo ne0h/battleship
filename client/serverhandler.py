@@ -3,10 +3,38 @@ from threading import Thread
 
 from messageparser import *
 
-class ServerHandler:
+"""
+class ReportCodes(Enum):
+	"11" = "Begin_Turn"
+	"13" = "Update_Own_Field"
+	"14" = "Update_Enemy_Field"
+	"15" = "Chat_Broadcast"
+	"16" = "Update_Lobby"
+	"17" = "Game_Ended"
+	"18" = "Begin_Ship_Placing"
+	"19" = "Game_Aborted"
+	"21" = "Successful_Move"
+	"22" = "Successful_Attack"
+	"23" = "Surrender_Accepted"
+	"24" = "Successful_Special_Attack"
+	"27" = "Successful_Game_Join"
+	"28" = "Successful_Game_Create"
+	"29" = "Successful_Ship_Placement"
+	"31" = "Illegal_Move"
+	"32" = "Illegal_Special_Attack"
+	"33" = "Illegal_Field"
+	"34" = "Illegal_Ship_Index"
+	"37" = "Illegal_Game_Definition"
+	"38" = "Illegal_Ship_Placement"
+	"39" = "Illegal_Attack"
+	"40" = "Message_Not_Recognized"
+	"41" = "Not_Your_Turn"
+	"43" = "Not_In_Any_Game"
+	"47" = "Game_Join_Denied"
+	"48" = "Game_Preparation_Ended"
+"""
 
-	def __sendMessage(self, type, params):
-		msg = self.__messageParser.encode(type, params)
+class ServerHandler:
 
 	def nicknameSet(self, nickname):
 		self.__sendMessage("nickname_set", {"name": "nickname"})
@@ -41,7 +69,7 @@ class ServerHandler:
 
 		# TODO lots of consistency tests...
 		# TODO remove already read values from map that the method runs in O(n)
-		# TODO Validate message length
+		# TODO Validate message length (should be already done in the receiveLoop)
 
 		games   = []
 		players = []
@@ -101,9 +129,22 @@ class ServerHandler:
 
 		self.__backend.lobbyUpdateGamesProgress(players, games)
 
+	# method is only temporary to test joinGame
+	def __joinGameLoop(self):
+		msg = "00type:report;status:27;"
+		_, params = self.__messageParser.decode(msg)
+
+		time.sleep(5)
+		print("Join game")
+		self.__backend.joinGameResponse(False)
+
+	def joinGame(self, gameId):
+		self.__sendMessage("game_join", {"name": {gameId}})
+		Thread(target=self.__joinGameLoop).start()
+
 	def __receiveLoop(self):
 
-		msg = "00type:Update_Lobby;number_of_clients:5;number_of_games:2;" \
+		msg = "00type:report;status:16;number_of_clients:5;number_of_games:2;" \
 				+ "game_name_0:Game One;game_name_1:Game Two;" \
 				+ "game_players_count_0:1;game_players_count_1:2;"\
 				+ "game_player_0_0:aaaa;game_player_1_0:bbbb;game_player_1_1:cccc;" \
@@ -113,15 +154,14 @@ class ServerHandler:
 				+ "player_name_3:Ludwig;player_identifier_3:bbbb;" \
 				+ "player_name_4:Erhard;player_identifier_4:eeee;"
 
-		messageType, params = self.__messageParser.decode(msg)
+		_, params = self.__messageParser.decode(msg)
 
 		while True:
-
-			if messageType == "Update_Lobby":
-				self.__setUpdateLobby(params)
-
+			self.__setUpdateLobby(params)
 			time.sleep(1)
 
+	def __sendMessage(self, type, params):
+		msg = self.__messageParser.encode(type, params)
 
 	def __init__(self, backend, host, port):
 		self.__backend = backend
