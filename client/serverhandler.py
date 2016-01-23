@@ -99,7 +99,7 @@ class ServerHandler:
 
 				games.append(game)
 
-		self.__backend.lobbyProgress(players, games)
+		self.__backend.lobbyUpdateGamesProgress(players, games)
 
 	def __receiveLoop(self):
 

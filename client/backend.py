@@ -80,25 +80,25 @@ class Backend:
 	def getClientStatus(self):
 		return self.__clientStatus
 
-	def registerLobbyCallback(self, callback):
-		self.__lobbyCallbacks.append(callback)
+	def registerLobbyUpdateGamesCallback(self, callback):
+		self.__lobbyUpdateGamesCallbacks.append(callback)
 		print("Lobby callback added")
 		return self.__lobbyCurrentPlayers, self.__lobbyCurrentGames
 
-	def removeLobbyCallback(self, callback):
-		for cb in self.__lobbyCallbacks:
+	def removeLobbyUpdateGamesCallback(self, callback):
+		for cb in self.__lobbyUpdateGamesCallbacks:
 			if cb is callback:
-				self.__lobbyCallbacks.remove(callback)
+				self.__lobbyUpdateGamesCallbacks.remove(callback)
 		print("Lobby observer removed")
 
-	def lobbyProgress(self, players, games):
+	def lobbyUpdateGamesProgress(self, players, games):
 		self.__lobbyCurrentPlayers = players
 		self.__lobbyCurrentGames = games
 
-		for callback in self.__lobbyCallbacks:
+		for callback in self.__lobbyUpdateGamesCallbacks:
 			callback.onAction(players, games)
 
-	def chooseGameCallback(self, callback):
+	def joinGameCallback(self, callback):
 		pass
 
 	def __init__(self, length):
@@ -110,6 +110,6 @@ class Backend:
 
 		self.__lobbyCurrentPlayers = []
 		self.__lobbyCurrentGames = []
-		self.__lobbyCallbacks = []
+		self.__lobbyUpdateGamesCallbacks = []
 
 		self.__serverHandler = ServerHandler(self, "localhost", 11000)

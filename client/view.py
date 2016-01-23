@@ -13,28 +13,42 @@ class ViewModel:
 
 class LobbyDialog(QDialog):
 
-	def __chooseGameOnClick(self):
+	def __joinGameOnClick(self):
+		from backend import Callback
+
 		gameId = self.__gamesWidget.currentItem().text().split(":")[0]
-		print(gameId)
+		cb = Callback()
+		self.__backend.joinGameCallback(cb)
+
+	def __createGameOnClick(self):
+		pass
 
 	def __setupGui(self):
 		self.__statusLbl = QLabel()
 		self.__gamesWidget = QListWidget()
 		self.__gamesWidget.setSortingEnabled(True)
-		self.__chooseGameBtn = QPushButton("Connect")
-		self.__chooseGameBtn.clicked.connect(self.__chooseGameOnClick)
+		self.__joinGameBtn = QPushButton("Join game")
+		self.__joinGameBtn.clicked.connect(self.__joinGameOnClick)
+		self.__createGameBtn = QPushButton("Create game")
+		self.__createGameBtn.clicked.connect(self.__createGameOnClick)
+
+		btnsLayout = QHBoxLayout()
+		btnsLayout.addWidget(self.__joinGameBtn)
+		btnsLayout.addWidget(self.__createGameBtn)
+		btnsWgt = QWidget()
+		btnsWgt.setLayout(btnsLayout)
 
 		layout = QVBoxLayout()
 		layout.addWidget(self.__statusLbl)
 		layout.addWidget(self.__gamesWidget)
-		layout.addWidget(self.__chooseGameBtn)
+		layout.addWidget(btnsWgt)
 
 		self.setLayout(layout)
 		self.setWindowTitle("Lobby")
 		self.resize(500, 300)
 		self.show()
 
-	def __onUpdate(self, players, games):
+	def __onUpdateGamesList(self, players, games):
 		self.__statusLbl.setText("%s players currently online and %s games are open!" % (len(players), len(games)))
 
 		# only add new games
@@ -64,19 +78,19 @@ class LobbyDialog(QDialog):
 				self.__gamesWidget.addItem(text)
 	
 	def closeEvent(self, event):
-		self.__backend.removeLobbyCallback(self.__callback)
+		self.__backend.removeLobbyUpdateGamesCallback(self.__gamesListCb)
 
 	def __init__(self, backend):
 		from backend import Callback
 
 		self.__backend = backend
-		self.__callback = Callback()
-		self.__callback.onAction = lambda players, games: self.__onUpdate(players, games)
-		players, games = self.__backend.registerLobbyCallback(self.__callback)
+		self.__gamesListCb = Callback()
+		self.__gamesListCb.onAction = lambda players, games: self.__onUpdateGamesList(players, games)
+		players, games = self.__backend.registerLobbyUpdateGamesCallback(self.__gamesListCb)
 
 		super(LobbyDialog, self).__init__()
 		self.__setupGui()
-		self.__onUpdate(players, games)
+		self.__onUpdateGamesList(players, games)
 
 class PlayingFieldWidget(QWidget):
 	"""
