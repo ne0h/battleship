@@ -1,4 +1,4 @@
-import abc
+import abc, logging
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
@@ -28,7 +28,7 @@ class LobbyDialog(QDialog):
 		self.__interfaceEnabled(False)
 
 	def __joinGameCallback(self, success):
-		print("Game joined? " + str(success))
+		logging.info("Game joined? " + str(success))
 
 	def __createGameOnClick(self):
 		pass

@@ -1,3 +1,5 @@
+import logging
+
 from playingfield import *
 
 class ClientStatus(Enum):
@@ -82,14 +84,14 @@ class Backend:
 
 	def registerLobbyUpdateGamesCallback(self, callback):
 		self.__lobbyUpdateGamesCallbacks.append(callback)
-		print("Lobby callback added")
+		logging.info("Lobby callback added")
 		return self.__lobbyCurrentPlayers, self.__lobbyCurrentGames
 
 	def removeLobbyUpdateGamesCallback(self, callback):
 		for cb in self.__lobbyUpdateGamesCallbacks:
 			if cb is callback:
 				self.__lobbyUpdateGamesCallbacks.remove(callback)
-		print("Lobby observer removed")
+		logging.info("Lobby observer removed")
 
 	def lobbyUpdateGamesProgress(self, players, games):
 		self.__lobbyCurrentPlayers = players

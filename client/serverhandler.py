@@ -1,4 +1,4 @@
-import socket, time
+import logging, socket, time
 from threading import Thread
 
 from messageparser import *
@@ -135,7 +135,7 @@ class ServerHandler:
 		_, params = self.__messageParser.decode(msg)
 
 		time.sleep(5)
-		print("Join game")
+		logging.info("Join game")
 		self.__backend.joinGameResponse(False)
 
 	def joinGame(self, gameId):
