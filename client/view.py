@@ -1,4 +1,4 @@
-import abc
+import abc, logging
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
@@ -11,6 +11,112 @@ class ViewModel:
 		self.waitForShipPlacement = False
 		self.newShipBow = None
 
+class LobbyDialog(QDialog):
+
+	def __interfaceEnabled(self, value):
+		self.__gamesWidget.setEnabled(value)
+		self.__joinGameBtn.setEnabled(value)
+		self.__createGameIpt.setEnabled(value)
+		self.__createGameBtn.setEnabled(value)
+
+	def __joinGameOnClick(self):
+		from backend import Callback
+
+		gameId = self.__gamesWidget.currentItem().text().split(":")[0]
+		cb = Callback()
+		cb.onAction = lambda success: self.__joinGameCallback(success)
+		self.__backend.joinGame(gameId, cb)
+		self.__interfaceEnabled(False)
+
+	def __joinGameCallback(self, success):
+		logging.info("Game joined? " + str(success))
+		if success:
+			self.__backend.prepareGame()
+			self.close()
+		else:
+			self.__error("Failed to join game. Please choose another one.")
+			self.__interfaceEnabled(True)
+
+	def __createGameOnClick(self):
+		pass
+
+	def __error(self, message):
+		self.__errorBox.setText(message)
+
+	def __setupGui(self):
+		self.__statusLbl = QLabel()
+		self.__gamesWidget = QListWidget()
+		self.__gamesWidget.setSortingEnabled(True)
+		self.__errorBox = QLabel()
+		self.__errorBox.setStyleSheet("color: #b00")
+		self.__joinGameBtn = QPushButton("Join game")
+		self.__joinGameBtn.clicked.connect(self.__joinGameOnClick)
+
+		self.__createGameIpt = QLineEdit()
+		self.__createGameBtn = QPushButton("Create game")
+		self.__createGameBtn.clicked.connect(self.__createGameOnClick)
+
+		btnsLayout = QHBoxLayout()
+		btnsLayout.addWidget(self.__createGameIpt)
+		btnsLayout.addWidget(self.__createGameBtn)
+		btnsWgt = QWidget()
+		btnsWgt.setLayout(btnsLayout)
+
+		layout = QVBoxLayout()
+		layout.addWidget(self.__statusLbl)
+		layout.addWidget(self.__gamesWidget)
+		layout.addWidget(self.__errorBox)
+		layout.addWidget(self.__joinGameBtn)
+		layout.addWidget(btnsWgt)
+
+		self.setLayout(layout)
+		self.setWindowTitle("Lobby")
+		self.resize(500, 300)
+		self.show()
+
+	def __onUpdateGamesList(self, players, games):
+		self.__statusLbl.setText("%s players currently online and %s games are open!" % (len(players), len(games)))
+
+		# only add new games
+		for game in games:
+			found = -1
+			for i in range(0, self.__gamesWidget.count()):
+				# this validation is sufficient, because colons are not allowed as values in the protocol
+				if self.__gamesWidget.item(i).text().startswith("%s:" % (game.name)):
+					found = i
+					break;
+
+			text = game.name
+			if game.players[0] == "":
+				text = ": %s" % ("An unnamed player")
+			else:
+				text = "%s: %s" % (text, game.players[0])
+			if len(game.players) is 1:
+				text = "%s is waiting for an oppenent" % (text)
+			else:
+				text = "%s vs. %s" % (text, game.players[1])
+
+			# is there an update? if yes - update corresponding item
+			# if not - add the new item
+			if found is not -1:
+				self.__gamesWidget.item(i).text = text
+			else:
+				self.__gamesWidget.addItem(text)
+	
+	def closeEvent(self, event):
+		self.__backend.removeLobbyUpdateGamesCallback(self.__gamesListCb)
+
+	def __init__(self, backend):
+		from backend import Callback
+
+		self.__backend = backend
+		self.__gamesListCb = Callback()
+		self.__gamesListCb.onAction = lambda players, games: self.__onUpdateGamesList(players, games)
+		players, games = self.__backend.registerLobbyUpdateGamesCallback(self.__gamesListCb)
+
+		super(LobbyDialog, self).__init__()
+		self.__setupGui()
+		self.__onUpdateGamesList(players, games)
 
 class PlayingFieldWidget(QWidget):
 	"""
@@ -31,7 +137,7 @@ class PlayingFieldWidget(QWidget):
 		Paints the playing field when an event occurs.
 
 		Args:
-			event -- information about the event that occored
+			event -- information about the event that occured
 		"""
 
 		painter = QPainter()
@@ -152,10 +258,23 @@ class MainForm(QWidget):
 	def __startPlaceShip(self):
 		self.__viewModel.waitForShipPlacement = True
 
+	def __openLobby(self):
+		import sys
+		from backend import ClientStatus
+
+		if not self.__lobbyAlreadyOpen:
+			self.__lobbyAlreadyOpen = True
+			LobbyDialog(self.__backend).exec_()
+
+			# lobby closed, check current client status
+			if self.__backend.clientStatus is ClientStatus.PREPARATIONS:
+				self.__placeShipBtn.setEnabled(True)
+				self.__lobbyBtn.setEnabled(False)
+
 	def __updateClientStatus(self):
 		from backend import ClientStatus
 
-		status = self.__backend.getClientStatus()
+		status = self.__backend.clientStatus
 
 		if status is ClientStatus.NOGAMERUNNING:
 			self.__statusLbl.setText("No game running, please use the lobby to connect to a game.")
@@ -183,8 +302,12 @@ class MainForm(QWidget):
 		enemeysPlayingFieldBox.setLayout(enemiesPlayingFieldLayout)
 
 		# buttons
-		placeShipBtn = QPushButton("Place Ship")
-		placeShipBtn.clicked.connect(self.__startPlaceShip)
+		self.__placeShipBtn = QPushButton("Place Ship")
+		self.__placeShipBtn.clicked.connect(self.__startPlaceShip)
+		self.__placeShipBtn.setEnabled(False)
+
+		self.__lobbyBtn = QPushButton("Lobby")
+		self.__lobbyBtn.clicked.connect(self.__openLobby)
 
 		# status line
 		self.__statusLbl = QLabel()
@@ -206,17 +329,22 @@ class MainForm(QWidget):
 		layout.addWidget(self.__statusLbl,            0,        0,     5,      80)
 		layout.addWidget(ownPlayingFieldBox,         10,        0,    48,      38)
 		layout.addWidget(enemeysPlayingFieldBox,     10,       41,    48,      48)
-		layout.addWidget(placeShipBtn,              100,        0,     1,       1)
+		layout.addWidget(self.__placeShipBtn,       100,        1,     1,       1)
+		layout.addWidget(self.__lobbyBtn,           100,        0,     1,       1)
 
 		self.setLayout(layout)
 		self.setWindowTitle("Battleship++")
-		#self.resize(600, 550)
+		self.resize(1100, 600)
 		self.show()
+
+	def closeEvent(self, event):
+		self.__backend.close()
 
 	def __init__(self, backend, fieldLength):
 		self.__backend = backend
 		self.__viewModel = ViewModel()
 		self.__fieldLength = fieldLength
+		self.__lobbyAlreadyOpen = False
 
 		super(MainForm, self).__init__()
 		self.__setupGui()
