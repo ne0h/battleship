@@ -1,0 +1,34 @@
+@startuml
+title Battleship++ client basic structure
+skinparam componentStyle uml2
+
+() Server
+
+package "Controller" {
+	[Backend]
+	[ServerHandler]
+	[MessageParser]
+
+	[Backend] --> [View] : callback.onAction(result)
+	[Backend] <--> [ServerHandler] : communicateWithServer()
+	[ServerHandler] --> Server : sendMessages()
+	Server --> [ServerHandler] : sendReports()
+	[ServerHandler] --> [MessageParser] : encodeMessages()
+}
+
+package "Model" {
+	[Backend] --> [Playingfields] : storeData()
+}
+
+package "View" {
+	[View]
+
+	[View] --> [ViewModel] : storeViewData()
+	[View] --> [Backend] : passUserInput(params, callback)
+}
+
+package "ViewModel" {
+	[ViewModel]
+}
+
+@enduml
