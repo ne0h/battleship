@@ -43,7 +43,7 @@ class LobbyRequestHandler(socketserver.BaseRequestHandler):
                     # check if lobby is unique
                     if self.__add_lobby(msgparams['name']):
                         # success report
-                        report = self.__msgparser.encode('report', {'status': '27'})
+                        report = self.__msgparser.encode('report', {'status': '28'})
                     else:
                         # error report
                         report = self.__msgparser.encode('report', {'status': '37'})
