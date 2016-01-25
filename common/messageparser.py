@@ -1,3 +1,6 @@
+import struct
+from helpers import *
+
 class MessageParser:
 	"""
 	Commonly used parser to encode and decode communication messages.
@@ -12,14 +15,14 @@ class MessageParser:
 			params - a dictonary of parameters that will be encoded separately
 
 		Returns:
-			Returns the exadecimal encoded message size and the message itself as a utf-8 string.
+			Returns the hexadecimal encoded message size and the message itself as a utf-8 string.
 		"""
-		
+
 		result = "type:%s;" % (type)
 		for param, value in params.items():
 			result = "%s%s:%s;" % (result, param, value)
-
-		return ("%s" + result) % (str(hex(len(result)))[2:])
+		
+		return struct.pack('>H', len(result)) +  b(result)
 
 	def decode(self, message):
 		"""
@@ -32,11 +35,11 @@ class MessageParser:
 			Returns the type of the message and the parameters as a dictonary.
 		"""
 
-		size = int(message[:2], 16)
+		#size = struct.unpack('>h', message[:2])
 
 		messageType = None
 		params = {}
-		tuples = message[2:].split(";")
+		tuples = message.split(";")
 		for t in tuples:
 			if t is not "":
 				tokens = t.split(":")

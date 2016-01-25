@@ -10,11 +10,11 @@ class TestMessageParser(unittest.TestCase):
 		msg = MessageParser().encode("attack", {"coordinate_x": "5", "coordinate_y": "14"})
 
 		# order of parameters is not deterministic
-		self.assertTrue(msg == "2btype:attack;coordinate_y:14;coordinate_x:5;"
-			or "2btype:attack;coordinate_x:5;coordinate_y:14;")
+		self.assertTrue(msg == "type:attack;coordinate_y:14;coordinate_x:5;"
+			or "type:attack;coordinate_x:5;coordinate_y:14;")
 
 	def test_decoding(self):
-		messageType, params = MessageParser().decode("2Dtype:attack; coordinate_x:5; coordinate_y:14;")
+		messageType, params = MessageParser().decode("type:attack; coordinate_x:5; coordinate_y:14;")
 
 		self.assertEqual(messageType, "attack")
 		self.assertEqual(len(params), 2)
