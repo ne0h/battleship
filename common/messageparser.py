@@ -1,4 +1,5 @@
 import struct
+import sys
 from helpers import *
 
 class MessageParser:
@@ -21,8 +22,8 @@ class MessageParser:
 		result = "type:%s;" % (type)
 		for param, value in params.items():
 			result = "%s%s:%s;" % (result, param, value)
-		
-		return struct.pack('>H', len(result)) +  b(result)
+
+		return struct.pack('>H', sys.getsizeof(result)) +  b(result)
 
 	def decode(self, message):
 		"""
