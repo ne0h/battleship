@@ -35,11 +35,6 @@ class PlayerInformation:
 		self.id = id
 		self.nickname = nickname
 
-class Lobby:
-
-	def __init__(self):
-		pass
-
 class Backend:
 	"""
 	Game client backend that does all kind of controller stuff.
@@ -111,9 +106,23 @@ class Backend:
 			cb.onAction(success)
 		self.__joinGameCallbacks = []
 
+	def createGame(self, gameId, callback):
+		self.__createGameCallbacks.append(callback)
+		self.__serverHandler.createGame(gameId)
+
+	def createGameResponse(self, success):
+
+		# validate current client status
+		if self.clientStatus is not ClientStatus.NOGAMERUNNING:
+			success = False
+
+		for cb in self.__createGameCallbacks:
+			cb.onAction(success)
+		self.__createGameCallbacks = []
+
 	def prepareGame(self):
 		self.clientStatus = ClientStatus.PREPARATIONS
-		logging.info("ClientStatus changed: Starting game preparations")
+		logging.info("ClientStatus changed: Starting game preparations...")
 
 	def close(self):
 		self.__serverHandler.close()
@@ -129,7 +138,7 @@ class Backend:
 		self.__lobbyCurrentPlayers = []
 		self.__lobbyCurrentGames = []
 		self.__lobbyUpdateGamesCallbacks = []
-
 		self.__joinGameCallbacks = []
+		self.__createGameCallbacks = []
 
-		self.__serverHandler = ServerHandler(self, "localhost", 11000)
+		self.__serverHandler = ServerHandler(self, "localhost", 44444)

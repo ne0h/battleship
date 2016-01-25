@@ -1,38 +1,36 @@
-import logging, socket, time
+import logging, socket, sys
 from threading import Thread
 
 from messageparser import *
 
-"""
-class ReportCodes(Enum):
-	"11" = "Begin_Turn"
-	"13" = "Update_Own_Field"
-	"14" = "Update_Enemy_Field"
-	"15" = "Chat_Broadcast"
-	"16" = "Update_Lobby"
-	"17" = "Game_Ended"
-	"18" = "Begin_Ship_Placing"
-	"19" = "Game_Aborted"
-	"21" = "Successful_Move"
-	"22" = "Successful_Attack"
-	"23" = "Surrender_Accepted"
-	"24" = "Successful_Special_Attack"
-	"27" = "Successful_Game_Join"
-	"28" = "Successful_Game_Create"
-	"29" = "Successful_Ship_Placement"
-	"31" = "Illegal_Move"
-	"32" = "Illegal_Special_Attack"
-	"33" = "Illegal_Field"
-	"34" = "Illegal_Ship_Index"
-	"37" = "Illegal_Game_Definition"
-	"38" = "Illegal_Ship_Placement"
-	"39" = "Illegal_Attack"
-	"40" = "Message_Not_Recognized"
-	"41" = "Not_Your_Turn"
-	"43" = "Not_In_Any_Game"
-	"47" = "Game_Join_Denied"
-	"48" = "Game_Preparation_Ended"
-"""
+reportCodes = {
+	11: "Begin_Turn",
+	13: "Update_Own_Field",
+	14: "Update_Enemy_Field",
+	15: "Chat_Broadcast",
+	16: "Update_Lobby",
+	17: "Game_Ended",
+	18: "Begin_Ship_Placing",
+	19: "Game_Aborted",
+	21: "Successful_Move",
+	22: "Successful_Attack",
+	23: "Surrender_Accepted",
+	24: "Successful_Special_Attack",
+	27: "Successful_Game_Join",
+	28: "Successful_Game_Create",
+	29: "Successful_Ship_Placement",
+	31: "Illegal_Move",
+	32: "Illegal_Special_Attack",
+	33: "Illegal_Field",
+	34: "Illegal_Ship_Index",
+	37: "Illegal_Game_Definition",
+	38: "Illegal_Ship_Placement",
+	39: "Illegal_Attack",
+	40: "Message_Not_Recognized",
+	41: "Not_Your_Turn",
+	43: "Not_In_Any_Game",
+	47: "Game_Join_Denied",
+	48: "Game_Preparation_Ended"}
 
 class ServerHandler:
 
@@ -129,38 +127,38 @@ class ServerHandler:
 
 		self.__backend.lobbyUpdateGamesProgress(players, games)
 
-	# method is only temporary to test joinGame
-	def __joinGameLoop(self):
-		msg = "00type:report;status:27;"
-		_, params = self.__messageParser.decode(msg)
-
-		time.sleep(5)
-		self.__backend.joinGameResponse(False)
-
 	def joinGame(self, gameId):
 		self.__sendMessage("game_join", {"name": {gameId}})
-		Thread(target=self.__joinGameLoop).start()
+
+	def createGame(self, gameId):
+		self.__sendMessage("game_create", {"name": gameId})
 
 	def __receiveLoop(self):
-
-		msg = "00type:report;status:16;number_of_clients:5;number_of_games:2;" \
-				+ "game_name_0:Game One;game_name_1:Game Two;" \
-				+ "game_players_count_0:1;game_players_count_1:2;"\
-				+ "game_player_0_0:aaaa;game_player_1_0:bbbb;game_player_1_1:cccc;" \
-				+ "player_name_0:Hans;player_identifier_0:cccc;" \
-				+ "player_name_1:;player_identifier_1:aaaa;" \
-				+ "player_name_2:Fritz Dieter;player_identifier_2:dddd;" \
-				+ "player_name_3:Ludwig;player_identifier_3:bbbb;" \
-				+ "player_name_4:Erhard;player_identifier_4:eeee;"
-
-		_, params = self.__messageParser.decode(msg)
-
 		while not self.__stopReceiveLoop:
-			self.__setUpdateLobby(params)
-			time.sleep(1)
+
+			# read the first to byte to receive the byte size of the message
+			size = self.__sock.recv(2)
+			if not size:
+				continue
+			else:
+				msg = self.__sock.recv(size[0] * 256 + size[1]).decode()
+				messageType, params = self.__messageParser.decode(msg)
+
+				# validate that the status code exists
+				status = int(params["status"])
+				if status in reportCodes:
+					logging.debug("%s received: %s" % (messageType, reportCodes[status]))
+					if status is 28:
+						self.__backend.createGameResponse(True)
+					elif status is 37:
+						self.__backend.createGameResponse(False)
+				else:
+					logging.debug("%s received with unknown status code." % (messageType))
 
 	def __sendMessage(self, type, params):
 		msg = self.__messageParser.encode(type, params)
+		logging.debug("Sending message: %s"  % (msg))
+		self.__sock.send(msg)
 
 	def close(self):
 		self.__stopReceiveLoop = True
@@ -169,9 +167,9 @@ class ServerHandler:
 		self.__backend = backend
 		self.__messageParser = MessageParser()
 
+		self.__sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+		self.__sock.connect((host, port))
+
 		self.__stopReceiveLoop = False
 		self.__receiveLoopThread = Thread(target=self.__receiveLoop)
 		self.__receiveLoopThread.start()
-
-		#self.__sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-		#self.__sock.connect((host, port))

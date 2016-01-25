@@ -38,7 +38,23 @@ class LobbyDialog(QDialog):
 			self.__interfaceEnabled(True)
 
 	def __createGameOnClick(self):
-		pass
+		from backend import Callback
+		# TODO validate ipt length
+		gameId = self.__createGameIpt.text()
+		logging.info("Creating game: %s", (gameId))
+		cb = Callback()
+		cb.onAction = lambda success: self.__createGameCallback(success)
+		self.__backend.createGame(gameId, cb)
+		self.__interfaceEnabled(False)
+
+	def __createGameCallback(self, success):
+		logging.info("Creation of game successful: %s", (success))
+		if success:
+			self.__backend.prepareGame()
+			self.close()
+		else:
+			self.__error("Failed create join game.")
+			self.__interfaceEnabled(True)
 
 	def __error(self, message):
 		self.__errorBox.setText(message)
