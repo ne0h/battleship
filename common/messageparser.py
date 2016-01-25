@@ -40,6 +40,7 @@ class MessageParser:
 
 		messageType = None
 		params = {}
+		print(message)
 		tuples = message.split(";")
 		for t in tuples:
 			if t is not "":

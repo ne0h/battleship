@@ -1,6 +1,12 @@
-import socketserver
+import sys
 
-host = '127.0.0.1'
+sys.path.append("../common")
+
+import socketserver
+import time
+from messageparser import *
+
+host = '0.0.0.0'
 port = 44444
 buffsize = 1024
 
@@ -9,7 +15,10 @@ class TestRequestHandler(socketserver.BaseRequestHandler):
         self.data = self.request.recv(1024).strip()
         print(self.client_address[0])
         print(self.data)
-        self.request.sendall(self.data)
+        #self.request.sendall(self.data)
+        #while (True):
+        self.request.sendall(MessageParser().encode("report", {"status": "28"}))
+        #time.sleep(2)
 
 class ForkingTCPServer(socketserver.ForkingMixIn, socketserver.TCPServer):
     pass
