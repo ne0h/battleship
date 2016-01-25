@@ -135,7 +135,6 @@ class ServerHandler:
 		_, params = self.__messageParser.decode(msg)
 
 		time.sleep(5)
-		logging.info("Join game")
 		self.__backend.joinGameResponse(False)
 
 	def joinGame(self, gameId):
@@ -156,18 +155,23 @@ class ServerHandler:
 
 		_, params = self.__messageParser.decode(msg)
 
-		while True:
+		while not self.__stopReceiveLoop:
 			self.__setUpdateLobby(params)
 			time.sleep(1)
 
 	def __sendMessage(self, type, params):
 		msg = self.__messageParser.encode(type, params)
 
+	def close(self):
+		self.__stopReceiveLoop = True
+
 	def __init__(self, backend, host, port):
 		self.__backend = backend
 		self.__messageParser = MessageParser()
 
-		Thread(target=self.__receiveLoop).start()
+		self.__stopReceiveLoop = False
+		self.__receiveLoopThread = Thread(target=self.__receiveLoop)
+		self.__receiveLoopThread.start()
 
 		#self.__sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		#self.__sock.connect((host, port))

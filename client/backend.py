@@ -79,9 +79,6 @@ class Backend:
 		
 		return self.__ownPlayingField.placeShip(bow, rear)
 
-	def getClientStatus(self):
-		return self.__clientStatus
-
 	def registerLobbyUpdateGamesCallback(self, callback):
 		self.__lobbyUpdateGamesCallbacks.append(callback)
 		logging.info("Lobby callback added")
@@ -105,16 +102,28 @@ class Backend:
 		self.__serverHandler.joinGame(gameId)
 
 	def joinGameResponse(self, success):
+
+		# validate current client status
+		if self.clientStatus is not ClientStatus.NOGAMERUNNING:
+			success = False
+
 		for cb in self.__joinGameCallbacks:
 			cb.onAction(success)
 		self.__joinGameCallbacks = []
+
+	def prepareGame(self):
+		self.clientStatus = ClientStatus.PREPARATIONS
+		logging.info("ClientStatus changed: Starting game preparations")
+
+	def close(self):
+		self.__serverHandler.close()
 
 	def __init__(self, length):
 		from serverhandler import ServerHandler
 
 		self.__ownPlayingField = PlayingField(length)
 		self.__enemeysPlayingField = PlayingField(length)
-		self.__clientStatus = ClientStatus.NOGAMERUNNING
+		self.clientStatus = ClientStatus.NOGAMERUNNING
 
 		# callback stuff
 		self.__lobbyCurrentPlayers = []

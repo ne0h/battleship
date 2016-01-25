@@ -13,7 +13,7 @@ if __name__ == '__main__':
 	Starts the game client.
 	"""
 
-	logging.basicConfig(format="%(asctime)s - %(name)s - %(levelname)s - %(message)s", level=logging.DEBUG)
+	logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s", level=logging.DEBUG)
 	logging.info("Starting client...")
 
 	fieldLength = 16

@@ -16,6 +16,7 @@ class LobbyDialog(QDialog):
 	def __interfaceEnabled(self, value):
 		self.__gamesWidget.setEnabled(value)
 		self.__joinGameBtn.setEnabled(value)
+		self.__createGameIpt.setEnabled(value)
 		self.__createGameBtn.setEnabled(value)
 
 	def __joinGameOnClick(self):
@@ -29,21 +30,34 @@ class LobbyDialog(QDialog):
 
 	def __joinGameCallback(self, success):
 		logging.info("Game joined? " + str(success))
+		if success:
+			self.__backend.prepareGame()
+			self.close()
+		else:
+			self.__error("Failed to join game. Please choose another one.")
+			self.__interfaceEnabled(True)
 
 	def __createGameOnClick(self):
 		pass
+
+	def __error(self, message):
+		self.__errorBox.setText(message)
 
 	def __setupGui(self):
 		self.__statusLbl = QLabel()
 		self.__gamesWidget = QListWidget()
 		self.__gamesWidget.setSortingEnabled(True)
+		self.__errorBox = QLabel()
+		self.__errorBox.setStyleSheet("color: #b00")
 		self.__joinGameBtn = QPushButton("Join game")
 		self.__joinGameBtn.clicked.connect(self.__joinGameOnClick)
+
+		self.__createGameIpt = QLineEdit()
 		self.__createGameBtn = QPushButton("Create game")
 		self.__createGameBtn.clicked.connect(self.__createGameOnClick)
 
 		btnsLayout = QHBoxLayout()
-		btnsLayout.addWidget(self.__joinGameBtn)
+		btnsLayout.addWidget(self.__createGameIpt)
 		btnsLayout.addWidget(self.__createGameBtn)
 		btnsWgt = QWidget()
 		btnsWgt.setLayout(btnsLayout)
@@ -51,6 +65,8 @@ class LobbyDialog(QDialog):
 		layout = QVBoxLayout()
 		layout.addWidget(self.__statusLbl)
 		layout.addWidget(self.__gamesWidget)
+		layout.addWidget(self.__errorBox)
+		layout.addWidget(self.__joinGameBtn)
 		layout.addWidget(btnsWgt)
 
 		self.setLayout(layout)
@@ -244,15 +260,21 @@ class MainForm(QWidget):
 
 	def __openLobby(self):
 		import sys
+		from backend import ClientStatus
 
 		if not self.__lobbyAlreadyOpen:
 			self.__lobbyAlreadyOpen = True
 			LobbyDialog(self.__backend).exec_()
 
+			# lobby closed, check current client status
+			if self.__backend.clientStatus is ClientStatus.PREPARATIONS:
+				self.__placeShipBtn.setEnabled(True)
+				self.__lobbyBtn.setEnabled(False)
+
 	def __updateClientStatus(self):
 		from backend import ClientStatus
 
-		status = self.__backend.getClientStatus()
+		status = self.__backend.clientStatus
 
 		if status is ClientStatus.NOGAMERUNNING:
 			self.__statusLbl.setText("No game running, please use the lobby to connect to a game.")
@@ -280,11 +302,12 @@ class MainForm(QWidget):
 		enemeysPlayingFieldBox.setLayout(enemiesPlayingFieldLayout)
 
 		# buttons
-		placeShipBtn = QPushButton("Place Ship")
-		placeShipBtn.clicked.connect(self.__startPlaceShip)
+		self.__placeShipBtn = QPushButton("Place Ship")
+		self.__placeShipBtn.clicked.connect(self.__startPlaceShip)
+		self.__placeShipBtn.setEnabled(False)
 
-		lobbyBtn = QPushButton("Lobby")
-		lobbyBtn.clicked.connect(self.__openLobby)
+		self.__lobbyBtn = QPushButton("Lobby")
+		self.__lobbyBtn.clicked.connect(self.__openLobby)
 
 		# status line
 		self.__statusLbl = QLabel()
@@ -306,13 +329,16 @@ class MainForm(QWidget):
 		layout.addWidget(self.__statusLbl,            0,        0,     5,      80)
 		layout.addWidget(ownPlayingFieldBox,         10,        0,    48,      38)
 		layout.addWidget(enemeysPlayingFieldBox,     10,       41,    48,      48)
-		layout.addWidget(placeShipBtn,              100,        1,     1,       1)
-		layout.addWidget(lobbyBtn,                  100,        0,     1,       1)
+		layout.addWidget(self.__placeShipBtn,       100,        1,     1,       1)
+		layout.addWidget(self.__lobbyBtn,           100,        0,     1,       1)
 
 		self.setLayout(layout)
 		self.setWindowTitle("Battleship++")
 		self.resize(1100, 600)
 		self.show()
+
+	def closeEvent(self, event):
+		self.__backend.close()
 
 	def __init__(self, backend, fieldLength):
 		self.__backend = backend
