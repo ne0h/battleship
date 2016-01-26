@@ -6,6 +6,7 @@ class ClientStatus(Enum):
 
 	NOGAMERUNNING = "nogamerunning"
 	PREPARATIONS = "preparations"
+	WAITINGFOROPPONENT = "waitingforopponent"
 	OWNTURN = "ownturn"
 	OPPONENTSTURN = "oppenentsturn"
 
@@ -69,10 +70,27 @@ class Backend:
 			rear -- address of the rear
 
 		Returns:
-			The ship or None if there have been any errors.
+			True if the user has to place more ships and False of the user successfully placed all his ships.
 		"""
-		
-		return self.__ownPlayingField.placeShip(bow, rear)
+
+		moreShips = self.__ownPlayingField.placeShip(bow, rear)
+		if not moreShips:
+			self.clientStatus = ClientStatus.WAITINGFOROPPONENT
+			self.clientStatusUpdates()
+
+			# TODO a bug is hiding here
+			# TODO send shiplist to server
+
+		return moreShips
+
+	def registerClientStatusCallback(self, callback):
+		self.__clientStatusCallbacks.append(callback)
+		logging.info("Client status callback added")
+		return self.clientStatus
+
+	def clientStatusUpdates(self):
+		for callback in self.__clientStatusCallbacks:
+			callback.onAction(self.clientStatus)
 
 	def registerLobbyUpdateGamesCallback(self, callback):
 		self.__lobbyUpdateGamesCallbacks.append(callback)
@@ -119,6 +137,7 @@ class Backend:
 		for cb in self.__createGameCallbacks:
 			cb.onAction(success)
 		self.__createGameCallbacks = []
+		self.clientStatusUpdates()
 
 	def prepareGame(self):
 		self.clientStatus = ClientStatus.PREPARATIONS
@@ -135,6 +154,7 @@ class Backend:
 		self.clientStatus = ClientStatus.NOGAMERUNNING
 
 		# callback stuff
+		self.__clientStatusCallbacks = []
 		self.__lobbyCurrentPlayers = []
 		self.__lobbyCurrentGames = []
 		self.__lobbyUpdateGamesCallbacks = []

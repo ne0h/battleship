@@ -100,54 +100,6 @@ class Ship:
 		for i in range(1, len(self.parts) - 1):
 			self.middles.append(self.parts[i])
 
-class Carrier(Ship):
-	"""
-	A Carrier.
-
-	Args:
-		bow -- field where the ship starts
-		rear -- field where the ship ends
-	"""
-
-	def __init__(self, bow, rear):
-		Ship.__init__(self, bow, rear)
-
-class Battleship(Ship):
-	"""
-	A battleship.
-
-	Args:
-		bow -- field where the ship starts
-		rear -- field where the ship ends
-	"""
-
-	def __init__(self, bow, rear):
-		Ship.__init__(self, bow, rear)
-
-class Cruiser(Ship):
-	"""
-	A cruiser.
-
-	Args:
-		bow -- field where the ship starts
-		rear -- field where the ship ends
-	"""
-
-	def __init__(self, bow, rear):
-		Ship.__init__(self, bow, rear)
-
-class Destroyer(Ship):
-	"""
-	A destroyer.
-
-	Args:
-		bow -- field where the ship starts
-		rear -- field where the ship ends
-	"""
-
-	def __init__(self, bow, rear):
-		Ship.__init__(self, bow, rear)
-
 class ShipList:
 	"""
 	Manages all ships on the playing field.
@@ -205,6 +157,19 @@ class ShipList:
 
 		return result
 
+	def moreShipsLeftToPlace(self):
+		"""
+		Checks if the user has to place more ships.
+
+		Returns:
+			Returns True if all ships have been placed or False if not.
+		"""
+
+		return not (self.__maxCarrierCount is len(self.__carriers)
+			and self.__maxBattleshipCount is len(self.__battleships)
+			and self.__maxCruiserCount is len(self.__cruisers)
+			and self.__maxDestroyerCount is len(self.__destroyers))
+
 	def add(self, bow, rear):
 		"""
 		Adds a new Ship to the playing field. Validates if the maximum count of this kind of ship is reached.
@@ -230,14 +195,7 @@ class ShipList:
 			return None
 
 		# build ship
-		if length is 5:
-			ship = Carrier(bow, rear)
-		elif length is 4:
-			ship = Battleship(bow, rear)
-		elif length is 3:
-			ship = Cruiser(bow, rear)
-		else:
-			ship = Destroyer(bow, rear)
+		ship = Ship(bow, rear)
 		
 		# check for collisions with previously placed ships
 		if not self.__checkForCollisionWithOtherShips(ship):
@@ -261,7 +219,7 @@ class ShipList:
 		else:
 			return None
 
-		return ship
+		return self.moreShipsLeftToPlace()
 
 	def __init__(self, fieldLength, maxCarrierCount=1, maxBattleshipCount=2, maxCruiserCount=3, maxDestroyerCount=4):
 		self.__fieldLength = fieldLength

@@ -226,16 +226,18 @@ class OwnPlayingFieldWidget(PlayingFieldWidget):
 		"""
 
 		fieldAddress = self._mapClickToField(mouseEvent)
-		print("Click event at own field: %s" % (fieldAddress.toString()))
+		logging.debug("Click event at own field: %s" % (fieldAddress.toString()))
 
 		if self._viewModel.waitForShipPlacement:
 			if self._viewModel.newShipBow is None:
 				self._viewModel.newShipBow = fieldAddress
 			else:
-				ship = self._backend.placeShip(fieldAddress, self._viewModel.newShipBow)
+				moreShips = self._backend.placeShip(fieldAddress, self._viewModel.newShipBow)
 
 				self.repaint()
-				self._viewModel.waitForShipPlacement = False
+
+				if not moreShips:
+					self._viewModel.waitForShipPlacement = True
 				self._viewModel.newShipBow = None
 
 	def _getShips(self):
@@ -287,15 +289,15 @@ class MainForm(QWidget):
 				self.__placeShipBtn.setEnabled(True)
 				self.__lobbyBtn.setEnabled(False)
 
-	def __updateClientStatus(self):
+	def __onUpdateClientStatus(self, status):
 		from backend import ClientStatus
-
-		status = self.__backend.clientStatus
 
 		if status is ClientStatus.NOGAMERUNNING:
 			self.__statusLbl.setText("No game running, please use the lobby to connect to a game.")
 		elif status is ClientStatus.PREPARATIONS:
 			self.__statusLbl.setText("Please place your ships.")
+		elif status is ClientStatus.WAITINGFOROPPONENT:
+			self.__statusLbl.setText("Placement of ships successful. Waiting for opponent now.")
 		elif status is ClientStatus.OWNTURN:
 			self.__status.setText("It is your turn.")
 		elif status is ClientStatus.OPPONENTSTURN:
@@ -318,7 +320,7 @@ class MainForm(QWidget):
 		enemeysPlayingFieldBox.setLayout(enemiesPlayingFieldLayout)
 
 		# buttons
-		self.__placeShipBtn = QPushButton("Place Ship")
+		self.__placeShipBtn = QPushButton("Place Ships")
 		self.__placeShipBtn.clicked.connect(self.__startPlaceShip)
 		self.__placeShipBtn.setEnabled(False)
 
@@ -328,7 +330,6 @@ class MainForm(QWidget):
 		# status line
 		self.__statusLbl = QLabel()
 		self.__statusLbl.setStyleSheet("color: #b00")
-		self.__updateClientStatus()
 
 		"""
 		  column------->
@@ -357,6 +358,8 @@ class MainForm(QWidget):
 		self.__backend.close()
 
 	def __init__(self, backend, fieldLength):
+		from backend import Callback
+
 		self.__backend = backend
 		self.__viewModel = ViewModel()
 		self.__fieldLength = fieldLength
@@ -364,3 +367,7 @@ class MainForm(QWidget):
 
 		super(MainForm, self).__init__()
 		self.__setupGui()
+
+		cb = Callback()
+		cb.onAction = lambda clientStatus: self.__onUpdateClientStatus(clientStatus)
+		self.__onUpdateClientStatus(self.__backend.registerClientStatusCallback(cb))
