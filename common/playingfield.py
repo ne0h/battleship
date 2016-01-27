@@ -221,8 +221,6 @@ class ShipList:
 		elif length is 2 and len(self.__destroyers) < self.__maxDestroyerCount:
 			self.__destroyers.append(ship)
 			logging.info("Added a destroyer. Destroyer count is now %s" % (len(self.__destroyers)))
-		else:
-			return None
 
 		return self.moreShipsLeftToPlace()
 
