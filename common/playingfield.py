@@ -1,3 +1,4 @@
+import logging
 from enum import Enum
 
 class Orientation(Enum):
@@ -210,12 +211,16 @@ class ShipList:
 		# all checks done - add ship to specific list
 		if length is 5 and len(self.__carriers) < self.__maxCarrierCount:
 			self.__carriers.append(ship)
+			logging.info("Added a carrier. Carrier count is now %s" % (len(self.__carriers)))
 		elif length is 4 and len(self.__battleships) < self.__maxBattleshipCount:
 			self.__battleships.append(ship)
+			logging.info("Added a battleship. battleship count is now %s" % (len(self.__battleships)))
 		elif length is 3 and len(self.__cruisers) < self.__maxCruiserCount:
 			self.__cruisers.append(ship)
+			logging.info("Added a cruiser. Cruiser count is now %s" % (len(self.__cruisers)))
 		elif length is 2 and len(self.__destroyers) < self.__maxDestroyerCount:
 			self.__destroyers.append(ship)
+			logging.info("Added a destroyer. Destroyer count is now %s" % (len(self.__destroyers)))
 		else:
 			return None
 

@@ -133,6 +133,9 @@ class ServerHandler:
 	def createGame(self, gameId):
 		self.__sendMessage("game_create", {"name": gameId})
 
+	def leaveGame(self):
+		self.__sendMessage("game_abort", {})
+
 	def __receiveLoop(self):
 		while not self.__stopReceiveLoop:
 
@@ -148,7 +151,9 @@ class ServerHandler:
 				status = int(params["status"])
 				if status in reportCodes:
 					logging.debug("%s received: %s" % (messageType, reportCodes[status]))
-					if status is 28:
+					if status is 19:
+						self.__backend.leaveGameResponse()
+					elif status is 28:
 						self.__backend.createGameResponse(True)
 					elif status is 37:
 						self.__backend.createGameResponse(False)

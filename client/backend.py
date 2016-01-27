@@ -85,7 +85,7 @@ class Backend:
 
 	def registerClientStatusCallback(self, callback):
 		self.__clientStatusCallbacks.append(callback)
-		logging.info("Client status callback added")
+		logging.debug("Client status callback added")
 		return self.clientStatus
 
 	def clientStatusUpdates(self):
@@ -94,14 +94,14 @@ class Backend:
 
 	def registerLobbyUpdateGamesCallback(self, callback):
 		self.__lobbyUpdateGamesCallbacks.append(callback)
-		logging.info("Lobby callback added")
+		logging.debug("Lobby callback added")
 		return self.__lobbyCurrentPlayers, self.__lobbyCurrentGames
 
 	def removeLobbyUpdateGamesCallback(self, callback):
 		for cb in self.__lobbyUpdateGamesCallbacks:
 			if cb is callback:
 				self.__lobbyUpdateGamesCallbacks.remove(callback)
-		logging.info("Lobby observer removed")
+		logging.debug("Lobby observer removed")
 
 	def lobbyUpdateGamesProgress(self, players, games):
 		self.__lobbyCurrentPlayers = players
@@ -143,6 +143,16 @@ class Backend:
 		self.clientStatus = ClientStatus.PREPARATIONS
 		logging.info("ClientStatus changed: Starting game preparations...")
 
+	def leaveGame(self, callback):
+		self.__leaveGameCallbacks.append(callback)
+		self.__serverHandler.leaveGame()
+
+	def leaveGameResponse(self):
+		for cb in self.__leaveGameCallbacks:
+			cb.onAction()
+		self.__leaveGameCallbacks = []
+		self.clientStatus = ClientStatus.NOGAMERUNNING
+
 	def close(self):
 		self.__serverHandler.close()
 
@@ -160,5 +170,6 @@ class Backend:
 		self.__lobbyUpdateGamesCallbacks = []
 		self.__joinGameCallbacks = []
 		self.__createGameCallbacks = []
+		self.__leaveGameCallbacks = []
 
 		self.__serverHandler = ServerHandler(self, "localhost", 44444)

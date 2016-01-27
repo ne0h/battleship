@@ -24,11 +24,11 @@ class LobbyDialog(QDialog):
 
 		gameId = self.__gamesWidget.currentItem().text().split(":")[0]
 		cb = Callback()
-		cb.onAction = lambda success: self.__joinGameCallback(success)
+		cb.onAction = lambda success: self.__joinGameCalled(success)
 		self.__backend.joinGame(gameId, cb)
 		self.__interfaceEnabled(False)
 
-	def __joinGameCallback(self, success):
+	def __joinGameCalled(self, success):
 		logging.info("Game joined? " + str(success))
 		if success:
 			self.__backend.prepareGame()
@@ -43,11 +43,11 @@ class LobbyDialog(QDialog):
 		gameId = self.__createGameIpt.text()
 		logging.info("Creating game: %s", (gameId))
 		cb = Callback()
-		cb.onAction = lambda success: self.__createGameCallback(success)
+		cb.onAction = lambda success: self.__createGameCalled(success)
 		self.__backend.createGame(gameId, cb)
 		self.__interfaceEnabled(False)
 
-	def __createGameCallback(self, success):
+	def __createGameCalled(self, success):
 		logging.info("Creation of game successful: %s", (success))
 		if success:
 			self.__backend.prepareGame()
@@ -273,6 +273,9 @@ class MainForm(QWidget):
 	The main form that shows the complete user interface.
 	"""
 
+	def __showMessageBox(self, title, text):
+		QMessageBox.about(self, title, text)
+
 	def __startPlaceShip(self):
 		self.__viewModel.waitForShipPlacement = True
 
@@ -296,12 +299,34 @@ class MainForm(QWidget):
 			self.__statusLbl.setText("No game running, please use the lobby to connect to a game.")
 		elif status is ClientStatus.PREPARATIONS:
 			self.__statusLbl.setText("Please place your ships.")
+			self.__leaveGameBtn.setEnabled(True)
 		elif status is ClientStatus.WAITINGFOROPPONENT:
 			self.__statusLbl.setText("Placement of ships successful. Waiting for opponent now.")
+			self.__placeShipBtn.setEnabled(False)
+
+			# TODO waitforgamestartcallback
+
 		elif status is ClientStatus.OWNTURN:
 			self.__status.setText("It is your turn.")
 		elif status is ClientStatus.OPPONENTSTURN:
 			self.__statusLbl.setText("Please wait for your opponent.")
+
+	def __leaveGameCalled(self):
+		logging.info("Game aborted. Preparing client for a new game.")
+		self.__showMessageBox("Game aborted", "Game aborted. You can now join or create another one.")
+		self.__resetClient()
+
+	def __leaveGame(self):
+		from backend import Callback
+
+		cb = Callback()
+		cb.onAction = lambda: self.__leaveGameCalled()
+		self.__backend.leaveGame(cb)
+
+	def __resetClient(self):
+		self.__lobbyBtn.setEnabled(True)
+		self.__placeShipBtn.setEnabled(False)
+		self.__leaveGameBtn.setEnabled(False)
 
 	def __setupGui(self):
 
@@ -327,6 +352,10 @@ class MainForm(QWidget):
 		self.__lobbyBtn = QPushButton("Lobby")
 		self.__lobbyBtn.clicked.connect(self.__openLobby)
 
+		self.__leaveGameBtn = QPushButton("Leave Game")
+		self.__leaveGameBtn.clicked.connect(self.__leaveGame)
+		self.__leaveGameBtn.setEnabled(False)
+
 		# status line
 		self.__statusLbl = QLabel()
 		self.__statusLbl.setStyleSheet("color: #b00")
@@ -348,6 +377,7 @@ class MainForm(QWidget):
 		layout.addWidget(enemeysPlayingFieldBox,     10,       41,    48,      48)
 		layout.addWidget(self.__placeShipBtn,       100,        1,     1,       1)
 		layout.addWidget(self.__lobbyBtn,           100,        0,     1,       1)
+		layout.addWidget(self.__leaveGameBtn,       100,        2,     1,       1)
 
 		self.setLayout(layout)
 		self.setWindowTitle("Battleship++")
