@@ -140,9 +140,8 @@ class PlayingFieldWidget(QWidget):
 	"""
 
 	def _setupGui(self):
-		self.setMaximumWidth(self._fieldSize  * 17 + 1)
-		self.setMaximumHeight(self._fieldSize * 17 + 1)
-		self.setStyleSheet("border: 1px solid red")
+		self.setMaximumWidth(self._fieldSize  * 18 + 1)
+		self.setMaximumHeight(self._fieldSize * 18 + 1)
 
 	@abc.abstractmethod
 	def _getShips(self):
@@ -193,15 +192,23 @@ class PlayingFieldWidget(QWidget):
 
 		for i in range(1, self._fieldLength + 1):
 			box = QRectF(i*self._fieldSize, 0, self._fieldSize, self._fieldSize)
+			painter.drawText(box, Qt.AlignCenter, chr(64 + i))
+
+		for i in range(1, self._fieldLength + 1):
+			box = QRectF(i*self._fieldSize, 17*self._fieldSize, self._fieldSize, self._fieldSize)
+			painter.drawText(box, Qt.AlignCenter, chr(64 + i))
+
+		for i in range(1, self._fieldLength + 1):
+			box = QRectF(0, (17-i)*self._fieldSize, self._fieldSize, self._fieldSize)
 			painter.drawText(box, Qt.AlignCenter, str(i))
 
 		for i in range(1, self._fieldLength + 1):
-			box = QRectF(0, i*self._fieldSize, self._fieldSize, self._fieldSize)
-			painter.drawText(box, Qt.AlignCenter, chr(64 + i))
+			box = QRectF(17*self._fieldSize, (17-i)*self._fieldSize, self._fieldSize, self._fieldSize)
+			painter.drawText(box, Qt.AlignCenter, str(i))
 
 	def _mapClickToField(self, mouseEvent):
 		x, y  = mouseEvent.x() // self._fieldSize, mouseEvent.y() // self._fieldSize		
-		return Field(x - 1, y - 1)
+		return Field(x - 1, 16 - y)
 
 	def __init__(self, backend, viewModel, fieldLength, fieldSize=25):
 		self._viewModel = viewModel
@@ -260,7 +267,7 @@ class EnemeysPlayingFieldWidget(PlayingFieldWidget):
 		"""
 
 		field = self._mapClickToField(mouseEvent)
-		print("Click event at enemey's field: %s" % (field.toString()))
+		logging.debug("Click event at enemey's field: %s" % (field.toString()))
 
 	def _getShips(self):
 		return self._backend.getEnemeysShips()
@@ -371,6 +378,7 @@ class MainForm(QWidget):
 
 													row		column	height 	width
 		"""
+		"""
 		layout = QGridLayout()
 		layout.addWidget(self.__statusLbl,            0,        0,     5,      80)
 		layout.addWidget(ownPlayingFieldBox,         10,        0,    48,      38)
@@ -378,10 +386,30 @@ class MainForm(QWidget):
 		layout.addWidget(self.__placeShipBtn,       100,        1,     1,       1)
 		layout.addWidget(self.__lobbyBtn,           100,        0,     1,       1)
 		layout.addWidget(self.__leaveGameBtn,       100,        2,     1,       1)
+		"""
+
+		playingFieldLayout = QHBoxLayout()
+		playingFieldLayout.addWidget(ownPlayingFieldBox)
+		playingFieldLayout.addWidget(enemeysPlayingFieldBox)
+		playingFieldWgt = QWidget()
+		playingFieldWgt.setLayout(playingFieldLayout)
+		playingFieldWgt.setMinimumWidth(1000)
+		playingFieldWgt.setMinimumHeight(510)
+
+		boxesLayout = QHBoxLayout()
+		boxesLayout.addWidget(self.__lobbyBtn)
+		boxesLayout.addWidget(self.__placeShipBtn)
+		boxesLayout.addWidget(self.__leaveGameBtn)
+		boxesWgt = QWidget()
+		boxesWgt.setLayout(boxesLayout)
+
+		layout = QVBoxLayout()
+		layout.addWidget(self.__statusLbl)
+		layout.addWidget(playingFieldWgt)
+		layout.addWidget(boxesWgt)
 
 		self.setLayout(layout)
 		self.setWindowTitle("Battleship++")
-		self.resize(1100, 600)
 		self.show()
 
 	def closeEvent(self, event):

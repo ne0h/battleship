@@ -21,7 +21,7 @@ class Field:
 	"""
 
 	def toString(self):
-		return chr(self.y + 65) + str(self.x + 1)
+		return ("%s%s") % (chr(self.x + 65), str(self.y + 1))
 
 	def equals(self, otherField):
 		"""
