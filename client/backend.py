@@ -75,11 +75,11 @@ class Backend:
 
 		moreShips = self.__ownPlayingField.placeShip(bow, rear)
 		if not moreShips:
+			logging.error("blong")
 			self.clientStatus = ClientStatus.WAITINGFOROPPONENT
 			self.clientStatusUpdates()
 
-			# TODO a bug is hiding here
-			# TODO send shiplist to server
+			self.__serverHandler.initBoard(self.__ownPlayingField.getShips())
 
 		return moreShips
 

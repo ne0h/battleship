@@ -17,7 +17,7 @@ package "Controller" {
 }
 
 package "Model" {
-	[Backend] --> [Playingfields] : storeData()
+	[Backend] --> [PlayingFields] : storeData()
 }
 
 package "View" {

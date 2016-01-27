@@ -2,6 +2,7 @@ import logging, socket, sys
 from threading import Thread
 
 from messageparser import *
+from playingfield import Orientation
 
 reportCodes = {
 	11: "Begin_Turn",
@@ -31,6 +32,12 @@ reportCodes = {
 	43: "Not_In_Any_Game",
 	47: "Game_Join_Denied",
 	48: "Game_Preparation_Ended"}
+
+orientationCodes = {
+	Orientation.NORTH: "N",
+	Orientation.WEST: "W",
+	Orientation.SOUTH: "S",
+	Orientation.EAST: "E"}
 
 class ServerHandler:
 
@@ -135,6 +142,18 @@ class ServerHandler:
 
 	def leaveGame(self):
 		self.__sendMessage("game_abort", {})
+
+	def initBoard(self, ships):
+		params = {}
+		
+		i = 0
+		for ship in ships:
+			params["ship_" + str(i) + "_x"] = str(ship.bow.x)
+			params["ship_" + str(i) + "_y"] = str(ship.bow.y)
+			params["ship_" + str(i) + "_direction"] = orientationCodes[ship.orientation]
+			i = i + 1
+
+		self.__sendMessage("board_init", params)
 
 	def __receiveLoop(self):
 		while not self.__stopReceiveLoop:
