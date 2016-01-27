@@ -5,7 +5,7 @@ import threading
 
 from messageparser import *
 
-class LobbyTCPServer(socketserver.ForkingMixIn, socketserver.TCPServer):
+class LobbyTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
     pass
 
 class LobbyRequestHandler(socketserver.BaseRequestHandler):
