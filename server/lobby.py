@@ -5,6 +5,8 @@ import threading
 
 from messageparser import *
 
+#logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s", level=logging.DEBUG)
+
 class LobbyTCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
     pass
 
@@ -35,29 +37,43 @@ class LobbyRequestHandler(socketserver.BaseRequestHandler):
 
             msgtype, msgparams = self.__msgparser.decode(msg.decode())
             logging.debug("Msg type: " + msgtype)
+
+            # switch message types
             if msgtype == 'game_create':
+
                 # check if parameter list is complete
                 if not msgparams['name']:
                     logging.warning("Malformed msg.")
+                    # Message_Not_Recognized
+                    report = self.__msgparser.encode('report', {'status': '40'})
                 else:
-                    # check if lobby is unique
+                    # try to add lobby and make sure that the name is unique
                     if self.__add_lobby(msgparams['name']):
-                        # success report
+                        # lobby name was unique
+                        # Successful_Game_Create
                         report = self.__msgparser.encode('report', {'status': '28'})
                     else:
-                        # error report
+                        # lobby name already exists
+                        # Illegal_Game_Definition
                         report = self.__msgparser.encode('report', {'status': '37'})
-                    self.request.sendall(report)
+
+                # send answer to client
+                self.request.sendall(report)
             else:
                 logging.warning("Unknown msg type.")
+                # Message_Not_Recognized
+                report = self.__msgparser.encode('report', {'status': '40'})
 
     def __add_lobby(self, name):
         result = True
         lock = threading.Lock()
         lock.acquire()
+        logging.debug('__lobby_list.count(name) ' + str(self.__lobby_list.count(name)))
+        logging.debug('__lobby_list ' + str(self.__lobby_list))
         if self.__lobby_list.count(name) > 0:
             result = False
         else:
+            logging.debug('Trying to append {} to __lobby_list'.format(name))
             self.__lobby_list.append(name)
         lock.release()
         return result
