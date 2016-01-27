@@ -298,6 +298,7 @@ class MainForm(QWidget):
 			self.__statusLbl.setText("Please place your ships.")
 		elif status is ClientStatus.WAITINGFOROPPONENT:
 			self.__statusLbl.setText("Placement of ships successful. Waiting for opponent now.")
+			self.__placeShipBtn.setEnabled(False)
 		elif status is ClientStatus.OWNTURN:
 			self.__status.setText("It is your turn.")
 		elif status is ClientStatus.OPPONENTSTURN:
