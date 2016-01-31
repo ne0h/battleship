@@ -14,6 +14,7 @@ To build the documentation navigate to `/docs` and run:
 #### Dependencies
 
 * Python 3
+* Qt5
 * PyQt5
 * Sphinx with autodoc to build the documentation
 
