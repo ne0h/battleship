@@ -14,14 +14,14 @@ class TestShipList(unittest.TestCase):
 		self.assertIsNone(ships.add(Field(-1,  3), Field(2 ,  3)))
 		self.assertIsNone(ships.add(Field(14,  3), Field(16,  3)))
 
-		self.assertIsNone(ships.add(Field(3 , -1), Field(3 ,  2)))
-		self.assertIsNone(ships.add(Field(3 , 16), Field(3 , 13)))
+		self.assertIsNone(ships.add(Field( 3, -1), Field(3 ,  2)))
+		self.assertIsNone(ships.add(Field( 3, 16), Field(3 , 13)))
 
-		self.assertIsNone(ships.add(Field(2 ,  3), Field(-1,  3)))
+		self.assertIsNone(ships.add(Field( 2,  3), Field(-1,  3)))
 		self.assertIsNone(ships.add(Field(16,  3), Field(14,  3)))
 
-		self.assertIsNone(ships.add(Field(3 ,  2), Field(3 , -1)))
-		self.assertIsNone(ships.add(Field(3 , 13), Field(3 , 16)))
+		self.assertIsNone(ships.add(Field( 3,  2), Field(3 , -1)))
+		self.assertIsNone(ships.add(Field( 3, 13), Field(3 , 16)))
 
 	def test_collidingShips(self):
 		ships = ShipList(self.FIELDLENGTH)

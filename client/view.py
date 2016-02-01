@@ -11,6 +11,54 @@ class ViewModel:
 		self.waitForShipPlacement = False
 		self.newShipBow = None
 
+class ConnectDialog(QDialog):
+
+	def __showSettingsErrorBox(self, title="Connection settings wrong.", text="Enter valid connection settings."):
+		QMessageBox.about(self, title, text)
+
+	def __connect(self):
+		try:
+			hostname = self.__hostnameIpt.text()
+			port     = int(self.__portIpt.text())
+		except ValueError:
+			logging.error("Port is not a number.")
+			self.__showSettingsErrorBox()
+
+		if not hostname:
+			self.__showSettingsErrorBox()
+		else:
+			if self.__backend.connect(hostname, port):
+				self.close()
+			else:
+				self.__showSettingsErrorBox(text="Server not reachable.")
+
+	def __setupGui(self):
+		self.__hostnameIpt = QLineEdit()
+		self.__hostnameIpt.setFixedWidth(150)
+		self.__hostnameIpt.setPlaceholderText("Hostname")
+		self.__hostnameIpt.setText("localhost")
+
+		self.__portIpt = QLineEdit()
+		self.__portIpt.setFixedWidth(60)
+		self.__portIpt.setPlaceholderText("Port")
+		self.__portIpt.setText("44444")
+
+		self.__returnBtn = QPushButton("Connect")
+		self.__returnBtn.clicked.connect(self.__connect)
+
+		layout = QHBoxLayout()
+		layout.addWidget(self.__hostnameIpt)
+		layout.addWidget(self.__portIpt)
+		layout.addWidget(self.__returnBtn)
+
+		self.setLayout(layout)
+		self.setWindowTitle("Connect to server")
+
+	def __init__(self, backend):
+		super(ConnectDialog, self).__init__()
+		self.__backend = backend
+		self.__setupGui()
+
 class LobbyDialog(QDialog):
 
 	def __interfaceEnabled(self, value):
@@ -293,6 +341,7 @@ class MainForm(QWidget):
 		if not self.__lobbyAlreadyOpen:
 			self.__lobbyAlreadyOpen = True
 			LobbyDialog(self.__backend).exec_()
+			self.__lobbyAlreadyOpen = False
 
 			# lobby closed, check current client status
 			if self.__backend.clientStatus is ClientStatus.PREPARATIONS:
@@ -302,8 +351,12 @@ class MainForm(QWidget):
 	def __onUpdateClientStatus(self, status):
 		from backend import ClientStatus
 
-		if status is ClientStatus.NOGAMERUNNING:
+		if status is ClientStatus.NOTCONNECTED:
+			self.__statusLbl.setText("Please connect to a server.")
+		elif status is ClientStatus.NOGAMERUNNING:
 			self.__statusLbl.setText("No game running, please use the lobby to connect to a game.")
+			self.__lobbyBtn.setEnabled(True)
+			self.__connectBtn.setEnabled(False)
 		elif status is ClientStatus.PREPARATIONS:
 			self.__statusLbl.setText("Please place your ships.")
 			self.__leaveGameBtn.setEnabled(True)
@@ -335,6 +388,25 @@ class MainForm(QWidget):
 		self.__placeShipBtn.setEnabled(False)
 		self.__leaveGameBtn.setEnabled(False)
 
+	def __connectCalled(self):
+		pass
+
+	def __openConnectDialog(self):
+		import sys
+
+		if not self.__connectDialogAlreadyOpen:
+			self.__connectDialogAlreadyOpen = True
+			ConnectDialog(self.__backend).exec()
+			self.__connectDialogAlreadyOpen = False
+
+		"""
+		from backend import Callback
+
+		cb = Callback()
+		cb.onAction = lambda success: self.__connectCalled(success)
+		#self.__backend.connect()
+		"""
+
 	def __setupGui(self):
 
 		# own playing field stuff
@@ -358,10 +430,14 @@ class MainForm(QWidget):
 
 		self.__lobbyBtn = QPushButton("Lobby")
 		self.__lobbyBtn.clicked.connect(self.__openLobby)
+		self.__lobbyBtn.setEnabled(False)
 
 		self.__leaveGameBtn = QPushButton("Leave Game")
 		self.__leaveGameBtn.clicked.connect(self.__leaveGame)
 		self.__leaveGameBtn.setEnabled(False)
+
+		self.__connectBtn = QPushButton("Connect")
+		self.__connectBtn.clicked.connect(self.__openConnectDialog)
 
 		# status line
 		self.__statusLbl = QLabel()
@@ -377,8 +453,6 @@ class MainForm(QWidget):
 		V
 
 													row		column	height 	width
-		"""
-		"""
 		layout = QGridLayout()
 		layout.addWidget(self.__statusLbl,            0,        0,     5,      80)
 		layout.addWidget(ownPlayingFieldBox,         10,        0,    48,      38)
@@ -396,17 +470,18 @@ class MainForm(QWidget):
 		playingFieldWgt.setMinimumWidth(1000)
 		playingFieldWgt.setMinimumHeight(510)
 
-		boxesLayout = QHBoxLayout()
-		boxesLayout.addWidget(self.__lobbyBtn)
-		boxesLayout.addWidget(self.__placeShipBtn)
-		boxesLayout.addWidget(self.__leaveGameBtn)
-		boxesWgt = QWidget()
-		boxesWgt.setLayout(boxesLayout)
+		btnsLayout = QHBoxLayout()
+		btnsLayout.addWidget(self.__connectBtn)
+		btnsLayout.addWidget(self.__lobbyBtn)
+		btnsLayout.addWidget(self.__placeShipBtn)
+		btnsLayout.addWidget(self.__leaveGameBtn)
+		btnsWgt = QWidget()
+		btnsWgt.setLayout(btnsLayout)
 
 		layout = QVBoxLayout()
 		layout.addWidget(self.__statusLbl)
 		layout.addWidget(playingFieldWgt)
-		layout.addWidget(boxesWgt)
+		layout.addWidget(btnsWgt)
 
 		self.setLayout(layout)
 		self.setWindowTitle("Battleship++")
@@ -421,6 +496,7 @@ class MainForm(QWidget):
 		self.__backend = backend
 		self.__viewModel = ViewModel()
 		self.__fieldLength = fieldLength
+		self.__connectDialogAlreadyOpen = False
 		self.__lobbyAlreadyOpen = False
 
 		super(MainForm, self).__init__()

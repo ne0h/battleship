@@ -4,6 +4,7 @@ from playingfield import *
 
 class ClientStatus(Enum):
 
+	NOTCONNECTED = "notconnected"
 	NOGAMERUNNING = "nogamerunning"
 	PREPARATIONS = "preparations"
 	WAITINGFOROPPONENT = "waitingforopponent"
@@ -75,7 +76,6 @@ class Backend:
 
 		moreShips = self.__ownPlayingField.placeShip(bow, rear)
 		if not moreShips:
-			logging.error("blong")
 			self.clientStatus = ClientStatus.WAITINGFOROPPONENT
 			self.clientStatusUpdates()
 
@@ -91,6 +91,10 @@ class Backend:
 	def clientStatusUpdates(self):
 		for callback in self.__clientStatusCallbacks:
 			callback.onAction(self.clientStatus)
+
+	def __updateClientStatus(self, status):
+		self.clientStatus = status
+		self.clientStatusUpdates()
 
 	def registerLobbyUpdateGamesCallback(self, callback):
 		self.__lobbyUpdateGamesCallbacks.append(callback)
@@ -156,12 +160,19 @@ class Backend:
 	def close(self):
 		self.__serverHandler.close()
 
-	def __init__(self, length):
+	def connect(self, hostname, port):
+		result = self.__serverHandler.connect(hostname, port)
+		if result:
+			self.__updateClientStatus(ClientStatus.NOGAMERUNNING)
+
+		return result
+
+	def __init__(self, length, hostname, port):
 		from serverhandler import ServerHandler
 
 		self.__ownPlayingField = PlayingField(length)
 		self.__enemeysPlayingField = PlayingField(length)
-		self.clientStatus = ClientStatus.NOGAMERUNNING
+		self.clientStatus = ClientStatus.NOTCONNECTED
 
 		# callback stuff
 		self.__clientStatusCallbacks = []
@@ -171,5 +182,9 @@ class Backend:
 		self.__joinGameCallbacks = []
 		self.__createGameCallbacks = []
 		self.__leaveGameCallbacks = []
+		self.__connectCallbacks = []
 
-		self.__serverHandler = ServerHandler(self, "localhost", 44444)
+		self.__serverHandler = ServerHandler(self)		
+		if hostname and port:
+			if self.connect(hostname, port):
+				self.clientStatus.ClientStatus.NOGAMERUNNING

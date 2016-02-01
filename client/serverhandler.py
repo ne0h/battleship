@@ -180,6 +180,10 @@ class ServerHandler:
 					logging.debug("%s received with unknown status code." % (messageType))
 
 	def __sendMessage(self, type, params):
+		if not self.__connected:
+			logging.error("Not connected.")
+			return
+
 		msg = self.__messageParser.encode(type, params)
 		logging.debug("Sending message: %s"  % (msg))
 		self.__sock.send(msg)
@@ -187,13 +191,24 @@ class ServerHandler:
 	def close(self):
 		self.__stopReceiveLoop = True
 
-	def __init__(self, backend, host, port):
+	def connect(self, hostname, port):
+		try:
+			self.__sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+			self.__sock.connect((hostname, port))
+			self.__connected = True
+
+			self.__receiveLoopThread = Thread(target=self.__receiveLoop)
+			self.__receiveLoopThread.start()
+			
+			return True
+
+		except socket.error:
+			logging.error("Failed to connect to server.")
+			return False
+
+	def __init__(self, backend):
 		self.__backend = backend
 		self.__messageParser = MessageParser()
 
-		self.__sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-		self.__sock.connect((host, port))
-
 		self.__stopReceiveLoop = False
-		self.__receiveLoopThread = Thread(target=self.__receiveLoop)
-		self.__receiveLoopThread.start()
+		self.__connected = False

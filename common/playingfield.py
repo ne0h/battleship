@@ -208,6 +208,8 @@ class ShipList:
 			print("Collision with border!")
 			return None
 
+		
+
 		# all checks done - add ship to specific list
 		if length is 5 and len(self.__carriers) < self.__maxCarrierCount:
 			self.__carriers.append(ship)
