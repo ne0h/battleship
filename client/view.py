@@ -172,7 +172,7 @@ class PlayingFieldWidget(QWidget):
 		painter.setBrush(QColor(210, 105, 30))
 		for ship in self._getShips():
 
-			# draw bow
+			# draw 
 			bow = ship.bow
 			painter.drawPixmap((bow.x + 1) * self._fieldSize, (bow.y + 1) * self._fieldSize, self._fieldSize,
 				self._fieldSize, QPixmap("./img/bow_" + ship.orientation.value + ".png"))
@@ -208,7 +208,7 @@ class PlayingFieldWidget(QWidget):
 
 	def _mapClickToField(self, mouseEvent):
 		x, y  = mouseEvent.x() // self._fieldSize, mouseEvent.y() // self._fieldSize		
-		return Field(x - 1, 16 - y)
+		return Field(x - 1, y-1)
 
 	def __init__(self, backend, viewModel, fieldLength, fieldSize=25):
 		self._viewModel = viewModel
