@@ -220,19 +220,19 @@ class PlayingFieldWidget(QWidget):
 		painter.setBrush(QColor(210, 105, 30))
 		for ship in self._getShips():
 
-			# draw 
+			# draw bow
 			bow = ship.bow
-			painter.drawPixmap((bow.x + 1) * self._fieldSize, (bow.y + 1) * self._fieldSize, self._fieldSize,
+			painter.drawPixmap((bow.x + 1) * self._fieldSize, (16 - bow.y) * self._fieldSize, self._fieldSize,
 				self._fieldSize, QPixmap("./img/bow_" + ship.orientation.value + ".png"))
 			
 			# draw rear
 			rear = ship.rear
-			painter.drawPixmap((rear.x + 1) * self._fieldSize, (rear.y + 1) * self._fieldSize, self._fieldSize,
+			painter.drawPixmap((rear.x + 1) * self._fieldSize, (16 - rear.y) * self._fieldSize, self._fieldSize,
 				self._fieldSize, QPixmap("./img/rear_" + ship.orientation.value + ".png"))
 			
 			# draw the rest
 			for middle in ship.middles:
-				painter.drawPixmap((middle.x + 1) * self._fieldSize, (middle.y + 1) * self._fieldSize, self._fieldSize,
+				painter.drawPixmap((middle.x + 1) * self._fieldSize, (16 - middle.y) * self._fieldSize, self._fieldSize,
 					self._fieldSize, QPixmap("./img/middle_" + ship.orientation.value + ".png"))
 
 		# draw horizontal and vertical enumeration
@@ -256,7 +256,7 @@ class PlayingFieldWidget(QWidget):
 
 	def _mapClickToField(self, mouseEvent):
 		x, y  = mouseEvent.x() // self._fieldSize, mouseEvent.y() // self._fieldSize		
-		return Field(x - 1, y-1)
+		return Field(x - 1, 16 - y)
 
 	def __init__(self, backend, viewModel, fieldLength, fieldSize=25):
 		self._viewModel = viewModel

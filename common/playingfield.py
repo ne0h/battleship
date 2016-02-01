@@ -88,9 +88,9 @@ class Ship:
 
 		# calculate orientation
 		if bow.y < rear.y:
-			self.orientation = Orientation.NORTH
-		elif bow.y > rear.y:
 			self.orientation = Orientation.SOUTH
+		elif bow.y > rear.y:
+			self.orientation = Orientation.NORTH
 		elif bow.x < rear.x:
 			self.orientation = Orientation.WEST
 		elif bow.x > rear.x:
@@ -192,23 +192,21 @@ class ShipList:
 			length = int(math.fabs(bow.x - rear.x)) + 1
 		
 		if length < 2 or length > 5:
-			print("To small!")
-			return None
+			logging.error("This type of ship does not exist.")
+			return True
 
 		# build ship
 		ship = Ship(bow, rear)
 		
 		# check for collisions with previously placed ships
 		if not self.__checkForCollisionWithOtherShips(ship):
-			print("Collision with ship!")
-			return None
+			logging.error("Collision with ship!")
+			return True
 
 		# check playing field borders
 		if not self.__checkForCollisionsWithBorders(ship):
-			print("Collision with border!")
-			return None
-
-		
+			logging.error("Collision with border!")
+			return True
 
 		# all checks done - add ship to specific list
 		if length is 5 and len(self.__carriers) < self.__maxCarrierCount:
