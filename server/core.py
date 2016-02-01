@@ -28,31 +28,63 @@ class RequestHandler(socketserver.BaseRequestHandler):
             msg = self.request.recv(size)
             logging.debug(b"Data: " + msg)
 
-            msgtype, msgparams = self.__msgparser.decode(msg.decode())
-            logging.debug("Msg type: " + msgtype)
+            self.__msgtype, self.__msgparams = self.__msgparser.decode(msg.decode())
+            logging.debug("Msg type: " + self.__msgtype)
 
             # switch message types
-            if msgtype == 'game_create':
-
-                # check if parameter list is complete
-                if not msgparams['name']:
-                    logging.warning("Malformed msg.")
-                    # Message_Not_Recognized
-                    report = self.__msgparser.encode('report', {'status': '40'})
-                else:
-                    # try to add lobby and make sure that the name is unique
-                    if self.__lobby_model.add_lobby(msgparams['name']):
-                        # lobby name was unique
-                        # Successful_Game_Create
-                        report = self.__msgparser.encode('report', {'status': '28'})
-                    else:
-                        # lobby name already exists
-                        # Illegal_Game_Definition
-                        report = self.__msgparser.encode('report', {'status': '37'})
-
-                # send answer to client
-                self.request.sendall(report)
+            if self.__msgtype == 'game_create':
+                report = self.__create_game()
+            elif self.__msgtype == 'game_join':
+                report = self.__join_game()
             else:
-                logging.warning("Unknown msg type.")
+                report = self.__unknown_msg()
+
+            # send answer to client
+            self.request.sendall(report)
+
+    def __create_game(self):
+        # make sure parameter list is complete
+        report = self.__expect_parameter(['name'])
+        if report:
+            return report
+
+        # create game and make sure that the lobby name is unique
+        if self.__lobby_model.add_lobby(self.__msgparams['name']):
+            # lobby name was unique
+            # Successful_Game_Create
+            report = self.__msgparser.encode('report', {'status': '28'})
+        else:
+            # lobby name already exists
+            # Illegal_Game_Definition
+            report = self.__msgparser.encode('report', {'status': '37'})
+        return report
+
+    def __join_game(self):
+        # make sure parameter list is complete
+        report = self.__expect_parameter(['name'])
+        if report:
+            return report
+
+        # join game and make sure that the lobby name exists
+        if self.__lobby_model.join_lobby(self.__msgparams['name']):
+            # Successful_Game_Join
+            report = self.__msgparser.encode('report', {'status': '27'})
+        else:
+            # Illegal_Game_Definition
+            report = self.__msgparser.encode('report', {'status': '37'})
+        return report
+
+    def __unknown_msg(self):
+        logging.warning("Unknown msg type.")
+        # Message_Not_Recognized
+        report = self.__msgparser.encode('report', {'status': '40'})
+        return report
+
+    def __expect_parameter(self, params):
+        for p in params:
+            if not self.__msgparams[p]:
+                logging.warning("Malformed msg. Missing parameter: " + p)
                 # Message_Not_Recognized
                 report = self.__msgparser.encode('report', {'status': '40'})
+                return report
+        return None
