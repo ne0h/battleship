@@ -142,6 +142,9 @@ class ShipList:
 			and ship.rear.x >= 0 and ship.rear.x < self.__fieldLength
 			and ship.rear.y >= 0 and ship.rear.y < self.__fieldLength)
 
+	def __checkForDiagonal(self, ship):
+		return not (ship.bow.x == ship.rear.x or ship.bow.y == ship.rear.y)
+
 	def getShips(self):
 		"""
 		Returns a list of all Ships.
@@ -197,6 +200,11 @@ class ShipList:
 
 		# build ship
 		ship = Ship(bow, rear)
+
+		# check if the ship is diagonal
+		if self.__checkForDiagonal(ship):
+			logging.error("Diagonal ship!")
+			return True
 		
 		# check for collisions with previously placed ships
 		if not self.__checkForCollisionWithOtherShips(ship):
