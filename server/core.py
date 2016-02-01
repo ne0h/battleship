@@ -6,13 +6,16 @@ import threading
 from messageparser import *
 from lobby import *
 
+# lock for client set
+global_game_set_lock = threading.Lock()
+
 class TCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
     pass
 
 class RequestHandler(socketserver.BaseRequestHandler):
-
     def setup(self):
         self.__lobby_model = Lobby()
+        self.__lobby_model.register_on_lobby_update_callback(self.__callback_update_lobby)
         self.__msgparser = MessageParser()
 
     def handle(self):
@@ -73,6 +76,13 @@ class RequestHandler(socketserver.BaseRequestHandler):
             # Illegal_Game_Definition
             report = self.__msgparser.encode('report', {'status': '37'})
         return report
+
+    def __callback_update_lobby(self):
+        """
+        Callback method that notifies this client about a lobby update.
+        """
+        # query all the things
+        logging.debug("__callback_update_lobby() called")
 
     def __unknown_msg(self):
         logging.warning("Unknown msg type.")
