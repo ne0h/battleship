@@ -5,8 +5,7 @@ import sys
 import logging
 import threading
 
-ROOTDIR = os.path.join(os.path.dirname(os.path.realpath(__file__))
-sys.path.append(ROOTDIR, '../common'))
+sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '../common'))
 
 from core import *
 
