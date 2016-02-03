@@ -12,6 +12,7 @@ USAGE = "Usage: main.py <host> <port>"
 def main():
     logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s", level=logging.DEBUG)
 
+    # TODO use argparse
     if len(sys.argv) != 3:
         print(USAGE)
         sys.exit(1)
@@ -24,7 +25,7 @@ def main():
     server_thread = threading.Thread(target=server.serve_forever)
     server_thread.daemon = True
     server_thread.start()
-    logging.info("Server loop running in thread: " + server_thread.name)
+    logging.debug("Server loop running in thread: " + server_thread.name)
 
     try:
         while True:

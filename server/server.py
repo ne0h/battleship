@@ -23,6 +23,9 @@ class RequestHandler(socketserver.BaseRequestHandler):
     def handle(self):
         self.__client.handle()
 
+    def finish(self):
+        self.__client.finish()
+
 
 class ClientHandler:
 
@@ -37,34 +40,39 @@ class ClientHandler:
         self.__lobby_model.register_callback(LobbyEvent.on_update, self.on_update_lobby)
 
     def handle(self):
-        # receive 2 bytes size header
-        size = self.__socket.recv(2)
-        if not size:
-            # TODO loop here instead?
-            logging.error("Bad header.")
-            return
-        size = struct.unpack('>H', size)[0]
-        logging.debug("Size: " + str(size))
+        logging.info("Client {} connected.".format(self.__socket.getpeername()))
+        while True:
+            # receive 2 bytes size header
+            size = self.__socket.recv(2)
+            if not size:
+                logging.info("Client {} disconnected.".format(self.__socket.getpeername()))
+                break
+            size = struct.unpack('>H', size)[0]
+            logging.debug("Size: " + str(size))
 
-        # receive message body
-        msg = self.__socket.recv(size)
-        logging.debug(b"Data: " + msg)
+            # receive message body
+            msg = self.__socket.recv(size)
+            if not msg:
+                logging.info("Client {} disconnected.".format(self.__socket.getpeername()))
+                break
+            logging.debug(b"Raw in: " + msg)
 
-        # explode received data into message type and parameters
-        msgtype, msgparams = self.__message_parser.decode(msg.decode())
-        logging.debug("Msg type: " + msgtype)
-        logging.debug("Msg parameters: " + repr(msgparams))
+            # explode received data into message type and parameters
+            msgtype, msgparams = self.__message_parser.decode(msg.decode())
+            logging.debug("Msg type: " + msgtype)
+            logging.debug("Msg parameters: " + repr(msgparams))
 
-        # dispatch message type
-        if msgtype == messages.CREATE_GAME:
-            report = self.__create_game(msgparams)
-        elif msgtype == messages.JOIN_GAME:
-            report = self.__join_game(msgparams)
-        else:
-            report = self.__unknown_msg()
+            # dispatch message type
+            if msgtype == messages.CREATE_GAME:
+                report = self.__create_game(msgparams)
+            elif msgtype == messages.JOIN_GAME:
+                report = self.__join_game(msgparams)
+            else:
+                report = self.__unknown_msg()
 
-        # send answer to client
-        self.__socket.sendall(report)
+            # send answer to client
+            logging.debug(b"Raw out: " + report)
+            self.__socket.sendall(report)
 
     def on_update_lobby(self):
         logging.debug("on_update_lobby()")
@@ -75,6 +83,9 @@ class ClientHandler:
 
     def get_socket(self):
         return self.__socket
+
+    def finish(self):
+        self.__lobby_model.remove_callback(LobbyEvent.on_update, self.on_update_lobby)
 
     def __create_game(self, params):
         # make sure parameter list is complete

@@ -14,6 +14,7 @@ global_games = {}
 global_waiting_games = set()
 global_callbacks = {}
 global_callbacks[LobbyEvent.on_update] = []
+
 global_games_lock = threading.Lock()
 global_callbacks_lock = threading.Lock()
 
@@ -100,6 +101,17 @@ class LobbyModel:
         global global_callbacks_lock
         global_callbacks_lock.acquire()
         global_callbacks[event].append(callback)
+        global_callbacks_lock.release()
+
+    def remove_callback(self, event, callback):
+        """
+        Remove a callback.
+        """
+        logging.debug("remove_callback({})".format(event))
+        global global_callbacks
+        global global_callbacks_lock
+        global_callbacks_lock.acquire()
+        global_callbacks[event].remove(callback)
         global_callbacks_lock.release()
 
     def __notify_all(self, event):
