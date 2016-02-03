@@ -232,6 +232,21 @@ class ShipList:
 
 		return self.moreShipsLeftToPlace()
 
+	def getCarrierCount(self):
+		return len(self.__carriers)
+
+	def getBattleshipCount(self):
+		return len(self.__battleships)
+
+	def getCruiserCount(self):
+		return len(self.__cruisers)
+
+	def getDestroyerCount(self):
+		return len(self.__destroyers)
+
+	def getShipCount(self):
+		return self.getCarrierCount() + self.getBattleshipCount() + self.getCruiserCount() + self.getDestroyerCount()
+
 	def __init__(self, fieldLength, maxCarrierCount=1, maxBattleshipCount=2, maxCruiserCount=3, maxDestroyerCount=4):
 		self.__fieldLength = fieldLength
 
