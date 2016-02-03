@@ -187,4 +187,4 @@ class Backend:
 		self.__serverHandler = ServerHandler(self)		
 		if hostname and port:
 			if self.connect(hostname, port):
-				self.clientStatus.ClientStatus.NOGAMERUNNING
+				self.clientStatus = ClientStatus.NOGAMERUNNING
