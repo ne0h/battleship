@@ -1,5 +1,7 @@
 import argparse, sys
-sys.path.append("../common")
+
+ROOTDIR = os.path.join(os.path.dirname(os.path.realpath(__file__))
+sys.path.append(ROOTDIR, '../common'))
 
 from PyQt5.QtCore import *
 from PyQt5.QtWidgets import *
