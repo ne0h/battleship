@@ -166,7 +166,7 @@ class LobbyDialog(QDialog):
 				self.__gamesWidget.item(i).text = text
 			else:
 				self.__gamesWidget.addItem(text)
-	
+
 	def closeEvent(self, event):
 		self.__backend.removeLobbyUpdateGamesCallback(self.__gamesListCb)
 
@@ -224,12 +224,12 @@ class PlayingFieldWidget(QWidget):
 			bow = ship.bow
 			painter.drawPixmap((bow.x + 1) * self._fieldSize, (16 - bow.y) * self._fieldSize, self._fieldSize,
 				self._fieldSize, QPixmap("./img/bow_" + ship.orientation.value + ".png"))
-			
+
 			# draw rear
 			rear = ship.rear
 			painter.drawPixmap((rear.x + 1) * self._fieldSize, (16 - rear.y) * self._fieldSize, self._fieldSize,
 				self._fieldSize, QPixmap("./img/rear_" + ship.orientation.value + ".png"))
-			
+
 			# draw the rest
 			for middle in ship.middles:
 				painter.drawPixmap((middle.x + 1) * self._fieldSize, (16 - middle.y) * self._fieldSize, self._fieldSize,
@@ -255,7 +255,7 @@ class PlayingFieldWidget(QWidget):
 			painter.drawText(box, Qt.AlignCenter, str(i))
 
 	def _mapClickToField(self, mouseEvent):
-		x, y  = mouseEvent.x() // self._fieldSize, mouseEvent.y() // self._fieldSize		
+		x, y  = mouseEvent.x() // self._fieldSize, mouseEvent.y() // self._fieldSize
 		return Field(x - 1, 16 - y)
 
 	def __init__(self, backend, viewModel, fieldLength, fieldSize=25):

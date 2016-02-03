@@ -4,10 +4,8 @@ import os
 import sys
 import logging
 import threading
-
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '../common'))
-
-from core import *
+from server import *
 
 USAGE = "Usage: main.py <host> <port>"
 
