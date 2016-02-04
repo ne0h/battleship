@@ -188,3 +188,9 @@ class Backend:
 		if hostname and port:
 			if self.connect(hostname, port):
 				self.clientStatus = ClientStatus.NOGAMERUNNING
+		else:
+			# try UDP discovery
+			from udpdiscoverer import UDPDiscoverer
+			from threading import Thread
+
+			Thread(target=UDPDiscoverer().__init__()).start()

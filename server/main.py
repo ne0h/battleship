@@ -7,10 +7,27 @@ import threading
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '../common'))
 from server import *
 
+from socketserver import UDPServer, BaseRequestHandler
+from threading import Thread
+
 USAGE = "Usage: main.py <host> <port>"
+
+class UDPDiscoveryHandler(BaseRequestHandler):
+    
+    def handle(self):
+        if self.request[0].decode("UTF-8") == "I_NEED_A_BATTLESHIP_PLUS_PLUS_SERVER":
+            socket = self.request[1]
+            socket.sendto("I_AM_A_BATTLESHIP_PLUS_PLUS_SERVER".encode("UTF-8"), self.client_address)
+
+def startUDPDiscovery():
+    server = UDPServer(("", 12345), UDPDiscoveryHandler)
+    server.serve_forever()
 
 def main():
     logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s", level=logging.DEBUG)
+
+    # start UPD discovery service
+    Thread(target=startUDPDiscovery).start()
 
     # TODO use argparse
     if len(sys.argv) != 3:
