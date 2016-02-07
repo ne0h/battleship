@@ -105,7 +105,7 @@ class Backend:
 		for cb in self.__lobbyUpdateGamesCallbacks:
 			if cb is callback:
 				self.__lobbyUpdateGamesCallbacks.remove(callback)
-		logging.debug("Lobby observer removed")
+		logging.debug("Lobby callback removed")
 
 	def lobbyUpdateGamesProgress(self, players, games):
 		self.__lobbyCurrentPlayers = players
@@ -159,6 +159,7 @@ class Backend:
 
 	def close(self):
 		self.__serverHandler.close()
+		self.__udpDiscoverer.close()
 
 	def connect(self, hostname, port):
 		result = self.__serverHandler.connect(hostname, port)
@@ -167,14 +168,35 @@ class Backend:
 
 		return result
 
+	def registerUdpDiscoveryCallback(self, callback):
+		self.__udpDiscoveryCallbacks.append(callback)
+		logging.debug("UDP discovery callback added")
+		print(self.__udpServers)
+		return self.__udpServers
+
+	def removeUdpDiscoveryCallback(self, callback):
+		for cb in self.__udpDiscoveryCallbacks:
+			if cb is callback:
+				self.__udpDiscoveryCallbacks.remove(callback)
+		logging.debug("UDP Discovery callback removed")
+
+	def udpDiscoveryUpdate(self, server):
+		self.__udpServers.append(server)
+		for cb in self.__udpDiscoveryCallbacks:
+			cb.onAction(self.__udpServers)
+
 	def __init__(self, length, hostname, port):
 		from serverhandler import ServerHandler
+		from udpdiscoverer import UDPDiscoverer
 
 		self.__ownPlayingField = PlayingField(length)
 		self.__enemeysPlayingField = PlayingField(length)
 		self.clientStatus = ClientStatus.NOTCONNECTED
 
 		# callback stuff
+		self.__udpDiscoveryCallbacks = []
+		self.__udpServers = []
+
 		self.__clientStatusCallbacks = []
 		self.__lobbyCurrentPlayers = []
 		self.__lobbyCurrentGames = []
@@ -188,9 +210,5 @@ class Backend:
 		if hostname and port:
 			if self.connect(hostname, port):
 				self.clientStatus = ClientStatus.NOGAMERUNNING
-		else:
-			# try UDP discovery
-			from udpdiscoverer import UDPDiscoverer
-			from threading import Thread
 
-			Thread(target=UDPDiscoverer().__init__()).start()
+		self.__udpDiscoverer = UDPDiscoverer(self)

@@ -32,7 +32,18 @@ class ConnectDialog(QDialog):
 			else:
 				self.__showSettingsErrorBox(text="Server not reachable.")
 
+	def __onUpdateServers(self, servers):
+		for server in servers:
+			logging.info("Server: %s" % (server))
+
+			for i in range(0, self.__serversWgt.count()):
+				if self.__serversWidget.item(i).text():
+					break
+			self.__serversWgt.addItem(server)
+
 	def __setupGui(self):
+		self.__serversWgt = QListWidget()
+		self.__serversWgt.setSortingEnabled(True)
 		self.__hostnameIpt = QLineEdit()
 		self.__hostnameIpt.setFixedWidth(150)
 		self.__hostnameIpt.setPlaceholderText("Hostname")
@@ -41,23 +52,37 @@ class ConnectDialog(QDialog):
 		self.__portIpt = QLineEdit()
 		self.__portIpt.setFixedWidth(60)
 		self.__portIpt.setPlaceholderText("Port")
-		self.__portIpt.setText("44444")
+		self.__portIpt.setText("12345")
 
 		self.__returnBtn = QPushButton("Connect")
 		self.__returnBtn.clicked.connect(self.__connect)
 
-		layout = QHBoxLayout()
-		layout.addWidget(self.__hostnameIpt)
-		layout.addWidget(self.__portIpt)
-		layout.addWidget(self.__returnBtn)
+		bottomlayout = QHBoxLayout()
+		bottomlayout.addWidget(self.__hostnameIpt)
+		bottomlayout.addWidget(self.__portIpt)
+		bottomlayout.addWidget(self.__returnBtn)
+		bottomLbl = QLabel()
+		bottomLbl.setMinimumHeight(40)
+		bottomLbl.setLayout(bottomlayout)
+
+		layout = QVBoxLayout()
+		layout.addWidget(self.__serversWgt)
+		layout.addWidget(bottomLbl)
 
 		self.setLayout(layout)
-		self.setWindowTitle("Connect to server")
+		self.setWindowTitle("Find a server")
+		self.resize(500, 300)
 
 	def __init__(self, backend):
+		from backend import Callback
+
 		super(ConnectDialog, self).__init__()
 		self.__backend = backend
 		self.__setupGui()
+
+		cb = Callback()
+		cb.onAction = lambda servers: self.__onUpdateServers(servers)
+		self.__onUpdateServers(self.__backend.registerUdpDiscoveryCallback(cb))
 
 class LobbyDialog(QDialog):
 
@@ -87,6 +112,7 @@ class LobbyDialog(QDialog):
 
 	def __createGameOnClick(self):
 		from backend import Callback
+
 		# TODO validate ipt length
 		gameId = self.__createGameIpt.text()
 		logging.info("Creating game: %s", (gameId))
@@ -148,7 +174,7 @@ class LobbyDialog(QDialog):
 				# this validation is sufficient, because colons are not allowed as values in the protocol
 				if self.__gamesWidget.item(i).text().startswith("%s:" % (game.name)):
 					found = i
-					break;
+					break
 
 			text = game.name
 			if game.players[0] == "":

@@ -197,8 +197,7 @@ class ServerHandler:
 			self.__sock.connect((hostname, port))
 			self.__connected = True
 
-			self.__receiveLoopThread = Thread(target=self.__receiveLoop)
-			self.__receiveLoopThread.start()
+			Thread(target=self.__receiveLoop).start()
 			
 			return True
 
