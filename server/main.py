@@ -31,7 +31,10 @@ def main():
 
     # start UPD discovery service
     udpdiscovery_server = UDPServer(("", 12345), UDPDiscoveryHandler)
-    Thread(target=udpdiscovery_server.serve_forever).start()
+    udpdiscovery_server_thread = Thread(target=udpdiscovery_server.serve_forever)
+    udpdiscovery_server_thread.daemon = True
+    udpdiscovery_server_thread.start()
+    logging.debug("UDP discovery server running in thread: " + udpdiscovery_server_thread.name)
 
     server = TCPServer((host, port), RequestHandler)
     logging.info("Listening on {}:{}".format(host, port))

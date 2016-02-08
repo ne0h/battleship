@@ -69,6 +69,8 @@ class ClientHandler:
                 report = self.__create_game(msgparams)
             elif msgtype == messages.JOIN_GAME:
                 report = self.__join_game(msgparams)
+            elif msgtype == messages.LEAVE_GAME:
+                report = self.__leave_game()
             else:
                 report = self.__unknown_msg()
 
