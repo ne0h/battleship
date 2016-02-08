@@ -13,7 +13,7 @@ from threading import Thread
 USAGE = "Usage: main.py <host> <port>"
 
 class UDPDiscoveryHandler(BaseRequestHandler):
-    
+
     def handle(self):
         if self.request[0].decode("UTF-8") == "I_NEED_A_BATTLESHIP_PLUS_PLUS_SERVER":
             socket = self.request[1]

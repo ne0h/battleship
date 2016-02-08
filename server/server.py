@@ -3,9 +3,11 @@ import logging
 import socketserver
 import struct
 import threading
+import hashlib
 from messageparser import MessageParser
 import messages
 from lobby import *
+from helpers import *
 
 global_clients = []
 global_clients_lock = threading.Lock()
@@ -71,15 +73,41 @@ class ClientHandler:
                 report = self.__unknown_msg()
 
             # send answer to client
-            logging.debug(b"Raw out: " + report)
-            self.__socket.sendall(report)
+            self.__send(report)
 
     def on_update_lobby(self):
         logging.debug("on_update_lobby()")
-        ngames = self.__lobby_model.get_number_of_games()
-        nclients = self.__lobby_model.get_number_of_players()
-        gamesinfo = self.__lobby_model.get_games_info()
-        logging.debug("Games: " + repr(gamesinfo))
+        number_of_clients = self.__lobby_model.get_number_of_players()
+        number_of_games = self.__lobby_model.get_number_of_games()
+        games_info = self.__lobby_model.get_games_info()
+        # Update_Lobby
+        data = {
+            'status': 16,
+            'number_of_clients': number_of_clients,
+            'number_of_games': number_of_games
+        }
+        i = 0
+        weirdkey = 'game_name_{}'
+        moreweirdkeys = 'game_players_count_{}'
+        whatevenisthis = 'game_player_{}_{}'
+        waitwhat = 'player_name_{}'
+        yetanotherkey = 'player_identifier_{}'
+        for game in games_info:
+            # game stuff
+            data[weirdkey.format(i)] = game['game_name']
+            data[moreweirdkeys.format(i)] = game['number_of_players']
+            # player 1 stuff
+            data[whatevenisthis.format(i, 1)] = game['ids'][0]
+            data[waitwhat.format(i, 1)] = game['nicknames'][0]
+            # player 2 stuff
+            if game['number_of_players'] == 2:
+                data[whatevenisthis.format(i, 2)] = game['ids'][1]
+                data[waitwhat.format(i, 2)] = game['nicknames'][1]
+
+            i += 1
+
+        msg = self.__message_parser.encode('report', data)
+        self.__send(msg)
 
     def get_socket(self):
         return self.__socket
@@ -96,11 +124,13 @@ class ClientHandler:
         # check if client is already in a game
         if self.__game:
             # TODO fix this crap
-            logging.error("Client already in some game.")
+            logging.debug("Client already in some game.")
             return
 
         # create the game
-        game = self.__lobby_model.add_lobby(params['name'])
+        addr, port = self.__socket.getpeername()
+        playerid = hashlib.sha1(b(addr + str(port))).hexdigest()
+        game = self.__lobby_model.add_lobby(params['name'], playerid)
         if game:
             self.__game = game
             self.__player_id = 1
@@ -118,11 +148,13 @@ class ClientHandler:
         # check if client is already in a game
         if self.__game:
             # TODO fix this crap
-            logging.error("Client already in some game.")
+            logging.debug("Client already in some game.")
             return
 
         # join the game
-        game = self.__lobby_model.join_lobby(params['name'])
+        addr, port = self.__socket.getpeername()
+        playerid = hashlib.sha1(b(addr + str(port))).hexdigest()
+        game = self.__lobby_model.join_lobby(params['name'], playerid)
         if game:
             self.__game = game
             self.__player_id = 2
@@ -141,3 +173,7 @@ class ClientHandler:
             if p not in keys:
                 return self.__unknown_msg()
         return None
+
+    def __send(self, msg):
+        logging.debug(b"Raw out: " + msg)
+        self.__socket.sendall(msg)
