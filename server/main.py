@@ -19,15 +19,8 @@ class UDPDiscoveryHandler(BaseRequestHandler):
             socket = self.request[1]
             socket.sendto("I_AM_A_BATTLESHIP_PLUS_PLUS_SERVER".encode("UTF-8"), self.client_address)
 
-def startUDPDiscovery():
-    server = UDPServer(("", 12345), UDPDiscoveryHandler)
-    server.serve_forever()
-
 def main():
     logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s", level=logging.DEBUG)
-
-    # start UPD discovery service
-    Thread(target=startUDPDiscovery).start()
 
     # TODO use argparse
     if len(sys.argv) != 3:
@@ -35,6 +28,10 @@ def main():
         sys.exit(1)
 
     host, port = sys.argv[1], int(sys.argv[2])
+
+    # start UPD discovery service
+    udpdiscovery_server = UDPServer(("", 12345), UDPDiscoveryHandler)
+    Thread(target=udpdiscovery_server.serve_forever).start()
 
     server = TCPServer((host, port), RequestHandler)
     logging.info("Listening on {}:{}".format(host, port))
@@ -53,6 +50,8 @@ def main():
     logging.info("Server shutting down...")
     server.shutdown()
     server.server_close()
+    udpdiscovery_server.shutdown()
+    udpdiscovery_server.server_close()
     logging.info("Bye!")
 
 if __name__ == '__main__':

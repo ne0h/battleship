@@ -84,7 +84,7 @@ class ClientHandler:
         data = {
             'status': 16,
             'number_of_clients': number_of_clients,
-            'number_of_games': number_of_games
+            'number_of_games': number_of_games[0]
         }
         i = 0
         weirdkey = 'game_name_{}'
