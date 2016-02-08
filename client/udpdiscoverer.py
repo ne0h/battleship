@@ -21,7 +21,7 @@ class UDPDiscoverer:
 						logging.debug("Found server at %s:%s" % (addr[0], addr[1]))
 						self.__backend.udpDiscoveryUpdate(addr[0])
 			except socket.timeout:
-				print("No servers found.")
+				logging.debug("No servers found.")
 
 		sock.close()
 

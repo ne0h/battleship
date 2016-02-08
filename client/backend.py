@@ -181,7 +181,8 @@ class Backend:
 		logging.debug("UDP Discovery callback removed")
 
 	def udpDiscoveryUpdate(self, server):
-		self.__udpServers.append(server)
+		if server not in self.__udpServers:
+			self.__udpServers.append(server)
 		for cb in self.__udpDiscoveryCallbacks:
 			cb.onAction(self.__udpServers)
 

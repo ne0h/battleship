@@ -32,18 +32,25 @@ class ConnectDialog(QDialog):
 			else:
 				self.__showSettingsErrorBox(text="Server not reachable.")
 
+	def __updateServerAddress(self):
+		self.__hostnameIpt.setText(self.__serversWgt.currentItem().text())
+
 	def __onUpdateServers(self, servers):
 		for server in servers:
 			logging.info("Server: %s" % (server))
 
+			found = False
 			for i in range(0, self.__serversWgt.count()):
-				if self.__serversWidget.item(i).text():
+				if self.__serversWgt.item(i).text():
+					found = True
 					break
-			self.__serversWgt.addItem(server)
+			if not found:
+				self.__serversWgt.addItem(server)
 
 	def __setupGui(self):
 		self.__serversWgt = QListWidget()
 		self.__serversWgt.setSortingEnabled(True)
+		self.__serversWgt.clicked.connect(self.__updateServerAddress)
 		self.__hostnameIpt = QLineEdit()
 		self.__hostnameIpt.setFixedWidth(150)
 		self.__hostnameIpt.setPlaceholderText("Hostname")
