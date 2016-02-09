@@ -3,6 +3,9 @@ import logging
 from playingfield import *
 
 class ClientStatus(Enum):
+	"""
+	Encapsulates the different client statuses.
+	"""
 
 	NOTCONNECTED = "notconnected"
 	NOGAMERUNNING = "nogamerunning"
@@ -13,13 +16,31 @@ class ClientStatus(Enum):
 	OPPONENTSTURN = "oppenentsturn"
 
 class Callback:
+	"""
+	Callback (observer pattern).
+	"""
 
 	def onAction(self):
+		"""
+		Calls the callback.
+		"""
+
 		pass
 
 class GameInformation:
+	"""
+	Represents a game.
+
+	Args:
+		name - the name of the game
+		firstPlayer - the identifier of the first player
+	"""
 
 	def toString(self):
+		"""
+		Returns a string representativ of the game.
+		"""
+
 		result = ("%s: %s vs.") % (self.name, self.players[0])
 		if len(self.players) > 1:
 			result = ("%s %s") % (result, self.players[1])
@@ -30,8 +51,19 @@ class GameInformation:
 		self.players = [firstPlayer]
 
 class PlayerInformation:
+	"""
+	Represents a player.
+
+	Args:
+		id - the identifier of the player
+		nickname - the nickname of the player
+	"""
 
 	def toString(self):
+		"""
+		Returns a string representativ of the player.
+		"""
+
 		return "%s(%s)" % (self.id, self.nickname)
 
 	def __init__(self, id, nickname):
@@ -41,6 +73,11 @@ class PlayerInformation:
 class Backend:
 	"""
 	Game client backend that does all kind of controller stuff.
+
+	Args:
+		length - the length of the playing field
+		hostname - the hostname of the server to connect to. If not set do not connect to any server so far
+		port - the port of the server to connect to. If not set do not connect to any server so far
 	"""
 
 	def getOwnShips(self):

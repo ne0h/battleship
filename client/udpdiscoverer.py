@@ -2,6 +2,9 @@ import logging, socket, time
 from threading import Thread
 
 class UDPDiscoverer:
+	"""
+	Searches for game servers.
+	"""
 
 	def __run(self):
 		timeout = 2
@@ -26,6 +29,10 @@ class UDPDiscoverer:
 		sock.close()
 
 	def close(self):
+		"""
+		Closes the service.
+		"""
+
 		run = False
 
 	def __init__(self, backend):

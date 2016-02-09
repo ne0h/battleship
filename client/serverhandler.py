@@ -41,7 +41,14 @@ orientationCodes = {
 
 class ServerHandler:
 
-	def nicknameSet(self, nickname):
+	def setNickname(self, nickname):
+		"""
+		Sets the nickname.
+
+		Args:
+			nickname - the new nickname
+		"""
+
 		self.__sendMessage("nickname_set", {"name": "nickname"})
 
 	"""
@@ -135,15 +142,40 @@ class ServerHandler:
 		self.__backend.lobbyUpdateGamesProgress(players, games)
 
 	def joinGame(self, gameId):
+		"""
+		Sends a joinGame request to the server.
+
+		Args:
+			gameId - the identifier of the game
+		"""
+
 		self.__sendMessage("game_join", {"name": {gameId}})
 
 	def createGame(self, gameId):
+		"""
+		Sends a new createGame request to the server.
+
+		Args:
+			gameId - the identifier of the new game
+		"""
+
 		self.__sendMessage("game_create", {"name": gameId})
 
 	def leaveGame(self):
+		"""
+		Sends a leaveGame request to the server.
+		"""
+
 		self.__sendMessage("game_abort", {})
 
 	def initBoard(self, ships):
+		"""
+		Sends the playing field to the server.
+
+		Args:
+			ships - a list of all ships
+		"""
+
 		params = {}
 		
 		i = 0
@@ -219,9 +251,21 @@ class ServerHandler:
 		self.__sock.send(msg)
 
 	def close(self):
+		"""
+		Closes the connection to the server.
+		"""
+
 		self.__stopReceiveLoop = True
 
 	def connect(self, hostname, port):
+		"""
+		Connects to a server.
+
+		Args:
+			hostname - the hostname or IP address of the server
+			port - the port of the server
+		"""
+
 		try:
 			self.__sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 			self.__sock.connect((hostname, port))
