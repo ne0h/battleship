@@ -429,7 +429,7 @@ class MainForm(QWidget):
 
 		if not self.__connectDialogAlreadyOpen:
 			self.__connectDialogAlreadyOpen = True
-			ConnectDialog(self.__backend).exec()
+			ConnectDialog(self.__backend).exec_()
 			self.__connectDialogAlreadyOpen = False
 
 		"""

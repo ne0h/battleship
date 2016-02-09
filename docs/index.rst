@@ -13,6 +13,7 @@ Contents:
 
    common
    client
+   server
 
 
 

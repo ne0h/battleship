@@ -170,12 +170,42 @@ class ServerHandler:
 				status = int(params["status"])
 				if status in reportCodes:
 					logging.debug("%s received: %s" % (messageType, reportCodes[status]))
-					if status is 19:
+
+					# game creation stuff
+					if status is 19:														# Game_Aborted
 						self.__backend.leaveGameResponse()
-					elif status is 28:
+					elif status is 27 or status is 47:										# Successful_Game_Join
+						self.__backend.joinGameResponse(status is 27)						# or Game_Join_Denied
+					elif status is 28:														# Successful_Game_Create
 						self.__backend.createGameResponse(True)
-					elif status is 37:
+					elif status is 29 or status is 38:										# Successful_Ship_Placement
+						self.__backend.placeShipsResponse(status is 29)						# or Illegal_Ship_Placement
+					elif status is 37:														# Illegal_Game_Definition
 						self.__backend.createGameResponse(False)
+					elif status is 48:														# Game_Preparation_Ended
+						self.__backend.gamePreparationsEndedResponse()
+
+					# game play stuff
+					#  - Successful_Move
+					#  - Successful_Attack
+					#  - Surrender_Accepted
+					#  - Successful_Special_Attack
+					#  - Illegal_Move
+					#  - Illegal_Special_Attack
+					#  - Illegal_Field
+					#  - Illegal_Ship_Index
+					#  - Illegal_Attack
+					#  - Not_Your_Turn
+					elif status is 21 or status is 22 or status is 23 or status is 24 or status is 31 or status is 32 \
+							or status is 33 or status is 34 or status is 39 or status is 41:
+						self.__backend.gamePlayUpdate(status)
+
+					# bad error stuff
+					#  - Message_Not_Recognized
+					#  - Not_In_Any_Game (what? :D)
+					elif status is 40 or status is 43:
+						self.__backend.errorResponse(status)
+
 				else:
 					logging.debug("%s received with unknown status code." % (messageType))
 

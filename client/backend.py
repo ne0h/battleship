@@ -8,6 +8,7 @@ class ClientStatus(Enum):
 	NOGAMERUNNING = "nogamerunning"
 	PREPARATIONS = "preparations"
 	WAITINGFOROPPONENT = "waitingforopponent"
+	PREPARATIONSENDED = "preparationsended"
 	OWNTURN = "ownturn"
 	OPPONENTSTURN = "oppenentsturn"
 
@@ -84,11 +85,25 @@ class Backend:
 		return moreShips
 
 	def registerClientStatusCallback(self, callback):
+		"""
+		Registers a new callback that will be called when the status of the client updates.
+
+		Args:
+			callback - the callback
+
+		Returns:
+			The current status.
+		"""
+
 		self.__clientStatusCallbacks.append(callback)
 		logging.debug("Client status callback added")
 		return self.clientStatus
 
 	def clientStatusUpdates(self):
+		"""
+		Calls all client status update callbacks.
+		"""
+
 		for callback in self.__clientStatusCallbacks:
 			callback.onAction(self.clientStatus)
 
@@ -97,17 +112,42 @@ class Backend:
 		self.clientStatusUpdates()
 
 	def registerLobbyUpdateGamesCallback(self, callback):
+		"""
+		Registers a new callback that is called when the server sends a lobby update.
+
+		Args:
+			callback - the callback
+
+		Returns:
+			A tuple constisting of the players and the games.
+		"""
+
 		self.__lobbyUpdateGamesCallbacks.append(callback)
 		logging.debug("Lobby callback added")
 		return self.__lobbyCurrentPlayers, self.__lobbyCurrentGames
 
 	def removeLobbyUpdateGamesCallback(self, callback):
+		"""
+		Removes a lobby update callback.
+
+		Args:
+			callback - the callback to remove
+		"""
+
 		for cb in self.__lobbyUpdateGamesCallbacks:
 			if cb is callback:
 				self.__lobbyUpdateGamesCallbacks.remove(callback)
 		logging.debug("Lobby callback removed")
 
 	def lobbyUpdateGamesProgress(self, players, games):
+		"""
+		Calls all lobby update callbacks when there is any update.
+
+		Args:
+			players - complete list of the current players
+			games - complete list of the current games
+		"""
+
 		self.__lobbyCurrentPlayers = players
 		self.__lobbyCurrentGames = games
 
@@ -115,10 +155,24 @@ class Backend:
 			callback.onAction(players, games)
 
 	def joinGame(self, gameId, callback):
+		"""
+		Joins a new game and registers a callback that will be called when the server answered.
+
+		Args:
+			gameId - the id of the game to join
+			callback - the callback
+		"""
+
 		self.__joinGameCallbacks.append(callback)
 		self.__serverHandler.joinGame(gameId)
 
 	def joinGameResponse(self, success):
+		"""
+		Calls all registered callbacks when the server answers a game join query.
+
+		Args:
+			success - True of the query has been successful or False if not
+		"""
 
 		# validate current client status
 		if self.clientStatus is not ClientStatus.NOGAMERUNNING:
@@ -129,10 +183,24 @@ class Backend:
 		self.__joinGameCallbacks = []
 
 	def createGame(self, gameId, callback):
+		"""
+		Creates a new game on the current servers and registers a callback that will be called when the server answers.
+
+		Args:
+			gameId - the identiefier (a name) of the game
+			callback - the callback
+		"""
+
 		self.__createGameCallbacks.append(callback)
 		self.__serverHandler.createGame(gameId)
 
 	def createGameResponse(self, success):
+		"""
+		Calls all registered callbacks when the servers answers a create game query.
+
+		Args:
+			success - True of the query has been successful or False if not
+		"""
 
 		# validate current client status
 		if self.clientStatus is not ClientStatus.NOGAMERUNNING:
@@ -144,24 +212,51 @@ class Backend:
 		self.clientStatusUpdates()
 
 	def prepareGame(self):
+		"""
+		Startes to prepare a new game.
+		"""
+
 		self.clientStatus = ClientStatus.PREPARATIONS
 		logging.info("ClientStatus changed: Starting game preparations...")
 
 	def leaveGame(self, callback):
+		"""
+		Leaves the current game and registers a callback to wait for an answer from the server.
+
+		Args:
+			callback - the callback
+		"""
+
 		self.__leaveGameCallbacks.append(callback)
 		self.__serverHandler.leaveGame()
 
 	def leaveGameResponse(self):
+		"""
+		Is called when the client received an answer to the leave game query.
+		"""
+
 		for cb in self.__leaveGameCallbacks:
 			cb.onAction()
 		self.__leaveGameCallbacks = []
 		self.clientStatus = ClientStatus.NOGAMERUNNING
 
 	def close(self):
+		"""
+		Closes the client.
+		"""
+
 		self.__serverHandler.close()
 		self.__udpDiscoverer.close()
 
 	def connect(self, hostname, port):
+		"""
+		Connects to a server.
+
+		Args:
+			hostname - the hostname or IP address of the server
+			port - the port of the server
+		"""
+
 		result = self.__serverHandler.connect(hostname, port)
 		if result:
 			self.__updateClientStatus(ClientStatus.NOGAMERUNNING)
@@ -169,22 +264,83 @@ class Backend:
 		return result
 
 	def registerUdpDiscoveryCallback(self, callback):
+		"""
+		Registers a callback that informs about newly discovered servers.
+
+		Args:
+			callback - the callback
+		"""
+
 		self.__udpDiscoveryCallbacks.append(callback)
 		logging.debug("UDP discovery callback added")
 		print(self.__udpServers)
 		return self.__udpServers
 
 	def removeUdpDiscoveryCallback(self, callback):
+		"""
+		Removes an already registered UDP discovery callback.
+
+		Args:
+			callback - the callback to remove
+		"""
+
 		for cb in self.__udpDiscoveryCallbacks:
 			if cb is callback:
 				self.__udpDiscoveryCallbacks.remove(callback)
 		logging.debug("UDP Discovery callback removed")
 
 	def udpDiscoveryUpdate(self, server):
+		"""
+		Is called when there is a server update.
+
+		Args:
+			servers - a list of servers discovered by UDP broadcast
+		"""
+
 		if server not in self.__udpServers:
 			self.__udpServers.append(server)
 		for cb in self.__udpDiscoveryCallbacks:
 			cb.onAction(self.__udpServers)
+
+	def registerGamePlayCallback(self, callback):
+		"""
+		Registers a callback to stay informed about game play updates.
+
+		Args:
+			callback - the callback
+		"""
+
+		self.__gamePlayCallbacks.append(callback)
+
+	def gamePlayUpdate(self, status):
+		"""
+		Is called when there is a game play update.
+
+		Args:
+			status - the received status update
+		"""
+
+		for cb in self.__gamePlayCallbacks:
+			cb.onAction(status)
+
+	def registerGamePreparationsEndedCallback(self, callback):
+		"""
+		Registers a callback that will be called when game preparations have finished.
+
+		Args:
+			callback - the callback
+		"""
+
+		self.__gamePreparationsEndedCallbacks.append(callback)
+
+	def gamePreparationsEndedResponse(self):
+		"""
+		Is called when the client received an answer to the game preparations query.
+		"""
+
+		self.__updateClientStatus(ClientStatus.PREPARATIONSENDED)
+		for cb in self.__gamePreparationsEndedCallbacks:
+			cb.onAction()
 
 	def __init__(self, length, hostname, port):
 		from serverhandler import ServerHandler
@@ -206,6 +362,8 @@ class Backend:
 		self.__createGameCallbacks = []
 		self.__leaveGameCallbacks = []
 		self.__connectCallbacks = []
+		self.__gamePreparationsEndedCallbacks = []
+		self.__gamePlayCallbacks = []
 
 		self.__serverHandler = ServerHandler(self)		
 		if hostname and port:
