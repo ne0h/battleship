@@ -10,15 +10,24 @@ class LobbyError(Enum):
 class LobbyEvent(Enum):
     on_update = 1
 
-global_games = {}
-global_waiting_games = set()
-global_players = []
-global_callbacks = {}
-global_callbacks[LobbyEvent.on_update] = []
+# Map of games by name
+games = {}
 
-global_games_lock = threading.Lock()
-global_players_lock = threading.Lock()
-global_callbacks_lock = threading.Lock()
+# Set of waiting games
+waiting_games = set()
+
+# Set of all connected player ids
+players = set()
+
+# Map of callback lists by event type
+callbacks = {}
+# Initialize an empty list for each event
+callbacks[LobbyEvent.on_update] = []
+
+# Locks
+games_lock = threading.Lock()
+players_lock = threading.Lock()
+callbacks_lock = threading.Lock()
 
 
 class LobbyModel:
@@ -28,28 +37,34 @@ class LobbyModel:
         Create a new lobby and make sure that the name is unique.
         Return the new game on success and False on failure (i.e., lobby name was already taken).
         """
-        global global_games
-        global global_waiting_games
-        global global_players
-        global global_games_lock
-        global global_players_lock
-        global_games_lock.acquire()
+        global games
+        global waiting_games
+        global players
+        global games_lock
+        global players_lock
 
-        if name in global_games:
-            global_games_lock.release()
+        # make sure that game name does not exist yet
+        games_lock.acquire()
+        if name in games:
+            games_lock.release()
             return False
 
-        # TODO wtf is this
-        global_players_lock.acquire()
-        global_games[name] = Game(name)
-        global_games[name].get_player(1).set_id(playerid)
-        global_players.append(playerid)
-        global_players_lock.release()
+        # add new game to list of games and set first player id
+        games[name] = Game(name)
+        games[name].get_player(1).set_id(playerid)
+        players_lock.acquire()
+        players.add(playerid)
+        players_lock.release()
 
-        global_waiting_games.add(name)
-        global_games_lock.release()
+        # add game to list of waiting games
+        waiting_games.add(name)
+        games_lock.release()
+
+        # trigger on_update event
         self.__notify_all(LobbyEvent.on_update)
-        return global_games[name]
+
+        # return the new game instance
+        return games[name]
 
     def join_lobby(self, name, playerid):
         """
@@ -57,62 +72,80 @@ class LobbyModel:
         Return True on success and False on failure as first return parameter.
         Return the joined game on success and an error type on failure as second return parameter.
         """
-        global global_games
-        global global_waiting_games
-        global global_games_lock
-        global_games_lock.acquire()
+        global games
+        global waiting_games
+        global players
+        global games_lock
+        global players_lock
 
-        if name not in global_games:
-            global_games_lock.release()
+        # make sure game name exists
+        games_lock.acquire()
+        if name not in games:
+            games_lock.release()
             return False, LobbyError.game_does_not_exist
 
-        if name not in global_waiting_games:
-            global_games_lock.release()
+        # make sure the game is not full
+        if name not in waiting_games:
+            games_lock.release()
             return False, LobbyError.game_is_full
 
-        global_waiting_games.remove(name)
-        global_games[name].get_player(2).set_id(playerid)
-        global_players_lock.acquire()
-        global_players.remove(playerid)
-        global_players_lock.release()
-        global_games_lock.release()
+        # set second player id in the game and add the id to the list of players
+        games[name].get_player(2).set_id(playerid)
+        players_lock.acquire()
+        players.add(playerid)
+        players_lock.release()
+
+        # remove game from the list of waiting games
+        waiting_games.remove(name)
+        games_lock.release()
+
+        # trigger on_update event
         self.__notify_all(LobbyEvent.on_update)
-        return True, global_games[name]
+
+        # return the joined game instance
+        return True, games[name]
 
     def get_number_of_games(self):
-        global global_games
-        global global_waiting_games
-        return len(global_games), len(global_waiting_games)
+        """
+        Return number of games, number of waiting games
+        """
+        global games
+        global waiting_games
+        return len(games), len(waiting_games)
 
     def get_number_of_players(self):
-        global global_games
-        global global_waiting_games
-        return 2 * len(global_games) - len(global_waiting_games)
+        global games
+        global waiting_games
+        return 2 * len(games) - len(waiting_games)
 
     def get_player_ids(self):
-        global global_players
-        global global_players_lock
-
-        global_players_lock.acquire()
-
-        # TODO do I need to do a copy here
+        global players
+        global players_lock
+        players_lock.acquire()
         result = []
-        for p in global_players:
+        for p in players:
             result.append(p)
-
-        global_players_lock.release()
+        players_lock.release()
         return result
 
+    def leave_lobby(self, name):
+        global games
+        global waiting_games
+        global games_lock
+        games_lock.acquire()
+
+        games_lock.release()
+
     def get_games_info(self):
-        global global_games
-        global global_waiting_games
-        global global_games_lock
-        global_games_lock.acquire()
+        global games
+        global waiting_games
+        global games_lock
+        games_lock.acquire()
 
         result = []
-        for _, g in global_games.items():
+        for _, g in games.items():
             # get number of players
-            if g.get_name() in global_waiting_games:
+            if g.get_name() in waiting_games:
                 number_of_players = 1
             else:
                 number_of_players = 2
@@ -123,7 +156,7 @@ class LobbyModel:
                 'ids': [g.get_player(1).get_id(), g.get_player(2).get_id()]
             })
 
-        global_games_lock.release()
+        games_lock.release()
         return result
 
     def register_callback(self, event, callback):
@@ -131,25 +164,29 @@ class LobbyModel:
         Register a callback that will be triggered as a given event occurs.
         """
         logging.debug("register_callback({})".format(event))
-        global global_callbacks
-        global global_callbacks_lock
-        global_callbacks_lock.acquire()
-        global_callbacks[event].append(callback)
-        global_callbacks_lock.release()
+
+        global callbacks
+        global callbacks_lock
+
+        callbacks_lock.acquire()
+        callbacks[event].append(callback)
+        callbacks_lock.release()
 
     def remove_callback(self, event, callback):
         """
         Remove a callback.
         """
         logging.debug("remove_callback({})".format(event))
-        global global_callbacks
-        global global_callbacks_lock
-        global_callbacks_lock.acquire()
-        global_callbacks[event].remove(callback)
-        global_callbacks_lock.release()
+
+        global callbacks
+        global callbacks_lock
+
+        callbacks_lock.acquire()
+        callbacks[event].remove(callback)
+        callbacks_lock.release()
 
     def __notify_all(self, event):
         logging.debug("__notify_all({})".format(event))
-        global global_callbacks
-        for cb in global_callbacks[event]:
+        global callbacks
+        for cb in callbacks[event]:
             cb()

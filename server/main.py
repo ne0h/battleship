@@ -6,9 +6,7 @@ import logging
 import threading
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '../common'))
 from server import *
-
 from socketserver import UDPServer, BaseRequestHandler
-from threading import Thread
 
 USAGE = "Usage: main.py <host> <port>"
 
@@ -31,7 +29,7 @@ def main():
 
     # start UPD discovery service
     udpdiscovery_server = UDPServer(("", 12345), UDPDiscoveryHandler)
-    udpdiscovery_server_thread = Thread(target=udpdiscovery_server.serve_forever)
+    udpdiscovery_server_thread = threading.Thread(target=udpdiscovery_server.serve_forever)
     udpdiscovery_server_thread.daemon = True
     udpdiscovery_server_thread.start()
     logging.debug("UDP discovery server running in thread: " + udpdiscovery_server_thread.name)

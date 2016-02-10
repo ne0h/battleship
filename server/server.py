@@ -9,9 +9,6 @@ import messages
 from lobby import *
 from helpers import *
 
-global_clients = []
-global_clients_lock = threading.Lock()
-
 
 class TCPServer(socketserver.ThreadingMixIn, socketserver.TCPServer):
     pass
@@ -36,7 +33,6 @@ class ClientHandler:
         self.__message_parser = MessageParser()
         self.__lobby_model = LobbyModel()
         self.__game = None
-        self.__player_id = None
 
         # register on_update callback
         self.__lobby_model.register_callback(LobbyEvent.on_update, self.on_update_lobby)
@@ -79,21 +75,26 @@ class ClientHandler:
 
     def on_update_lobby(self):
         logging.debug("on_update_lobby()")
+
+        # Get required data for update lobby msg
         number_of_clients = self.__lobby_model.get_number_of_players()
         number_of_games = self.__lobby_model.get_number_of_games()
         games_info = self.__lobby_model.get_games_info()
+
         # Update_Lobby
         data = {
             'status': 16,
             'number_of_clients': number_of_clients,
             'number_of_games': number_of_games[0]
         }
+
         i = 0
         weirdkey = 'game_name_{}'
         moreweirdkeys = 'game_players_count_{}'
         whatevenisthis = 'game_player_{}_{}'
         waitwhat = 'player_name_{}'
         yetanotherkey = 'player_identifier_{}'
+
         for game in games_info:
             # game stuff
             data[weirdkey.format(i)] = game['game_name']
@@ -105,8 +106,14 @@ class ClientHandler:
             if game['number_of_players'] == 2:
                 data[whatevenisthis.format(i, 2)] = game['ids'][1]
                 data[waitwhat.format(i, 2)] = game['nicknames'][1]
-
             i += 1
+
+        # concat all player ids
+        ids = self.__lobby_model.get_player_ids()
+        j = 0
+        for id in ids:
+            data[yetanotherkey.format(j)] = id
+            j += 1
 
         msg = self.__message_parser.encode('report', data)
         self.__send(msg)
@@ -135,8 +142,7 @@ class ClientHandler:
         game = self.__lobby_model.add_lobby(params['name'], playerid)
         if game:
             self.__game = game
-            self.__player_id = 1
-            # TODO use a const here
+            # TODO use consts here
             return self.__message_parser.encode('report', {'status': '28'})
         else:
             return self.__message_parser.encode('report', {'status': '37'})
@@ -159,14 +165,18 @@ class ClientHandler:
         game = self.__lobby_model.join_lobby(params['name'], playerid)
         if game:
             self.__game = game
-            self.__player_id = 2
-            # TODO use a const here
+            # TODO use consts here
             return self.__message_parser.encode('report', {'status': '27'})
         else:
             return self.__message_parser.encode('report', {'status': '37'})
 
+    def __leave_game(self):
+        self.__lobby_model.leave_lobby
+        # TODO use consts here
+        return self.__message_parser.encode('report', {'status': '19'})
+
     def __unknown_msg(self):
-        # TODO use a const here
+        # TODO use consts here
         return self.__message_parser.encode('report', {'status': '40'})
 
     def __expect_parameter(self, expected, actual):
