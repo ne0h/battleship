@@ -102,7 +102,8 @@ class TestShipList(unittest.TestCase):
 
 		ships.add(Field(4, 0), Field(4, 1))
 		self.assertEqual(ships.getDestroyerCount(), 4)		
-#Easy Test
+#Easy Test#
+#---------#
 #if __name__ == "__main__":
 #	unittest.main()
 
