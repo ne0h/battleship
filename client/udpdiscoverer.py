@@ -8,13 +8,12 @@ class UDPDiscoverer:
 
 	def __run(self):
 		timeout = 2
-		self.run = True
 
 		sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
 		sock.setsockopt(socket.SOL_SOCKET, socket.SO_BROADCAST, True)
 		sock.settimeout(timeout)
 
-		while self.run:
+		while self.__keepRunning:
 			sock.sendto("I_NEED_A_BATTLESHIP_PLUS_PLUS_SERVER".encode("UTF-8"), ("<broadcast>", 12345))
 			try:
 				stopTime = time.time() + timeout
@@ -33,9 +32,10 @@ class UDPDiscoverer:
 		Closes the service.
 		"""
 
-		self.run = False
+		self.__keepRunning = False
 
 	def __init__(self, backend):
 		self.__backend = backend
+		self.__keepRunning = True
 
 		Thread(target=self.__run).start()
