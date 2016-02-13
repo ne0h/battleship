@@ -298,6 +298,7 @@ class PlayingFieldWidget(QWidget):
 		self._fieldLength = fieldLength
 
 		super(PlayingFieldWidget, self).__init__()
+		self.setMinimumWidth(450)
 		self._setupGui()
 
 class OwnPlayingFieldWidget(PlayingFieldWidget):
@@ -321,7 +322,6 @@ class OwnPlayingFieldWidget(PlayingFieldWidget):
 				self._viewModel.newShipBow = fieldAddress
 			else:
 				moreShips = self._backend.placeShip(fieldAddress, self._viewModel.newShipBow)
-
 				self.repaint()
 
 				if not moreShips:
@@ -381,6 +381,10 @@ class MainForm(QWidget):
 				self.__placeShipBtn.setEnabled(True)
 				self.__lobbyBtn.setEnabled(False)
 
+	def __onUpdateShipList(self, shipId):
+		ship = self.__backend.getOwnShip(shipId)
+		self.__shipsWgt.addItem("#%s: %s:%s" % (shipId, ship.bow.toString(), ship.rear.toString()))
+
 	def __onUpdateClientStatus(self, status):
 		from backend import ClientStatus
 
@@ -391,8 +395,15 @@ class MainForm(QWidget):
 			self.__lobbyBtn.setEnabled(True)
 			self.__connectBtn.setEnabled(False)
 		elif status is ClientStatus.PREPARATIONS:
+			from backend import Callback
+
 			self.__statusLbl.setText("Please place your ships.")
 			self.__leaveGameBtn.setEnabled(True)
+
+			cb = Callback()
+			cb.onAction = lambda shipId: self.__onUpdateShipList(shipId)
+			self.__backend.registerShipUpdateCallback(cb)
+
 		elif status is ClientStatus.WAITINGFOROPPONENT:
 			self.__statusLbl.setText("Placement of ships successful. Waiting for opponent now.")
 			self.__placeShipBtn.setEnabled(False)
@@ -456,6 +467,15 @@ class MainForm(QWidget):
 		enemiesPlayingFieldLayout.addWidget(enemeysPlayingFieldWgt)
 		enemeysPlayingFieldBox.setLayout(enemiesPlayingFieldLayout)
 
+		# shiplist
+		shipsBox = QGroupBox("Your ships")
+		self.__shipsWgt = QListWidget()
+		self.__shipsWgt.setMaximumWidth(200)
+		self.__shipsWgt.setSortingEnabled(True)
+		shipsLayout = QVBoxLayout()
+		shipsLayout.addWidget(self.__shipsWgt)
+		shipsBox.setLayout(shipsLayout)
+
 		# buttons
 		self.__placeShipBtn = QPushButton("Place Ships")
 		self.__placeShipBtn.clicked.connect(self.__startPlaceShip)
@@ -476,31 +496,14 @@ class MainForm(QWidget):
 		self.__statusLbl = QLabel()
 		self.__statusLbl.setStyleSheet("color: #b00")
 
-		"""
-		  column------->
-		r
-		o
-		w
-		|
-		|
-		V
-
-													row		column	height 	width
-		layout = QGridLayout()
-		layout.addWidget(self.__statusLbl,            0,        0,     5,      80)
-		layout.addWidget(ownPlayingFieldBox,         10,        0,    48,      38)
-		layout.addWidget(enemeysPlayingFieldBox,     10,       41,    48,      48)
-		layout.addWidget(self.__placeShipBtn,       100,        1,     1,       1)
-		layout.addWidget(self.__lobbyBtn,           100,        0,     1,       1)
-		layout.addWidget(self.__leaveGameBtn,       100,        2,     1,       1)
-		"""
-
+		# place all elements
 		playingFieldLayout = QHBoxLayout()
 		playingFieldLayout.addWidget(ownPlayingFieldBox)
+		playingFieldLayout.addWidget(shipsBox)
 		playingFieldLayout.addWidget(enemeysPlayingFieldBox)
 		playingFieldWgt = QWidget()
 		playingFieldWgt.setLayout(playingFieldLayout)
-		playingFieldWgt.setMinimumWidth(1000)
+		playingFieldWgt.setMinimumWidth(1100)
 		playingFieldWgt.setMinimumHeight(510)
 
 		btnsLayout = QHBoxLayout()

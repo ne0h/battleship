@@ -161,6 +161,30 @@ class ShipList:
 
 		return result
 
+	def getShip(self, shipId):
+		"""
+		Returns a specified ship from the own playing field.
+
+		Args:
+		    shipId - the id of the ship
+
+		Returns:
+			Returns a specified ship from the own playing field.
+		"""
+
+		if shipId is 0:
+			return self.__carriers[0]
+		if shipId > 0 and shipId < 3:
+			shipId = shipId - 1
+			return self.__battleships[shipId]
+		if shipId > 2 and shipId < 6:
+			shipId = shipId - 3
+			return self.__cruisers[shipId]
+		else:
+			shipId = shipId - 6
+			return self.__destroyers[shipId]
+
+
 	def moreShipsLeftToPlace(self):
 		"""
 		Checks if the user has to place more ships.
@@ -183,7 +207,8 @@ class ShipList:
 			rear -- the rear of the Ship to add
 
 		Return:
-			Returns the newly built ship or None if there was any game rule violation
+			Returns the id of the newly built ship or -1 if there was any game rule violation. In addition returns if
+			the user has to place more ships.
 		"""
 
 		import math
@@ -196,7 +221,7 @@ class ShipList:
 		
 		if length < 2 or length > 5:
 			logging.error("This type of ship does not exist.")
-			return True
+			return -1, True
 
 		# build ship
 		ship = Ship(bow, rear)
@@ -204,33 +229,38 @@ class ShipList:
 		# check if the ship is diagonal
 		if self.__checkForDiagonal(ship):
 			logging.error("Diagonal ship!")
-			return True
+			return -1, True
 		
 		# check for collisions with previously placed ships
 		if not self.__checkForCollisionWithOtherShips(ship):
 			logging.error("Collision with ship!")
-			return True
+			return -1, True
 
 		# check playing field borders
 		if not self.__checkForCollisionsWithBorders(ship):
 			logging.error("Collision with border!")
-			return True
+			return -1, True
 
 		# all checks done - add ship to specific list
+		shipId = -1
 		if length is 5 and len(self.__carriers) < self.__maxCarrierCount:
 			self.__carriers.append(ship)
+			shipId = 0
 			logging.info("Added a carrier. Carrier count is now %s" % (len(self.__carriers)))
 		elif length is 4 and len(self.__battleships) < self.__maxBattleshipCount:
 			self.__battleships.append(ship)
+			shipId = len(self.__battleships)
 			logging.info("Added a battleship. battleship count is now %s" % (len(self.__battleships)))
 		elif length is 3 and len(self.__cruisers) < self.__maxCruiserCount:
 			self.__cruisers.append(ship)
+			shipId = len(self.__cruisers) + 2
 			logging.info("Added a cruiser. Cruiser count is now %s" % (len(self.__cruisers)))
 		elif length is 2 and len(self.__destroyers) < self.__maxDestroyerCount:
 			self.__destroyers.append(ship)
+			shipId = len(self.__destroyers) + 5
 			logging.info("Added a destroyer. Destroyer count is now %s" % (len(self.__destroyers)))
 
-		return self.moreShipsLeftToPlace()
+		return shipId, self.moreShipsLeftToPlace()
 
 	def getCarrierCount(self):
 		return len(self.__carriers)
@@ -271,7 +301,27 @@ class PlayingField:
 	"""
 
 	def getShips(self):
+		"""
+		Returns all ships.
+
+		Returns:
+			Returns all ships.
+		"""
+
 		return self.__ships.getShips()
+
+	def getShip(self, shipId):
+		"""
+		Returns a specified ship.
+
+		Args:
+		    shipId - the id of the ship
+
+		Returns:
+			Returns a specified ship.
+		"""
+
+		return self.__ships.getShip(shipId)
 
 	def placeShip(self, bow, rear):
 		"""

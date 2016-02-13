@@ -90,6 +90,19 @@ class Backend:
 
 		return self.__ownPlayingField.getShips()
 
+	def getOwnShip(self, shipId):
+		"""
+		Returns a specified ship from the own playing field.
+
+		Args:
+		    shipId - the id of the ship
+
+		Returns:
+			Returns a specified ship from the own playing field.
+		"""
+
+		return self.__ownPlayingField.getShip(shipId)
+
 	def getEnemeysShips(self):
 		"""
 		Returns the enemey's ships.
@@ -109,10 +122,14 @@ class Backend:
 			rear -- address of the rear
 
 		Returns:
-			True if the user has to place more ships and False of the user successfully placed all his ships.
+			Returns the id of the newley placed ship. In addition returns True if the user has to place more ships and
+			False of the user successfully placed all his ships.
 		"""
 
-		moreShips = self.__ownPlayingField.placeShip(bow, rear)
+		shipId, moreShips = self.__ownPlayingField.placeShip(bow, rear)
+
+		if shipId > -1 and shipId < 10:
+			self.shipUpdate(shipId)
 		if not moreShips:
 			self.clientStatus = ClientStatus.WAITINGFOROPPONENT
 			self.clientStatusUpdates()
@@ -310,7 +327,7 @@ class Backend:
 
 		self.__udpDiscoveryCallbacks.append(callback)
 		logging.debug("UDP discovery callback added")
-		print(self.__udpServers)
+
 		return self.__udpServers
 
 	def removeUdpDiscoveryCallback(self, callback):
@@ -379,6 +396,27 @@ class Backend:
 		for cb in self.__gamePreparationsEndedCallbacks:
 			cb.onAction()
 
+	def registerShipUpdateCallback(self, callback):
+		"""
+		Registers a new callback to inform about ship updates.
+
+		Args:
+		    callback - the callback
+		"""
+
+		self.__shipUpdateCallbacks.append(callback)
+
+	def shipUpdate(self, shipId):
+		"""
+		Is called when there is any ship update.
+
+		Args:
+		    shipId - the id of the updated ship
+		"""
+
+		for cb in self.__shipUpdateCallbacks:
+			cb.onAction(shipId)
+
 	def __init__(self, length, hostname, port):
 		from serverhandler import ServerHandler
 		from udpdiscoverer import UDPDiscoverer
@@ -401,6 +439,7 @@ class Backend:
 		self.__connectCallbacks = []
 		self.__gamePreparationsEndedCallbacks = []
 		self.__gamePlayCallbacks = []
+		self.__shipUpdateCallbacks = []
 
 		self.__serverHandler = ServerHandler(self)		
 		if hostname and port:
