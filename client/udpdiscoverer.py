@@ -20,10 +20,11 @@ class UDPDiscoverer:
 				while time.time() < stopTime:
 					data, addr = sock.recvfrom(1024)
 					if data.decode("UTF-8") == "I_AM_A_BATTLESHIP_PLUS_PLUS_SERVER":
-						logging.debug("Found server at %s:%s" % (addr[0], addr[1]))
+						#logging.debug("Found server at %s:%s" % (addr[0], addr[1]))
 						self.__backend.udpDiscoveryUpdate(addr[0])
 			except socket.timeout:
-				logging.debug("No servers found.")
+				#logging.debug("No servers found.")
+				pass
 
 		sock.close()
 
