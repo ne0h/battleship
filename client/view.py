@@ -451,6 +451,21 @@ class MainForm(QWidget):
 		#self.__backend.connect()
 		"""
 
+	def __attackResponse(self, success, result):
+		pass
+
+	def __attack(self):
+		from backend import Callback
+
+		cb = Callback()
+		cb.onAction = lambda success, result: self.__attackResponse(success, result)
+
+	def __specialAttack(self):
+		pass
+
+	def __moveShip(self):
+		pass
+
 	def __setupGui(self):
 
 		# own playing field stuff
@@ -467,13 +482,23 @@ class MainForm(QWidget):
 		enemiesPlayingFieldLayout.addWidget(enemeysPlayingFieldWgt)
 		enemeysPlayingFieldBox.setLayout(enemiesPlayingFieldLayout)
 
-		# shiplist
+		# shiplist with game play buttons
 		shipsBox = QGroupBox("Your ships")
 		self.__shipsWgt = QListWidget()
 		self.__shipsWgt.setMaximumWidth(200)
 		self.__shipsWgt.setSortingEnabled(True)
+		self.__attackBtn = QPushButton("Attack")
+		self.__attackBtn.clicked.connect(self.__attack)
+		self.__specialAttackBtn = QPushButton("Special Attack")
+		self.__specialAttackBtn.clicked.connect(self.__specialAttack)
+		self.__moveShipBtn = QPushButton("Move Ship")
+		self.__moveShipBtn.clicked.connect(self.__moveShip)
+
 		shipsLayout = QVBoxLayout()
 		shipsLayout.addWidget(self.__shipsWgt)
+		shipsLayout.addWidget(self.__attackBtn)
+		shipsLayout.addWidget(self.__specialAttackBtn)
+		shipsLayout.addWidget(self.__moveShipBtn)
 		shipsBox.setLayout(shipsLayout)
 
 		# buttons

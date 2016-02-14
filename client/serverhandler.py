@@ -187,6 +187,26 @@ class ServerHandler:
 
 		self.__sendMessage("board_init", params)
 
+	def attack(self, target):
+		"""
+		Sends an attack message.
+
+		Args:
+			target - the address of the field that is to be attacked
+		"""
+
+		self.__sendMessage("attack", {"coordinate_x": target.x, "coordinate_y": target.y})
+
+	def specialAttack(self, target):
+		"""
+		Special-attacks the given field.
+
+		Args:
+		    target - the address of the bottom-left field
+		"""
+
+		self.__sendMessage("special_attack", {"coordinate_x": target.x, "coordinate_y": target.y})
+
 	def __receiveLoop(self):
 		while not self.__stopReceiveLoop:
 

@@ -401,7 +401,7 @@ class Backend:
 		Registers a new callback to inform about ship updates.
 
 		Args:
-		    callback - the callback
+			callback - the callback
 		"""
 
 		self.__shipUpdateCallbacks.append(callback)
@@ -411,11 +411,33 @@ class Backend:
 		Is called when there is any ship update.
 
 		Args:
-		    shipId - the id of the updated ship
+			shipId - the id of the updated ship
 		"""
 
 		for cb in self.__shipUpdateCallbacks:
 			cb.onAction(shipId)
+
+	def attack(self, target):
+		"""
+		Attacks the enemy at the given field.
+
+		Args:
+			target - the address of the field
+		"""
+
+		# TODO: validate client status
+		self.__serverHandler.attack(target)
+
+	def specialAttack(self, target):
+		"""
+		Special-attacks the given field.
+
+		Args:
+		    target - the address of the bottom-left field
+		"""
+
+		# TODO: validate client status
+		self.__serverHandler.specialAttack(target)
 
 	def __init__(self, length, hostname, port):
 		from serverhandler import ServerHandler
