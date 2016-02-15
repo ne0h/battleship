@@ -82,6 +82,7 @@ class ServerHandler:
 		# TODO lots of consistency tests...
 		# TODO remove already read values from map that the method runs in O(n)
 		# TODO Validate message length (should be already done in the receiveLoop)
+		# TODO Validate if empty nicknames work correctly (that there is not 'None' in wireshark)
 
 		games   = []
 		players = []
@@ -160,6 +161,9 @@ class ServerHandler:
 		"""
 
 		self.__sendMessage("game_create", {"name": gameId})
+
+	def setNickname(self, nickname):
+		self.__sendMessage("nickname_set", {"name": nickname})
 
 	def leaveGame(self):
 		"""

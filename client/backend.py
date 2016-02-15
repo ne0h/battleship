@@ -232,9 +232,12 @@ class Backend:
 		if self.clientStatus is not ClientStatus.NOGAMERUNNING:
 			success = False
 
+		self.__updateClientStatus(ClientStatus.PREPARATIONS)
+
 		for cb in self.__joinGameCallbacks:
 			cb.onAction(success)
 		self.__joinGameCallbacks = []
+		self.clientStatusUpdates()
 
 	def createGame(self, gameId, callback):
 		"""
@@ -302,7 +305,7 @@ class Backend:
 		self.__serverHandler.close()
 		self.__udpDiscoverer.close()
 
-	def connect(self, hostname, port):
+	def connect(self, nickname, hostname, port):
 		"""
 		Connects to a server.
 
@@ -310,10 +313,12 @@ class Backend:
 			hostname: the hostname or IP address of the server
 			port: the port of the server
 		"""
+		# TODO: Validate input (if it is None)
 
 		result = self.__serverHandler.connect(hostname, port)
 		if result:
 			self.__updateClientStatus(ClientStatus.NOGAMERUNNING)
+			#self.__serverHandler.setNickname(nickname)
 
 		return result
 
