@@ -100,12 +100,12 @@ class ClientHandler:
             data[weirdkey.format(i)] = game['game_name']
             data[moreweirdkeys.format(i)] = game['number_of_players']
             # player 1 stuff
-            data[whatevenisthis.format(i, 1)] = game['ids'][0]
-            data[waitwhat.format(i, 1)] = game['nicknames'][0]
+            data[whatevenisthis.format(i, 0)] = game['ids'][0]
+            data[waitwhat.format(i, 0)] = game['nicknames'][0]
             # player 2 stuff
             if game['number_of_players'] == 2:
-                data[whatevenisthis.format(i, 2)] = game['ids'][1]
-                data[waitwhat.format(i, 2)] = game['nicknames'][1]
+                data[whatevenisthis.format(i, 1)] = game['ids'][1]
+                data[waitwhat.format(i, 1)] = game['nicknames'][1]
             i += 1
 
         # concat all player ids
