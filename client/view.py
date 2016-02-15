@@ -37,8 +37,6 @@ class ConnectDialog(QDialog):
 
 	def __onUpdateServers(self, servers):
 		for server in servers:
-			logging.info("Server: %s" % (server))
-
 			found = False
 			for i in range(0, self.__serversWgt.count()):
 				if self.__serversWgt.item(i).text():
