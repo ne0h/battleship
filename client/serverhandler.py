@@ -46,7 +46,7 @@ class ServerHandler:
 		Sets the nickname.
 
 		Args:
-			nickname - the new nickname
+			nickname: the new nickname
 		"""
 
 		self.__sendMessage("nickname_set", {"name": "nickname"})
@@ -78,10 +78,11 @@ class ServerHandler:
 	"""
 	def __setUpdateLobby(self, params):
 		from backend import GameInformation, PlayerInformation
-
+		print(params)
 		# TODO lots of consistency tests...
 		# TODO remove already read values from map that the method runs in O(n)
 		# TODO Validate message length (should be already done in the receiveLoop)
+		# TODO Validate if empty nicknames work correctly (that there is not 'None' in wireshark)
 
 		games   = []
 		players = []
@@ -139,14 +140,14 @@ class ServerHandler:
 
 				games.append(game)
 
-		self.__backend.lobbyUpdateGamesProgress(players, games)
+		self.__backend.onLobbyUpdates(players, games)
 
 	def joinGame(self, gameId):
 		"""
 		Sends a joinGame request to the server.
 
 		Args:
-			gameId - the identifier of the game
+			gameId: the identifier of the game
 		"""
 
 		self.__sendMessage("game_join", {"name": {gameId}})
@@ -156,10 +157,13 @@ class ServerHandler:
 		Sends a new createGame request to the server.
 
 		Args:
-			gameId - the identifier of the new game
+			gameId: the identifier of the new game
 		"""
 
 		self.__sendMessage("game_create", {"name": gameId})
+
+	def setNickname(self, nickname):
+		self.__sendMessage("nickname_set", {"name": nickname})
 
 	def leaveGame(self):
 		"""
@@ -173,7 +177,7 @@ class ServerHandler:
 		Sends the playing field to the server.
 
 		Args:
-			ships - a list of all ships
+			ships: a list of all ships
 		"""
 
 		params = {}
@@ -192,7 +196,7 @@ class ServerHandler:
 		Sends an attack message.
 
 		Args:
-			target - the address of the field that is to be attacked
+			target: the address of the field that is to be attacked
 		"""
 
 		self.__sendMessage("attack", {"coordinate_x": target.x, "coordinate_y": target.y})
@@ -202,7 +206,7 @@ class ServerHandler:
 		Special-attacks the given field.
 
 		Args:
-		    target - the address of the bottom-left field
+		    target: the address of the bottom-left field
 		"""
 
 		self.__sendMessage("special_attack", {"coordinate_x": target.x, "coordinate_y": target.y})
@@ -223,8 +227,11 @@ class ServerHandler:
 				if status in reportCodes:
 					logging.debug("%s received: %s" % (messageType, reportCodes[status]))
 
+					if status is 16:
+						self.__setUpdateLobby(params)
+
 					# game creation stuff
-					if status is 19:														# Game_Aborted
+					elif status is 19:														# Game_Aborted
 						self.__backend.leaveGameResponse()
 					elif status is 27 or status is 47:										# Successful_Game_Join
 						self.__backend.joinGameResponse(status is 27)						# or Game_Join_Denied
@@ -254,7 +261,7 @@ class ServerHandler:
 
 					# bad error stuff
 					#  - Message_Not_Recognized
-					#  - Not_In_Any_Game (what? :D)
+					#  - Not_In_Any_Game (what? wtf? :D)
 					elif status is 40 or status is 43:
 						self.__backend.errorResponse(status)
 

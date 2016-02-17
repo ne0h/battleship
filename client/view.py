@@ -18,6 +18,7 @@ class ConnectDialog(QDialog):
 
 	def __connect(self):
 		try:
+			nickname = self.__nicknameIpt.text()
 			hostname = self.__hostnameIpt.text()
 			port     = int(self.__portIpt.text())
 		except ValueError:
@@ -27,18 +28,17 @@ class ConnectDialog(QDialog):
 		if not hostname:
 			self.__showSettingsErrorBox()
 		else:
-			if self.__backend.connect(hostname, port):
+			if self.__backend.connect(nickname, hostname, port):
 				self.close()
 			else:
 				self.__showSettingsErrorBox(text="Server not reachable.")
 
 	def __updateServerAddress(self):
 		self.__hostnameIpt.setText(self.__serversWgt.currentItem().text())
+		self.__portIpt.setText("12345")
 
 	def __onUpdateServers(self, servers):
 		for server in servers:
-			logging.info("Server: %s" % (server))
-
 			found = False
 			for i in range(0, self.__serversWgt.count()):
 				if self.__serversWgt.item(i).text():
@@ -51,26 +51,33 @@ class ConnectDialog(QDialog):
 		self.__serversWgt = QListWidget()
 		self.__serversWgt.setSortingEnabled(True)
 		self.__serversWgt.clicked.connect(self.__updateServerAddress)
+
+		self.__nicknameIpt = QLineEdit()
+		self.__nicknameIpt.setFixedWidth(100)
+		self.__nicknameIpt.setFixedHeight(20)
+		self.__nicknameIpt.setPlaceholderText("Nickname")
+
 		self.__hostnameIpt = QLineEdit()
 		self.__hostnameIpt.setFixedWidth(150)
+		self.__hostnameIpt.setFixedHeight(20)
 		self.__hostnameIpt.setPlaceholderText("Hostname")
-		self.__hostnameIpt.setText("localhost")
 
 		self.__portIpt = QLineEdit()
 		self.__portIpt.setFixedWidth(60)
+		self.__portIpt.setFixedHeight(20)
 		self.__portIpt.setPlaceholderText("Port")
-		self.__portIpt.setText("12345")
 
 		self.__returnBtn = QPushButton("Connect")
 		self.__returnBtn.clicked.connect(self.__connect)
 
-		bottomlayout = QHBoxLayout()
-		bottomlayout.addWidget(self.__hostnameIpt)
-		bottomlayout.addWidget(self.__portIpt)
-		bottomlayout.addWidget(self.__returnBtn)
+		bottomLayout = QHBoxLayout()
+		bottomLayout.addWidget(self.__nicknameIpt)
+		bottomLayout.addWidget(self.__hostnameIpt)
+		bottomLayout.addWidget(self.__portIpt)
+		bottomLayout.addWidget(self.__returnBtn)
 		bottomLbl = QLabel()
 		bottomLbl.setMinimumHeight(40)
-		bottomLbl.setLayout(bottomlayout)
+		bottomLbl.setLayout(bottomLayout)
 
 		layout = QVBoxLayout()
 		layout.addWidget(self.__serversWgt)

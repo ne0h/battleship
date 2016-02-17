@@ -40,6 +40,7 @@ class ClientHandler:
 
     def handle(self):
         logging.info("Client {} connected.".format(self.__socket.getpeername()))
+        self.on_update_lobby()
         while True:
             # receive 2 bytes size header
             size = self.__socket.recv(2)

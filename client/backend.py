@@ -32,8 +32,8 @@ class GameInformation:
 	Represents a game.
 
 	Args:
-		name - the name of the game
-		firstPlayer - the identifier of the first player
+		name: the name of the game
+		firstPlayer: the identifier of the first player
 	"""
 
 	def toString(self):
@@ -55,8 +55,8 @@ class PlayerInformation:
 	Represents a player.
 
 	Args:
-		id - the identifier of the player
-		nickname - the nickname of the player
+		id: the identifier of the player
+		nickname: the nickname of the player
 	"""
 
 	def toString(self):
@@ -75,9 +75,9 @@ class Backend:
 	Game client backend that does all kind of controller stuff.
 
 	Args:
-		length - the length of the playing field
-		hostname - the hostname of the server to connect to. If not set do not connect to any server so far
-		port - the port of the server to connect to. If not set do not connect to any server so far
+		length: the length of the playing field
+		hostname: the hostname of the server to connect to. If not set do not connect to any server so far
+		port: the port of the server to connect to. If not set do not connect to any server so far
 	"""
 
 	def getOwnShips(self):
@@ -95,7 +95,7 @@ class Backend:
 		Returns a specified ship from the own playing field.
 
 		Args:
-		    shipId - the id of the ship
+		    shipId: the id of the ship
 
 		Returns:
 			Returns a specified ship from the own playing field.
@@ -118,8 +118,8 @@ class Backend:
 		Places a new Ship on the own playing field.
 
 		Args:
-			bow -- address of the bow
-			rear -- address of the rear
+			bow: address of the bow
+			rear: address of the rear
 
 		Returns:
 			Returns the id of the newley placed ship. In addition returns True if the user has to place more ships and
@@ -143,7 +143,7 @@ class Backend:
 		Registers a new callback that will be called when the status of the client updates.
 
 		Args:
-			callback - the callback
+			callback: the callback
 
 		Returns:
 			The current status.
@@ -170,7 +170,7 @@ class Backend:
 		Registers a new callback that is called when the server sends a lobby update.
 
 		Args:
-			callback - the callback
+			callback: the callback
 
 		Returns:
 			A tuple constisting of the players and the games.
@@ -185,7 +185,7 @@ class Backend:
 		Removes a lobby update callback.
 
 		Args:
-			callback - the callback to remove
+			callback: the callback to remove
 		"""
 
 		for cb in self.__lobbyUpdateGamesCallbacks:
@@ -193,13 +193,13 @@ class Backend:
 				self.__lobbyUpdateGamesCallbacks.remove(callback)
 		logging.debug("Lobby callback removed")
 
-	def lobbyUpdateGamesProgress(self, players, games):
+	def onLobbyUpdates(self, players, games):
 		"""
 		Calls all lobby update callbacks when there is any update.
 
 		Args:
-			players - complete list of the current players
-			games - complete list of the current games
+			players: complete list of the current players
+			games: complete list of the current games
 		"""
 
 		self.__lobbyCurrentPlayers = players
@@ -213,8 +213,8 @@ class Backend:
 		Joins a new game and registers a callback that will be called when the server answered.
 
 		Args:
-			gameId - the id of the game to join
-			callback - the callback
+			gameId: the id of the game to join
+			callback: the callback
 		"""
 
 		self.__joinGameCallbacks.append(callback)
@@ -225,24 +225,27 @@ class Backend:
 		Calls all registered callbacks when the server answers a game join query.
 
 		Args:
-			success - True of the query has been successful or False if not
+			success: True of the query has been successful or False if not
 		"""
 
 		# validate current client status
 		if self.clientStatus is not ClientStatus.NOGAMERUNNING:
 			success = False
 
+		self.__updateClientStatus(ClientStatus.PREPARATIONS)
+
 		for cb in self.__joinGameCallbacks:
 			cb.onAction(success)
 		self.__joinGameCallbacks = []
+		self.clientStatusUpdates()
 
 	def createGame(self, gameId, callback):
 		"""
 		Creates a new game on the current servers and registers a callback that will be called when the server answers.
 
 		Args:
-			gameId - the identiefier (a name) of the game
-			callback - the callback
+			gameId: the identiefier (a name) of the game
+			callback: the callback
 		"""
 
 		self.__createGameCallbacks.append(callback)
@@ -253,7 +256,7 @@ class Backend:
 		Calls all registered callbacks when the servers answers a create game query.
 
 		Args:
-			success - True of the query has been successful or False if not
+			success: True of the query has been successful or False if not
 		"""
 
 		# validate current client status
@@ -278,7 +281,7 @@ class Backend:
 		Leaves the current game and registers a callback to wait for an answer from the server.
 
 		Args:
-			callback - the callback
+			callback: the callback
 		"""
 
 		self.__leaveGameCallbacks.append(callback)
@@ -302,18 +305,20 @@ class Backend:
 		self.__serverHandler.close()
 		self.__udpDiscoverer.close()
 
-	def connect(self, hostname, port):
+	def connect(self, nickname, hostname, port):
 		"""
 		Connects to a server.
 
 		Args:
-			hostname - the hostname or IP address of the server
-			port - the port of the server
+			hostname: the hostname or IP address of the server
+			port: the port of the server
 		"""
+		# TODO: Validate input (if it is None)
 
 		result = self.__serverHandler.connect(hostname, port)
 		if result:
 			self.__updateClientStatus(ClientStatus.NOGAMERUNNING)
+			#self.__serverHandler.setNickname(nickname)
 
 		return result
 
@@ -322,7 +327,7 @@ class Backend:
 		Registers a callback that informs about newly discovered servers.
 
 		Args:
-			callback - the callback
+			callback: the callback
 		"""
 
 		self.__udpDiscoveryCallbacks.append(callback)
@@ -335,7 +340,7 @@ class Backend:
 		Removes an already registered UDP discovery callback.
 
 		Args:
-			callback - the callback to remove
+			callback: the callback to remove
 		"""
 
 		for cb in self.__udpDiscoveryCallbacks:
@@ -348,7 +353,7 @@ class Backend:
 		Is called when there is a server update.
 
 		Args:
-			servers - a list of servers discovered by UDP broadcast
+			servers: a list of servers discovered by UDP broadcast
 		"""
 
 		if server not in self.__udpServers:
@@ -361,7 +366,7 @@ class Backend:
 		Registers a callback to stay informed about game play updates.
 
 		Args:
-			callback - the callback
+			callback: the callback
 		"""
 
 		self.__gamePlayCallbacks.append(callback)
@@ -371,7 +376,7 @@ class Backend:
 		Is called when there is a game play update.
 
 		Args:
-			status - the received status update
+			status: the received status update
 		"""
 
 		for cb in self.__gamePlayCallbacks:
@@ -382,7 +387,7 @@ class Backend:
 		Registers a callback that will be called when game preparations have finished.
 
 		Args:
-			callback - the callback
+			callback: the callback
 		"""
 
 		self.__gamePreparationsEndedCallbacks.append(callback)
@@ -401,7 +406,7 @@ class Backend:
 		Registers a new callback to inform about ship updates.
 
 		Args:
-			callback - the callback
+			callback: the callback
 		"""
 
 		self.__shipUpdateCallbacks.append(callback)
@@ -411,7 +416,7 @@ class Backend:
 		Is called when there is any ship update.
 
 		Args:
-			shipId - the id of the updated ship
+			shipId: the id of the updated ship
 		"""
 
 		for cb in self.__shipUpdateCallbacks:
@@ -422,7 +427,7 @@ class Backend:
 		Attacks the enemy at the given field.
 
 		Args:
-			target - the address of the field
+			target: the address of the field
 		"""
 
 		# TODO: validate client status
@@ -433,7 +438,7 @@ class Backend:
 		Special-attacks the given field.
 
 		Args:
-		    target - the address of the bottom-left field
+		    target: the address of the bottom-left field
 		"""
 
 		# TODO: validate client status
