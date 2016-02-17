@@ -470,7 +470,7 @@ class Backend:
 
 		self.__serverHandler = ServerHandler(self)		
 		if hostname and port:
-			if self.connect(hostname, port):
+			if self.connect(None, hostname, port):
 				self.clientStatus = ClientStatus.NOGAMERUNNING
 
 		self.__udpDiscoverer = UDPDiscoverer(self)
