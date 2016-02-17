@@ -50,8 +50,7 @@ class LobbyModel:
             return False
 
         # add new game to list of games and set first player id
-        games[name] = Game(name)
-        games[name].get_player(1).set_id(playerid)
+        games[name] = Game(name, playerid)
         players_lock.acquire()
         players.add(playerid)
         players_lock.release()
@@ -144,24 +143,19 @@ class LobbyModel:
 
         result = []
         for _, g in games.items():
-            # get number of players
-            number_of_players = g.get_number_of_players()
-            # TODO empty game or player 2
-            if number_of_players == 1:
-                result.append({
-                    'nicknames': [g.get_player(1).get_nick()],
-                    'ids': [g.get_player(1).get_id()]
-                })
-            elif number_of_players == 2:
-                result.append({
-                    'nicknames': [g.get_player(1).get_nick(), g.get_player(2).get_nick()],
-                    'ids': [g.get_player(1).get_id(), g.get_player(2).get_id()]
-                })
+            info = {}
+            number_of_players = 1 if g.is_waiting() else 2
+            if g.is_waiting():
+                info['nicknames'] = [ g.get_player(1).get_nick() ]
+                info['ids'] = [ g.get_player(1).get_id() ]
+            else:
+                info['nicknames'] = [ g.get_player(1).get_nick(), g.get_player(2).get_nick() ]
+                info['ids'] = [ g.get_player(1).get_id(), g.get_player(2).get_id() ]
 
-            result.append({
-                'game_name': g.get_name(),
-                'number_of_players': number_of_players
-            })
+            info['game_name'] = g.get_name()
+            info['number_of_players'] = number_of_players
+            
+            result.append(info)
 
         games_lock.release()
         return result

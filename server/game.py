@@ -1,29 +1,46 @@
 import playingfield
 import logging
+from enum import Enum
+
+
+class GameStatus(Enum):
+    waiting = 1,
+    ready = 2
+
 
 class Game:
 
-    def __init__(self, name):
+    def __init__(self, name, id):
+        """
+        Create a new game.
+        Args:
+            name : The name of the game
+            nick : The nickname of the player who created the game
+            id : The player's id
+        """
         self.__name = name
         self.__first_field = playingfield.PlayingField(16)
         self.__second_field = playingfield.PlayingField(16)
-        self.__first_player = None
+        self.__first_player = Player(id=id)
         self.__second_player = None
+        self.__status = GameStatus.waiting
 
-    def add_player(self, player, nick, id):
-        if player == 1:
-            self.__first_player = Player(nick, id)
-        elif player == 2:
-            self.__second_player = Player(nick, id)
+    def add_second_player(self, player, nick, id):
+        self.__second_player = Player(nick, id)
+        self.__status = GameStatus.ready
 
-    def remove_player(self, player):
-        if player == 1:
-            self.__first_player = None
-        elif player == 2:
-            self.__second_player = None
+    def remove_second_player(self):
+        self.__second_player = None
+        self.__status = GameStatus.waiting
 
     def get_name(self):
         return self.__name
+
+    def get_status(self):
+        return self.__status
+
+    def is_waiting(self):
+        return self.__status == GameStatus.waiting
 
     def get_player(self, player):
         if player == 1:
