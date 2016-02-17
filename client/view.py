@@ -261,21 +261,23 @@ class PlayingFieldWidget(QWidget):
 		# add ships
 		painter.setBrush(QColor(210, 105, 30))
 		for ship in self._getShips():
+			import os
+			dir = os.path.join(os.path.dirname(os.path.realpath(__file__)))
 
 			# draw bow
 			bow = ship.bow
 			painter.drawPixmap((bow.x + 1) * self._fieldSize, (16 - bow.y) * self._fieldSize, self._fieldSize,
-				self._fieldSize, QPixmap("./img/bow_" + ship.orientation.value + ".png"))
+				self._fieldSize, QPixmap(dir + "/img/bow_" + ship.orientation.value + ".png"))
 
 			# draw rear
 			rear = ship.rear
 			painter.drawPixmap((rear.x + 1) * self._fieldSize, (16 - rear.y) * self._fieldSize, self._fieldSize,
-				self._fieldSize, QPixmap("./img/rear_" + ship.orientation.value + ".png"))
+				self._fieldSize, QPixmap(dir + "/img/rear_" + ship.orientation.value + ".png"))
 
 			# draw the rest
 			for middle in ship.middles:
 				painter.drawPixmap((middle.x + 1) * self._fieldSize, (16 - middle.y) * self._fieldSize, self._fieldSize,
-					self._fieldSize, QPixmap("./img/middle_" + ship.orientation.value + ".png"))
+					self._fieldSize, QPixmap(dir + "/img/middle_" + ship.orientation.value + ".png"))
 
 		# draw horizontal and vertical enumeration
 		painter.setPen(QColor(0, 0, 0))
@@ -417,11 +419,13 @@ class MainForm(QWidget):
 			self.__statusLbl.setText("Please place your ships.")
 			self.__leaveGameBtn.setEnabled(True)
 
-			if self.__backend.opponent.nickname:
-				opponent = self.__backend.opponent.nickname
-			else:
-				opponent = self.__backend.opponent.id
-			self.__playersLbl.setText("Current game: %s vs. %s" % (self.__backend.nickname, opponent))
+			# TODO
+			if self.__backend.opponent:
+				if self.__backend.opponent.nickname:
+					opponent = self.__backend.opponent.nickname
+				else:
+					opponent = self.__backend.opponent.id
+				self.__playersLbl.setText("Current game: %s vs. %s" % (self.__backend.nickname, opponent))
 
 			cb = Callback()
 			cb.onAction = lambda shipId: self.__onUpdateShipList(shipId)
@@ -488,6 +492,10 @@ class MainForm(QWidget):
 
 	def __moveShip(self):
 		pass
+
+	def __sendChatMessage(self):
+		msg = self.__chatIpt.text()
+		self.__backend.sendChatMessage(msg)
 
 	def __setupGui(self, nickname=None):
 
@@ -557,14 +565,23 @@ class MainForm(QWidget):
 		topWgt = QWidget()
 		topWgt.setLayout(topLayout)
 
+		# chat stuff
+		self.__chatLog = QTextEdit()
+		self.__chatIpt = QLineEdit()
+		self.__chatIpt.setPlaceholderText("Message")
+		chatBtn = QPushButton("Send")
+		chatBtn.clicked.connect(self.__sendChatMessage)
+
+		#
 		# place all elements
+		#
 		playingFieldLayout = QHBoxLayout()
 		playingFieldLayout.addWidget(ownPlayingFieldBox)
 		playingFieldLayout.addWidget(shipsBox)
 		playingFieldLayout.addWidget(enemeysPlayingFieldBox)
 		playingFieldWgt = QWidget()
 		playingFieldWgt.setLayout(playingFieldLayout)
-		playingFieldWgt.setMinimumWidth(1100)
+		playingFieldWgt.setMinimumWidth(1200)
 		playingFieldWgt.setMinimumHeight(510)
 
 		btnsLayout = QHBoxLayout()

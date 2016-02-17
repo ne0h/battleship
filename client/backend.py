@@ -462,6 +462,9 @@ class Backend:
 	def errorResponse(self, status):
 		pass
 
+	def sendChatMessage(self, msg):
+		pass
+
 	def __init__(self, length, hostname, port, nickname):
 		from serverhandler import ServerHandler
 		from udpdiscoverer import UDPDiscoverer
