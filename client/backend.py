@@ -318,7 +318,7 @@ class Backend:
 		result = self.__serverHandler.connect(hostname, port)
 		if result:
 			self.__updateClientStatus(ClientStatus.NOGAMERUNNING)
-			#self.__serverHandler.setNickname(nickname)
+			self.__serverHandler.setNickname(nickname)
 
 		return result
 
