@@ -60,11 +60,13 @@ class ConnectDialog(QDialog):
 		self.__hostnameIpt = QLineEdit()
 		self.__hostnameIpt.setFixedWidth(150)
 		self.__hostnameIpt.setFixedHeight(20)
+		self.__hostnameIpt.setText("localhost")
 		self.__hostnameIpt.setPlaceholderText("Hostname")
 
 		self.__portIpt = QLineEdit()
 		self.__portIpt.setFixedWidth(60)
 		self.__portIpt.setFixedHeight(20)
+		self.__portIpt.setText("44444")
 		self.__portIpt.setPlaceholderText("Port")
 
 		self.__returnBtn = QPushButton("Connect")
@@ -389,8 +391,16 @@ class MainForm(QWidget):
 				self.__lobbyBtn.setEnabled(False)
 
 	def __onUpdateShipList(self, shipId):
-		ship = self.__backend.getOwnShip(shipId)
-		self.__shipsWgt.addItem("#%s: %s:%s" % (shipId, ship.bow.toString(), ship.rear.toString()))
+
+		# validate if the ship is already in the list
+		found = False
+		for i in range(0, self.__shipsWgt.count()):
+			if self.__shipsWgt.item(i).text().startswith("#%s:" % (shipId)):
+				found = True
+				break
+		if not found:
+			ship = self.__backend.getOwnShip(shipId)
+			self.__shipsWgt.addItem("#%s: %s:%s" % (shipId, ship.bow.toString(), ship.rear.toString()))
 
 	def __onUpdateClientStatus(self, status):
 		from backend import ClientStatus
