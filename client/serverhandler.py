@@ -121,7 +121,7 @@ class ServerHandler:
 				# TODO error
 				if gamesCounter >= gamesTotal:
 					continue
-				gamesCounter = gamesCounter + 1
+				gamesCounter += 1
 
 				counter = int(param[10:])
 				numberOfPlayers = int(params["game_players_count_" + str(counter)])
