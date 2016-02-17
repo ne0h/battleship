@@ -76,9 +76,8 @@ class ServerHandler:
 		player_identifier_0:[identifier];...;player_identifier_n-1:[identifier];
 			Per-server-unique identifier (implementations may map any string as identifier)
 	"""
-	def __setUpdateLobby(self, params):
+	def __onUpdateLobby(self, params):
 		from backend import GameInformation, PlayerInformation
-		print(params)
 		# TODO lots of consistency tests...
 		# TODO remove already read values from map that the method runs in O(n)
 		# TODO Validate message length (should be already done in the receiveLoop)
@@ -162,9 +161,6 @@ class ServerHandler:
 
 		self.__sendMessage("game_create", {"name": gameId})
 
-	def setNickname(self, nickname):
-		self.__sendMessage("nickname_set", {"name": nickname})
-
 	def leaveGame(self):
 		"""
 		Sends a leaveGame request to the server.
@@ -228,7 +224,7 @@ class ServerHandler:
 					logging.debug("%s received: %s" % (messageType, reportCodes[status]))
 
 					if status is 16:
-						self.__setUpdateLobby(params)
+						self.__onUpdateLobby(params)
 
 					# game creation stuff
 					elif status is 19:														# Game_Aborted
