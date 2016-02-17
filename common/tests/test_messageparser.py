@@ -16,8 +16,7 @@ class TestMessageParser(unittest.TestCase):
 	#format: type:report;status:11;
 	def test_beginTurnEncoding(self):
 		msg = MessageParser().encode("report",{"status": "11"})						
-		msg=msg.decode('utf-8') # decode it from bytes to string								
-		msg = msg[2:] 		# we don't want first character				
+		msg=msg[2:].decode('utf-8') # decode it from bytes to string
 		self.assertTrue(msg == "type:report;status:11;")
 
 	def test_beginTurnDecoding(self):
@@ -34,11 +33,56 @@ class TestMessageParser(unittest.TestCase):
 	   	number_of_games:[number m];
 		game_name_0:[name];...;game_name_m-1:[name];
 		game_players_count_0:[1|2];...;game_players_m-1:[1|2];
-		game_player_0_i:[player_identifier];...;game_player_m-1_i:[player_identifier]
+		game_player_0_i:[player_identifier];...;game_player_m-1_i:[player_identifier]   i=0,1
 		player_name_0:[name];...;player_name_n-1:[name];
 		player_identifier_0:[identifier];...;player_identifier_n-1:[identifier];
 	"""
+	def test_updateLobbyEncoding(self):
+		params={"status": "16", "number_of_clients": "3", "number_of_games": "2", "game_name_0": "FCB",
+			"game_name_1": "HSV", "game_players_count_0": "2", "game_players_count_1": "1",
+			"game_player_0_0": "1000", "game_player_0_1": "2000", "game_player_1_0": "3000",
+			"player_name_0": "Dari","player_name_1": "Max","player_name_2": "",
+			"player_identifier_0": "1000", "player_identifier_1": "2000", "player_identifier_2": "3000"}		
+		msg = MessageParser().encode("report",params)									
+		msg=msg[2:].decode('utf-8') # decode it from bytes to string
+		#print(msg)
+		check=True							
+		for key,value in params.items():
+			if((key+":"+value) not in msg): check=False
+		if(check): self.assertTrue(True)		
+		else: self.assertTrue(False)
 
+	def test_updateLobbyDecoding(self):
+		messageType, params = MessageParser().decode("type:report;"+
+							     "status:16;number_of_clients:3;number_of_games:2;game_name_0:FCB;"+
+							     "game_name_1:HSV;game_players_count_0:2;game_players_count_1:1;"+
+   							     "game_player_0_0:1000;game_player_0_1:2000;game_player_1_0:3000;"+
+							     "player_name_0:Dari;player_name_1:Max;player_name_2:;"+
+							     "player_identifier_0:1000;player_identifier_1:2000;"+
+							     "player_identifier_2:3000;")
+
+		for key,value in params.items():
+			print(key+":"+value)		
+		self.assertEqual(messageType, "report")
+		self.assertEqual(len(params),16 )
+		self.assertEqual(params["status"],"16")
+		self.assertEqual(params["number_of_games"],"2")
+		self.assertEqual(params["number_of_clients"],"3")
+		self.assertEqual(params["game_name_0"],"FCB")
+		self.assertEqual(params["game_name_1"],"HSV")
+		self.assertEqual(params["game_players_count_0"],"2")
+		self.assertEqual(params["game_players_count_1"],"1")
+		self.assertEqual(params["game_player_0_0"],"1000")
+		self.assertEqual(params["game_player_0_1"],"2000")
+		self.assertEqual(params["game_player_1_0"],"3000")
+		self.assertEqual(params["player_name_0"],"Dari")
+		self.assertEqual(params["player_name_1"],"Max")
+		self.assertEqual(params["player_name_2"],"")
+		self.assertEqual(params["player_identifier_0"],"1000")
+		self.assertEqual(params["player_identifier_1"],"2000")
+		self.assertEqual(params["player_identifier_2"],"3000")	
+			
+		
 	#17 Game_Ended
 	#format: type:report;status:17;params;
 	#params:	
@@ -50,12 +94,15 @@ class TestMessageParser(unittest.TestCase):
 		reason_for_game_end : [text] ;
 	"""
 	def test_gameEndedEncoding(self):
-		msg = MessageParser().encode("report",{"status": "17", "timestamp": "1000", "winner": "0", "name_of_game": "FCB",
-						       "identifier_0": "2000", "identifier_1": "3000", "reason_for_game_end": "player1 won"})						
-		#print(msg)
-		#msg=msg.decode('utf-8') # decode it from bytes to string
-		#print (msg.split("type",1)[1])		
-		self.assertTrue(False)
+		params={"status": "17", "timestamp": "1000", "winner": "0", "name_of_game": "FCB",
+			"identifier_0": "2000", "identifier_1": "3000", "reason_for_game_end": "player1 won"}		
+		msg = MessageParser().encode("report",params)									
+		msg=msg[2:].decode('utf-8') # decode it from bytes to string
+		check=True							
+		for key,value in params.items():
+			if((key+":"+value) not in msg): check=False
+		if(check): self.assertTrue(True)		
+		else: self.assertTrue(False)
 
 	def test_gameEndedDecoding(self):
 		messageType, params = MessageParser().decode("type:report;status:17;timestamp:1000;winner:0;name_of_game:FCB;"+
@@ -78,6 +125,26 @@ class TestMessageParser(unittest.TestCase):
 		coordinate_x : [number] ;
 		coordinate_y : [number] ;
 	"""	
+	def test_updateOwnFieldEncoding(self):
+		params={"status": "13", "was_special_attack": "true", "coordinate_x": "12", "coordinate_y":"6"}		
+		msg = MessageParser().encode("report",params)									
+		msg=msg[2:].decode('utf-8') # decode it from bytes to string
+		check=True							
+		for key,value in params.items():
+			if((key+":"+value) not in msg): check=False
+		if(check): self.assertTrue(True)		
+		else: self.assertTrue(False)
+
+	def test_updateOwnFieldDecoding(self):
+		messageType, params = MessageParser().decode("type:report;status:13;was_special_attack:true;"+
+							     "coordinate_x:12;coordinate_y:6;")
+
+		self.assertEqual(messageType, "report")
+		self.assertEqual(len(params), 4)
+		self.assertEqual(params["status"],"13")
+		self.assertEqual(params["was_special_attack"],"true")
+		self.assertEqual(params["coordinate_x"],"12")
+		self.assertEqual(params["coordinate_y"],"6")
 	
 	#14 Update_Enemy_Field
 	#format: type:report;status:14;params;
@@ -87,22 +154,55 @@ class TestMessageParser(unittest.TestCase):
 		field_0_y : [number]; ... ; field_n_y : [number];
 		field_0_condition : [free|damaged|undamaged] ; ... ; field_n_condition : [free|damaged|undamaged];
 	"""
+	def test_updateEnemyFieldEncoding(self):
+		params={"status": "14", "number_of_updated_fields": "5", "field_0_x": "3", "field_1_x": "2",
+			"field_2_x": "10","field_3_x": "6","field_4_x": "7","field_0_y": "4", "field_1_y": "7",
+			"field_2_y": "8","field_3_y": "11","field_4_y": "13","field_0_condition": "free",
+			 "field_1_condition": "damaged","field_2_condition": "undamaged","field_3_condition": "free",
+			"field_4_condition": "free"}		
+		msg = MessageParser().encode("report",params)									
+		msg=msg[2:].decode('utf-8') # decode it from bytes to string
+		check=True							
+		for key,value in params.items():
+			if((key+":"+value) not in msg): check=False
+		if(check): self.assertTrue(True)		
+		else: self.assertTrue(False)
 
-	#15 Chat_Broadcast
-	#format: type:report;status:15;params;
-	#params:
-	"""	author_id : [identifier];
-		timestamp : [millis] ;
-		message_content : [text];
-	"""
+	def test_updateEnemyFieldDecoding(self):
+		messageType, params = MessageParser().decode("type:report;status:14;number_of_updated_fields:5;field_0_x:3;"+
+							     "field_1_x:2;field_2_x:10;field_3_x:6;field_4_x:7;field_0_y:4;"+
+							     "field_1_y:7;field_2_y:8;field_3_y:11;field_4_y:13;field_0_condition:free;"+
+			 				     "field_1_condition:damaged;field_2_condition:undamaged;"+
+							      "field_3_condition:free;field_4_condition:free")
+
+		self.assertEqual(messageType, "report")
+		self.assertEqual(len(params), 17)
+		self.assertEqual(params["status"],"14")
+		self.assertEqual(params["number_of_updated_fields"],"5")
+		self.assertEqual(params["field_0_x"],"3")
+		self.assertEqual(params["field_1_x"],"2")
+		self.assertEqual(params["field_2_x"],"10")
+		self.assertEqual(params["field_3_x"],"6")
+		self.assertEqual(params["field_4_x"],"7")
+		self.assertEqual(params["field_0_y"],"4")
+		self.assertEqual(params["field_1_y"],"7")
+		self.assertEqual(params["field_2_y"],"8")
+		self.assertEqual(params["field_3_y"],"11")
+		self.assertEqual(params["field_4_y"],"13")
+		self.assertEqual(params["field_0_condition"],"free")
+		self.assertEqual(params["field_1_condition"],"damaged")
+		self.assertEqual(params["field_2_condition"],"undamaged")
+		self.assertEqual(params["field_3_condition"],"free")
+		self.assertEqual(params["field_4_condition"],"free")
+
 
 	#18 Begin_Ship_Placing
 	#format: type:report;status:18;
 	def test_beginShipPlacingEncoding(self):
 		msg = MessageParser().encode("report",{"status": "18"})						
-		msg=msg.decode('utf-8') # decode it from bytes to string			
+		msg=msg[2:].decode('utf-8') # decode it from bytes to string			
 		#print ("type"+msg.split("type",1)[1])								
-		msg = msg[2:] 		# we don't want first character						
+								
 		self.assertTrue(msg == "type:report;status:18;")
 
 	def test_beginShipPlacingDecoding(self):
@@ -116,8 +216,7 @@ class TestMessageParser(unittest.TestCase):
 	#format: type:report;status:19;
 	def test_gameAbortedEncoding(self):
 		msg = MessageParser().encode("report",{"status": "19"})						
-		msg=msg.decode('utf-8') # decode it from bytes to string								
-		msg = msg[2:] 		# we don't want first character				
+		msg=msg[2:].decode('utf-8') # decode it from bytes to string								
 		self.assertTrue(msg == "type:report;status:19;")
 
 	def test_gameAbortedDecoding(self):
@@ -133,8 +232,8 @@ class TestMessageParser(unittest.TestCase):
 	#format: type:report;status:21;
 	def test_successfulMoveEncoding(self):
 		msg = MessageParser().encode("report",{"status": "21"})						
-		msg=msg.decode('utf-8') # decode it from bytes to string								
-		msg = msg[2:] 		# we don't want first character				
+		msg=msg[2:].decode('utf-8') # decode it from bytes to string								
+						
 		self.assertTrue(msg == "type:report;status:21;")
 
 	def test_successfulMoveDecoding(self):
@@ -148,8 +247,8 @@ class TestMessageParser(unittest.TestCase):
 	#format: type:report;status:22;
 	def test_successfulAttackEncoding(self):
 		msg = MessageParser().encode("report",{"status": "22"})						
-		msg=msg.decode('utf-8') # decode it from bytes to string								
-		msg = msg[2:] 		# we don't want first character				
+		msg=msg[2:].decode('utf-8') # decode it from bytes to string								
+						
 		self.assertTrue(msg == "type:report;status:22;")
 
 	def test_successfulAttackDecoding(self):
@@ -163,8 +262,8 @@ class TestMessageParser(unittest.TestCase):
 	#format: type:report;status:23;
 	def test_surrenderAcceptedEncoding(self):
 		msg = MessageParser().encode("report",{"status": "23"})						
-		msg=msg.decode('utf-8') # decode it from bytes to string								
-		msg = msg[2:] 		# we don't want first character				
+		msg=msg[2:].decode('utf-8') # decode it from bytes to string								
+						
 		self.assertTrue(msg == "type:report;status:23;")
 
 	def test_surrenderAcceptedDecoding(self):
@@ -178,8 +277,8 @@ class TestMessageParser(unittest.TestCase):
 	#format: type:report;status:24;
 	def test_successfulSpecialAttackEncoding(self):
 		msg = MessageParser().encode("report",{"status": "24"})						
-		msg=msg.decode('utf-8') # decode it from bytes to string								
-		msg = msg[2:] 		# we don't want first character				
+		msg=msg[2:].decode('utf-8') # decode it from bytes to string								
+						
 		self.assertTrue(msg == "type:report;status:24;")
 
 	def test_successfulSpecialAttackDecoding(self):
@@ -193,8 +292,8 @@ class TestMessageParser(unittest.TestCase):
 	#format: type:report;status:27;
 	def test_successfulGameJoinEncoding(self):
 		msg = MessageParser().encode("report",{"status": "27"})						
-		msg=msg.decode('utf-8') # decode it from bytes to string								
-		msg = msg[2:] 		# we don't want first character				
+		msg=msg[2:].decode('utf-8') # decode it from bytes to string								
+						
 		self.assertTrue(msg == "type:report;status:27;")
 
 	def test_successfulGameJoinDecoding(self):
@@ -208,8 +307,8 @@ class TestMessageParser(unittest.TestCase):
 	#format: type:report;status:28;
 	def test_successfulGameCreateEncoding(self):
 		msg = MessageParser().encode("report",{"status": "28"})						
-		msg=msg.decode('utf-8') # decode it from bytes to string								
-		msg = msg[2:] 		# we don't want first character				
+		msg=msg[2:].decode('utf-8') # decode it from bytes to string								
+						
 		self.assertTrue(msg == "type:report;status:28;")
 
 	def test_successfulGameCreateDecoding(self):
@@ -223,8 +322,8 @@ class TestMessageParser(unittest.TestCase):
 	#format: type:report;status:29;
 	def test_successfulShipPlacementEncoding(self):
 		msg = MessageParser().encode("report",{"status": "29"})						
-		msg=msg.decode('utf-8') # decode it from bytes to string								
-		msg = msg[2:] 		# we don't want first character				
+		msg=msg[2:].decode('utf-8') # decode it from bytes to string								
+						
 		self.assertTrue(msg == "type:report;status:29;")
 
 	def test_successfulShipPlacementDecoding(self):
@@ -240,8 +339,8 @@ class TestMessageParser(unittest.TestCase):
 	#format: type:report;status:31;
 	def test_illegalMoveEncoding(self):
 		msg = MessageParser().encode("report",{"status": "31"})						
-		msg=msg.decode('utf-8') # decode it from bytes to string								
-		msg = msg[2:] 		# we don't want first character				
+		msg=msg[2:].decode('utf-8') # decode it from bytes to string								
+						
 		self.assertTrue(msg == "type:report;status:31;")
 
 	def test_illegalMoveDecoding(self):
@@ -255,8 +354,8 @@ class TestMessageParser(unittest.TestCase):
 	#format: type:report;status:32;	
 	def test_illegalSpecialAttackEncoding(self):
 		msg = MessageParser().encode("report",{"status": "32"})						
-		msg=msg.decode('utf-8') # decode it from bytes to string								
-		msg = msg[2:] 		# we don't want first character				
+		msg=msg[2:].decode('utf-8') # decode it from bytes to string								
+						
 		self.assertTrue(msg == "type:report;status:32;")
 
 	def test_illegalSpecialAttackDecoding(self):
@@ -270,8 +369,8 @@ class TestMessageParser(unittest.TestCase):
 	#format: type:report;status:33;	
 	def test_illegalFieldEncoding(self):
 		msg = MessageParser().encode("report",{"status": "33"})						
-		msg=msg.decode('utf-8') # decode it from bytes to string								
-		msg = msg[2:] 		# we don't want first character				
+		msg=msg[2:].decode('utf-8') # decode it from bytes to string								
+						
 		self.assertTrue(msg == "type:report;status:33;")
 
 	def test_illegalFieldDecoding(self):
@@ -285,8 +384,8 @@ class TestMessageParser(unittest.TestCase):
 	#format: type:report;status:34;	
 	def test_illegalShipIndexEncoding(self):
 		msg = MessageParser().encode("report",{"status": "34"})						
-		msg=msg.decode('utf-8') # decode it from bytes to string								
-		msg = msg[2:] 		# we don't want first character				
+		msg=msg[2:].decode('utf-8') # decode it from bytes to string								
+						
 		self.assertTrue(msg == "type:report;status:34;")
 
 	def test_illegalShipIndexDecoding(self):
@@ -300,8 +399,8 @@ class TestMessageParser(unittest.TestCase):
 	#format: type:report;status:37;	
 	def test_illegalGameDefinitionEncoding(self):
 		msg = MessageParser().encode("report",{"status": "37"})						
-		msg=msg.decode('utf-8') # decode it from bytes to string								
-		msg = msg[2:] 		# we don't want first character				
+		msg=msg[2:].decode('utf-8') # decode it from bytes to string								
+						
 		self.assertTrue(msg == "type:report;status:37;")
 
 	def test_illegalGameDefinitionDecoding(self):
@@ -315,8 +414,8 @@ class TestMessageParser(unittest.TestCase):
 	#format: type:report;status:38;	
 	def test_illegalShipPlacementEncoding(self):
 		msg = MessageParser().encode("report",{"status": "38"})						
-		msg=msg.decode('utf-8') # decode it from bytes to string								
-		msg = msg[2:] 		# we don't want first character				
+		msg=msg[2:].decode('utf-8') # decode it from bytes to string								
+						
 		self.assertTrue(msg == "type:report;status:38;")
 
 	def test_illegalShipPlacementDecoding(self):
@@ -330,8 +429,8 @@ class TestMessageParser(unittest.TestCase):
 	#format: type:report;status:39;	
 	def test_illegalAttackEncoding(self):
 		msg = MessageParser().encode("report",{"status": "39"})						
-		msg=msg.decode('utf-8') # decode it from bytes to string								
-		msg = msg[2:] 		# we don't want first character				
+		msg=msg[2:].decode('utf-8') # decode it from bytes to string								
+						
 		self.assertTrue(msg == "type:report;status:39;")
 
 	def test_illegalAttackDecoding(self):
@@ -347,8 +446,8 @@ class TestMessageParser(unittest.TestCase):
 	#format: type:report;status:40;	
 	def test_messageNotRecongnizedEncoding(self):
 		msg = MessageParser().encode("report",{"status": "40"})						
-		msg=msg.decode('utf-8') # decode it from bytes to string								
-		msg = msg[2:] 		# we don't want first character				
+		msg=msg[2:].decode('utf-8') # decode it from bytes to string								
+						
 		self.assertTrue(msg == "type:report;status:40;")
 
 	def test_messageNotRecongnizedDecoding(self):
@@ -362,8 +461,8 @@ class TestMessageParser(unittest.TestCase):
 	#format: type:report;status:41;	
 	def test_notYourTurnEncoding(self):
 		msg = MessageParser().encode("report",{"status": "41"})						
-		msg=msg.decode('utf-8') # decode it from bytes to string								
-		msg = msg[2:] 		# we don't want first character				
+		msg=msg[2:].decode('utf-8') # decode it from bytes to string								
+						
 		self.assertTrue(msg == "type:report;status:41;")
 
 	def test_notYourTurnDecoding(self):
@@ -377,8 +476,8 @@ class TestMessageParser(unittest.TestCase):
 	#format: type:report;status:43;	
 	def test_notInAnyGameEncoding(self):
 		msg = MessageParser().encode("report",{"status": "43"})						
-		msg=msg.decode('utf-8') # decode it from bytes to string								
-		msg = msg[2:] 		# we don't want first character				
+		msg=msg[2:].decode('utf-8') # decode it from bytes to string								
+						
 		self.assertTrue(msg == "type:report;status:43;")
 
 	def test_notInAnyGameDecoding(self):
@@ -392,8 +491,8 @@ class TestMessageParser(unittest.TestCase):
 	#format: type:report;status:47;	
 	def test_gameJoinDeniedEncoding(self):
 		msg = MessageParser().encode("report",{"status": "47"})						
-		msg=msg.decode('utf-8') # decode it from bytes to string								
-		msg = msg[2:] 		# we don't want first character				
+		msg=msg[2:].decode('utf-8') # decode it from bytes to string								
+						
 		self.assertTrue(msg == "type:report;status:47;")
 
 	def test_gameJoinDeniedDecoding(self):
@@ -407,8 +506,8 @@ class TestMessageParser(unittest.TestCase):
 	#format: type:report;status:48;	
 	def test_gamePreparationEndedEncoding(self):
 		msg = MessageParser().encode("report",{"status": "48"})						
-		msg=msg.decode('utf-8') # decode it from bytes to string								
-		msg = msg[2:] 		# we don't want first character				
+		msg=msg[2:].decode('utf-8') # decode it from bytes to string								
+						
 		self.assertTrue(msg == "type:report;status:48;")
 
 	def test_gamePreparationEndedDecoding(self):
@@ -428,8 +527,8 @@ class TestMessageParser(unittest.TestCase):
 	#format: type:nickname_set;name:[nickname];
 	def test_nickNameSetEncoding(self):
 		msg = MessageParser().encode("nickname_set",{"name": "Dari"})				
-		msg=msg.decode('utf-8') # decode it from bytes to string						
-		msg = msg[2:] 		# we don't want first character				
+		msg=msg[2:].decode('utf-8') # decode it from bytes to string						
+						
 		self.assertTrue(msg == "type:nickname_set;name:Dari;")
 
 	def test_nickNameSetDecoding(self):
@@ -443,8 +542,8 @@ class TestMessageParser(unittest.TestCase):
 	#format: type:game_create;name:[name];
 	def test_gameCreateEncoding(self):
 		msg = MessageParser().encode("game_create",{"name": "FCB"})				
-		msg=msg.decode('utf-8') # decode it from bytes to string						
-		msg = msg[2:] 		# we don't want first character				
+		msg=msg[2:].decode('utf-8') # decode it from bytes to string						
+						
 		self.assertTrue(msg == "type:game_create;name:FCB;")
 
 	def test_gameCreateDecoding(self):
@@ -458,8 +557,8 @@ class TestMessageParser(unittest.TestCase):
 	#format: type:game_join;name:[name];	
 	def test_gameJoinEncoding(self):
 		msg = MessageParser().encode("game_join",{"name": "FCB"})				
-		msg=msg.decode('utf-8') # decode it from bytes to string						
-		msg = msg[2:] 		# we don't want first character				
+		msg=msg[2:].decode('utf-8') # decode it from bytes to string						
+						
 		self.assertTrue(msg == "type:game_join;name:FCB;")
 
 	def test_gameJoinDecoding(self):
@@ -473,8 +572,8 @@ class TestMessageParser(unittest.TestCase):
 	#format: type:game_abort;
 	def test_gameAbortEncoding(self):
 		msg = MessageParser().encode("game_abort",{})				
-		msg=msg.decode('utf-8') # decode it from bytes to string				
-		msg = msg[2:] 		# we don't want first character			
+		msg=msg[2:].decode('utf-8') # decode it from bytes to string				
+					
 		self.assertTrue(msg == "type:game_abort;")
 
 	def test_gameAbortDecoding(self):
@@ -483,20 +582,7 @@ class TestMessageParser(unittest.TestCase):
 		self.assertEqual(messageType, "game_abort")
 		self.assertEqual(len(params), 0)
 	
-	#chat_send
-	#format: type:chat_send;text:[text];
-	def test_chatSendEncoding(self):
-		msg = MessageParser().encode("chat_send",{"text": "How are you?"})				
-		msg=msg.decode('utf-8') # decode it from bytes to string				
-		msg = msg[2:] 		# we don't want first character				
-		self.assertTrue(msg == "type:chat_send;text:How are you?;")
-
-	def test_chatSendDecoding(self):
-		messageType, params = MessageParser().decode("type:chat_send;text:How are you?;")
-
-		self.assertEqual(messageType, "chat_send")
-		self.assertEqual(len(params), 1)
-		self.assertEqual(params["text"],"How are you?")
+				
 	#-----------------------------------------------------------------------------------------------------------------------	
 	#Game-Related Messages
 	#-----------------------------------------------------------------------------------------------------------------------	
@@ -504,9 +590,7 @@ class TestMessageParser(unittest.TestCase):
 	#format: type:board_init; ship_0_x:[number];ship_0_y:[number];ship_0_direction: [W|E|S|N];...;ship_9_x:[number];ship_9_y:	 
 	#[number];ship_9_direction: [W|E|S|N];
 	def test_boardInitEncoding(self):
-
-		#for max:please change your messageparser
-		# if you use set we have 30! permutation (it is impossible to check all)		
+	
 		params = {"ship_0_x": "5", "ship_0_y": "3", "ship_0_direction": "W",
 			  "ship_1_x": "6", "ship_1_y": "3", "ship_1_direction": "N",
 		          "ship_2_x": "4", "ship_2_y": "2", "ship_2_direction": "E",
@@ -517,41 +601,17 @@ class TestMessageParser(unittest.TestCase):
 			  "ship_7_x": "10", "ship_7_y": "4", "ship_7_direction": "N",
 			  "ship_8_x": "10", "ship_8_y": "8", "ship_8_direction": "E",
 			  "ship_9_x": "12", "ship_9_y": "8", "ship_9_direction": "S" }
-		#by List you have 1 permutation		
-		params2 = ["ship_0_x:5", "ship_0_y:3", "ship_0_direction:W",
-			  "ship_1_x:6", "ship_1_y:3", "ship_1_direction:N",
-		          "ship_2_x:4", "ship_2_y:2", "ship_2_direction:E",
-		          "ship_3_x:7", "ship_3_y:3", "ship_3_direction:N",
-		          "ship_4_x:8", "ship_4_y:3", "ship_4_direction:N",
-			  "ship_5_x:9", "ship_5_y:3", "ship_5_direction:N",
-		          "ship_6_x:12", "ship_6_y:3", "ship_6_direction:W",
-			  "ship_7_x:10", "ship_7_y:4", "ship_7_direction:N",
-			  "ship_8_x:10", "ship_8_y:8", "ship_8_direction:E",
-			  "ship_9_x:12", "ship_9_y:8", "ship_9_direction:S"]	
-		# by list of sets you have 10*3!=60  permutation		
-		params3= [{"ship_0_x": "5", "ship_0_y": "3", "ship_0_direction": "W"},
-			  {"ship_1_x": "6", "ship_1_y": "3", "ship_1_direction": "N"},
-		          {"ship_2_x": "4", "ship_2_y": "2", "ship_2_direction": "E"},
-		          {"ship_3_x": "7", "ship_3_y": "3", "ship_3_direction": "N"},
-		          {"ship_4_x": "8", "ship_4_y": "3", "ship_4_direction": "N"},
-			  {"ship_5_x": "9", "ship_5_y": "3", "ship_5_direction": "N"},
-		          {"ship_6_x": "12", "ship_6_y": "3", "ship_6_direction": "W"},
-			  {"ship_7_x": "10", "ship_7_y": "4", "ship_7_direction": "N"},
-			  {"ship_8_x": "10", "ship_8_y": "8", "ship_8_direction": "E"},
-			  {"ship_9_x": "12", "ship_9_y": "8", "ship_9_direction": "S"} ]	
-		"""print (params)	
-		print (params2)
-		print (params3)	
-		msg = MessageParser().encode("board_init", params)	
-		print (msg) 
-		msg=msg.decode('utf-8') # decode it from bytes to string		
-		msg = msg[2:] 		# we don't want first character		
+		
+		msg = MessageParser().encode("board_init", params)	 
+		msg=msg[2:].decode('utf-8') # decode it from bytes to string		
+				
 		print (msg)
 		# order of parameters is not deterministic
-						
-		self.assertTrue(msg == "type:move;direction:W;ship_id:5;" or
-				msg== "type:move;ship_id:5;direction:W;")"""
-		self.assertTrue(False)
+		check=True							
+		for key,value in params.items():
+			if((key+":"+value) not in msg): check=False
+		if(check): self.assertTrue(True)		
+		else: self.assertTrue(False)			
 
 	def test_boardInitDecoding(self):
 		messageType, params = MessageParser().decode("type:board_init;"+
@@ -613,8 +673,8 @@ class TestMessageParser(unittest.TestCase):
 	#format: type:surrender;
 	def test_surrenderEncoding(self):
 		msg = MessageParser().encode("surrender",{})		
-		msg=msg.decode('utf-8') # decode it from bytes to string		
-		msg = msg[2:] 		# we don't want first character
+		msg=msg[2:].decode('utf-8') # decode it from bytes to string		
+		
 						
 		self.assertTrue(msg == "type:surrender;")
 
@@ -628,8 +688,8 @@ class TestMessageParser(unittest.TestCase):
 	#format: type:move; ship_id:[id];direction:[W|E|S|N];
 	def test_moveEncoding(self):
 		msg = MessageParser().encode("move", {"ship_id": "5", "direction": "W"})		
-		msg=msg.decode('utf-8') # decode it from bytes to string
-		msg = msg[2:] 		# we don't want first character		
+		msg=msg[2:].decode('utf-8') # decode it from bytes to string
+				
 		
 		# order of parameters is not deterministic				
 		self.assertTrue(msg == "type:move;direction:W;ship_id:5;" or
@@ -647,8 +707,8 @@ class TestMessageParser(unittest.TestCase):
 	#format: type:attack;coordinate_x:[number];coordinate_y:[number];
 	def test_attackEncoding(self):
 		msg = MessageParser().encode("attack", {"coordinate_x": "5", "coordinate_y": "14"})
-		msg=msg.decode('utf-8') # decode it from bytes to string
-		msg = msg[2:] 		# we don't want first character
+		msg=msg[2:].decode('utf-8') # decode it from bytes to string
+		
 		
 		# order of parameters is not deterministic				
 		self.assertTrue(msg == "type:attack;coordinate_y:14;coordinate_x:5;" or
@@ -666,8 +726,8 @@ class TestMessageParser(unittest.TestCase):
 	#Format: type:special_attack;coordinate_x:[number];coordinate_y:[number]; 
 	def test_attackSpecialEncoding(self):
 		msg = MessageParser().encode("special_attack", {"coordinate_x": "5", "coordinate_y": "14"})
-		msg=msg.decode('utf-8') # decode it from bytes to string
-		msg = msg[2:] 		# we don't want first character	
+		msg=msg[2:].decode('utf-8') # decode it from bytes to string
+			
 		
 		# order of parameters is not deterministic				
 		self.assertTrue(msg == "type:special_attack;coordinate_y:14;coordinate_x:5;" or
