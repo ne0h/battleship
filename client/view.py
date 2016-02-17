@@ -417,6 +417,12 @@ class MainForm(QWidget):
 			self.__statusLbl.setText("Please place your ships.")
 			self.__leaveGameBtn.setEnabled(True)
 
+			if self.__backend.opponent.nickname:
+				opponent = self.__backend.opponent.nickname
+			else:
+				opponent = self.__backend.opponent.id
+			self.__playersLbl.setText("Current game: %s vs. %s" % (self.__backend.nickname, opponent))
+
 			cb = Callback()
 			cb.onAction = lambda shipId: self.__onUpdateShipList(shipId)
 			self.__backend.registerShipUpdateCallback(cb)

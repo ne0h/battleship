@@ -217,6 +217,16 @@ class Backend:
 			callback: the callback
 		"""
 
+		# get gameInformation and opponentInformation
+		for cur in self.__lobbyCurrentGames:
+			if cur.name == gameId:
+				self.game = cur
+				break
+		for i in range(0, len(self.__lobbyCurrentPlayers)):
+			if self.__lobbyCurrentPlayers[0].id == self.game.players[0]:
+				self.opponent = self.__lobbyCurrentPlayers[0]
+				break
+
 		self.__joinGameCallbacks.append(callback)
 		self.__serverHandler.joinGame(gameId)
 
@@ -227,6 +237,10 @@ class Backend:
 		Args:
 			success: True of the query has been successful or False if not
 		"""
+
+		if success:
+			logging.info("Successfully join game '%s' against '%s'" % (self.game.name,
+																	   self.opponent.id))
 
 		# validate current client status
 		if self.clientStatus is not ClientStatus.NOGAMERUNNING:
@@ -315,6 +329,7 @@ class Backend:
 		"""
 		# TODO: Validate input (if it is None)
 
+		self.nickname = nickname
 		result = self.__serverHandler.connect(hostname, port)
 		if result:
 			self.__updateClientStatus(ClientStatus.NOGAMERUNNING)
@@ -454,6 +469,10 @@ class Backend:
 		self.__ownPlayingField = PlayingField(length)
 		self.__enemeysPlayingField = PlayingField(length)
 		self.clientStatus = ClientStatus.NOTCONNECTED
+
+		self.nickname = nickname
+		self.game = None
+		self.opponent = None
 
 		# callback stuff
 		self.__udpDiscoveryCallbacks = []
