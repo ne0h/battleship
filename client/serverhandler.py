@@ -35,9 +35,9 @@ reportCodes = {
 
 orientationCodes = {
 	Orientation.NORTH: "N",
-	Orientation.WEST: "W",
+	Orientation.WEST:  "W",
 	Orientation.SOUTH: "S",
-	Orientation.EAST: "E"}
+	Orientation.EAST:  "E"}
 
 class ServerHandler:
 
@@ -49,7 +49,7 @@ class ServerHandler:
 			nickname: the new nickname
 		"""
 
-		self.__sendMessage("nickname_set", {"name": "nickname"})
+		self.__sendMessage("nickname_set", {"name": nickname})
 
 	"""
 	Sent whenever the server noticed a change in the lobby.
