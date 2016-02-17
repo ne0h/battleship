@@ -172,6 +172,15 @@ class ClientHandler:
         else:
             return self.__message_parser.encode('report', {'status': '37'})
 
+    def __set_nickname(self, params):
+        report = self.__expect_parameter(['name'], params)
+        if report:
+            return report
+
+        self.__game.get_player(self.__player).set_nick(params['name'])
+        # send an update lobby
+        self.on_update_lobby()
+
     def __leave_lobby(self):
         # TODO handle already left
         if self.__game is None:
