@@ -145,15 +145,22 @@ class LobbyModel:
         result = []
         for _, g in games.items():
             # get number of players
-            if g.get_name() in waiting_games:
-                number_of_players = 1
-            else:
-                number_of_players = 2
+            number_of_players = g.get_number_of_players()
+            # TODO empty game or player 2
+            if number_of_players == 1:
+                result.append({
+                    'nicknames': [g.get_player(1).get_nick()],
+                    'ids': [g.get_player(1).get_id()]
+                })
+            elif number_of_players == 2:
+                result.append({
+                    'nicknames': [g.get_player(1).get_nick(), g.get_player(2).get_nick()],
+                    'ids': [g.get_player(1).get_id(), g.get_player(2).get_id()]
+                })
+
             result.append({
                 'game_name': g.get_name(),
-                'number_of_players': number_of_players,
-                'nicknames': [g.get_player(1).get_nick(), g.get_player(2).get_nick()],
-                'ids': [g.get_player(1).get_id(), g.get_player(2).get_id()]
+                'number_of_players': number_of_players
             })
 
         games_lock.release()

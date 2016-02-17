@@ -7,8 +7,20 @@ class Game:
         self.__name = name
         self.__first_field = playingfield.PlayingField(16)
         self.__second_field = playingfield.PlayingField(16)
-        self.__first_player = Player()
-        self.__second_player = Player()
+        self.__first_player = None
+        self.__second_player = None
+
+    def add_player(self, player, nick, id):
+        if player == 1:
+            self.__first_player = Player(nick, id)
+        elif player == 2:
+            self.__second_player = Player(nick, id)
+
+    def remove_player(self, player):
+        if player == 1:
+            self.__first_player = None
+        elif player == 2:
+            self.__second_player = None
 
     def get_name(self):
         return self.__name
@@ -18,7 +30,7 @@ class Game:
             return self.__first_player
         elif player == 2:
             return self.__second_player
-        return None
+        return False
 
     def place_ship(self, player, id, x, y, direction):
         field = self.__get_field_by_player(player)

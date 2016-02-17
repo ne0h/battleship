@@ -33,6 +33,7 @@ class ClientHandler:
         self.__message_parser = MessageParser()
         self.__lobby_model = LobbyModel()
         self.__game = None
+        self.__player = None
 
         # register on_update callback
         self.__lobby_model.register_callback(LobbyEvent.on_update, self.on_update_lobby)
@@ -100,12 +101,12 @@ class ClientHandler:
             data[weirdkey.format(i)] = game['game_name']
             data[moreweirdkeys.format(i)] = game['number_of_players']
             # player 1 stuff
-            data[whatevenisthis.format(i, 1)] = game['ids'][0]
-            data[waitwhat.format(i, 1)] = game['nicknames'][0]
+            data[whatevenisthis.format(i, 0)] = game['ids'][0]
+            data[waitwhat.format(i, 0)] = game['nicknames'][0]
             # player 2 stuff
             if game['number_of_players'] == 2:
-                data[whatevenisthis.format(i, 2)] = game['ids'][1]
-                data[waitwhat.format(i, 2)] = game['nicknames'][1]
+                data[whatevenisthis.format(i, 1)] = game['ids'][1]
+                data[waitwhat.format(i, 1)] = game['nicknames'][1]
             i += 1
 
         # concat all player ids
@@ -142,7 +143,7 @@ class ClientHandler:
         game = self.__lobby_model.add_lobby(params['name'], playerid)
         if game:
             self.__game = game
-            # TODO use consts here
+            self.__player = 1
             return self.__message_parser.encode('report', {'status': '28'})
         else:
             return self.__message_parser.encode('report', {'status': '37'})
@@ -165,18 +166,26 @@ class ClientHandler:
         game = self.__lobby_model.join_lobby(params['name'], playerid)
         if game:
             self.__game = game
-            # TODO use consts here
+            self.__player = 2
             return self.__message_parser.encode('report', {'status': '27'})
         else:
             return self.__message_parser.encode('report', {'status': '37'})
 
-    def __leave_game(self):
-        self.__lobby_model.leave_lobby
-        # TODO use consts here
+    def __leave_lobby(self):
+        # TODO handle already left
+        if self.__game is None:
+            # illegal move
+            return self.__message_parser.encode('report', {'status': '31'})
+
+        self.__lobby_model.leave_game(self.__game.get_player(self.__player), )
+        # if player who created game leaves then destroy the game
+        if self.__player == 1:
+            self.__lobby_model.delete_game(self.__game)
+
+        self.__game = None
         return self.__message_parser.encode('report', {'status': '19'})
 
     def __unknown_msg(self):
-        # TODO use consts here
         return self.__message_parser.encode('report', {'status': '40'})
 
     def __expect_parameter(self, expected, actual):
