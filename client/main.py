@@ -11,8 +11,8 @@ from backend import Backend
 
 def setupArgparse():
 	parser = argparse.ArgumentParser(description="Battleship++ Client Application")
-	parser.add_argument("--host", metavar=("<HOSTNAME>", "<PORT>"),	help="Connect directly without settings dialog.",
-			nargs=2, type=str)
+	parser.add_argument("-c", "--connect", metavar=("<HOSTNAME>", "<PORT>", "<NICKNAME"),
+						help="Connect directly without settings dialog.", nargs=3, type=str)
 
 	return parser
 
@@ -28,14 +28,15 @@ if __name__ == "__main__":
 	args = setupArgparse().parse_args()
 	hostname = None
 	port = None
-	if args.host:
-		if not args.host[1].isdigit():
+	if args.connect:
+		if not args.connect[1].isdigit():
 			logging.error("Wrong connection settings. Not connected so far.")
 		else:
-			hostname = args.host[0]
-			port = int(args.host[1])
+			hostname = args.connect[0]
+			port = int(args.connect[1])
+			nickname = args.connect[2]
 
-	backend = Backend(fieldLength, hostname, port)
+	backend = Backend(fieldLength, hostname, port, nickname)
 
 	app = QApplication(sys.argv)
 	screen = MainForm(backend, fieldLength)

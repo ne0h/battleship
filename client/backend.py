@@ -444,7 +444,7 @@ class Backend:
 		# TODO: validate client status
 		self.__serverHandler.specialAttack(target)
 
-	def __init__(self, length, hostname, port):
+	def __init__(self, length, hostname, port, nickname):
 		from serverhandler import ServerHandler
 		from udpdiscoverer import UDPDiscoverer
 
@@ -469,8 +469,8 @@ class Backend:
 		self.__shipUpdateCallbacks = []
 
 		self.__serverHandler = ServerHandler(self)		
-		if hostname and port:
-			if self.connect(None, hostname, port):
+		if hostname and port and nickname:
+			if self.connect(nickname, hostname, port):
 				self.clientStatus = ClientStatus.NOGAMERUNNING
 
 		self.__udpDiscoverer = UDPDiscoverer(self)
