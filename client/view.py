@@ -483,7 +483,7 @@ class MainForm(QWidget):
 	def __moveShip(self):
 		pass
 
-	def __setupGui(self):
+	def __setupGui(self, nickname=None):
 
 		# own playing field stuff
 		ownPlayingFieldBox = QGroupBox("Your own playing field")
@@ -534,9 +534,22 @@ class MainForm(QWidget):
 		self.__connectBtn = QPushButton("Connect")
 		self.__connectBtn.clicked.connect(self.__openConnectDialog)
 
-		# status line
+		# status stuff
 		self.__statusLbl = QLabel()
 		self.__statusLbl.setStyleSheet("color: #b00")
+		self.__statusLbl.setMinimumWidth(800)
+		# TODO: align right side
+
+		self.__playersLbl = QLabel()
+		self.__playersLbl.setStyleSheet("color: #00b")
+		if nickname:
+			self.__playersLbl.setText("Nickname: %s" % (nickname))
+
+		topLayout = QHBoxLayout()
+		topLayout.addWidget(self.__statusLbl)
+		topLayout.addWidget(self.__playersLbl)
+		topWgt = QWidget()
+		topWgt.setLayout(topLayout)
 
 		# place all elements
 		playingFieldLayout = QHBoxLayout()
@@ -557,7 +570,7 @@ class MainForm(QWidget):
 		btnsWgt.setLayout(btnsLayout)
 
 		layout = QVBoxLayout()
-		layout.addWidget(self.__statusLbl)
+		layout.addWidget(topWgt)
 		layout.addWidget(playingFieldWgt)
 		layout.addWidget(btnsWgt)
 
@@ -568,7 +581,7 @@ class MainForm(QWidget):
 	def closeEvent(self, event):
 		self.__backend.close()
 
-	def __init__(self, backend, fieldLength):
+	def __init__(self, backend, fieldLength, nickname=None):
 		from backend import Callback
 
 		self.__backend = backend
@@ -578,7 +591,7 @@ class MainForm(QWidget):
 		self.__lobbyAlreadyOpen = False
 
 		super(MainForm, self).__init__()
-		self.__setupGui()
+		self.__setupGui(nickname)
 
 		cb = Callback()
 		cb.onAction = lambda clientStatus: self.__onUpdateClientStatus(clientStatus)

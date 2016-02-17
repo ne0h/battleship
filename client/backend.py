@@ -444,6 +444,9 @@ class Backend:
 		# TODO: validate client status
 		self.__serverHandler.specialAttack(target)
 
+	def errorResponse(self, status):
+		pass
+
 	def __init__(self, length, hostname, port, nickname):
 		from serverhandler import ServerHandler
 		from udpdiscoverer import UDPDiscoverer
