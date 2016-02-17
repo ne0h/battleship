@@ -27,6 +27,7 @@ if __name__ == "__main__":
 
 	args = setupArgparse().parse_args()
 	hostname = None
+	nickname = None
 	port = None
 	if args.connect:
 		if not args.connect[1].isdigit():
@@ -39,6 +40,6 @@ if __name__ == "__main__":
 	backend = Backend(fieldLength, hostname, port, nickname)
 
 	app = QApplication(sys.argv)
-	screen = MainForm(backend, fieldLength)
+	screen = MainForm(backend, fieldLength, nickname)
 	screen.show()
 	sys.exit(app.exec_())
