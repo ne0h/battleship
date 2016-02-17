@@ -32,15 +32,20 @@ class ClientHandler:
         self.__socket = sock
         self.__message_parser = MessageParser()
         self.__lobby_model = LobbyModel()
+        # name of the game
         self.__game = None
+        # player number (1 or 2)
         self.__player = None
+        # player id lol
+        self.__id = self.__get_own_player_id()
+        # add client as player
+        self.__lobby_model.add_player(self.__id)
 
         # register on_update callback
         self.__lobby_model.register_callback(LobbyEvent.on_update, self.on_update_lobby)
 
     def handle(self):
         logging.info("Client {} connected.".format(self.__socket.getpeername()))
-        self.on_update_lobby()
         while True:
             # receive 2 bytes size header
             size = self.__socket.recv(2)
@@ -84,6 +89,7 @@ class ClientHandler:
         number_of_clients = self.__lobby_model.get_number_of_players()
         number_of_games = self.__lobby_model.get_number_of_games()
         games_info = self.__lobby_model.get_games_info()
+        players_info = self.__lobby_model.get_players_info()
 
         # Update_Lobby
         data = {
@@ -105,19 +111,17 @@ class ClientHandler:
             data[moreweirdkeys.format(i)] = game['number_of_players']
             # player 1 stuff
             data[whatevenisthis.format(i, 0)] = game['ids'][0]
-            data[waitwhat.format(i, 0)] = game['nicknames'][0]
             # player 2 stuff
             if game['number_of_players'] == 2:
                 data[whatevenisthis.format(i, 1)] = game['ids'][1]
-                data[waitwhat.format(i, 1)] = game['nicknames'][1]
             i += 1
 
-        # concat all player ids
-        ids = self.__lobby_model.get_player_ids()
-        j = 0
-        for id in ids:
-            data[yetanotherkey.format(j)] = id
-            j += 1
+        i = 0
+        for player in players_info:
+            # player stuff
+            data[yetanotherkey.format(i)] = player['id']
+            data[waitwhat.format(i)] = player['nickname']
+            i += 1
 
         msg = self.__message_parser.encode('report', data)
         self.__send(msg)
@@ -141,11 +145,9 @@ class ClientHandler:
             return
 
         # create the game
-        addr, port = self.__socket.getpeername()
-        playerid = hashlib.sha1(b(addr + str(port))).hexdigest()
-        game = self.__lobby_model.add_lobby(params['name'], playerid)
+        game = self.__lobby_model.add_lobby(params['name'], self.__id)
         if game:
-            self.__game = game
+            self.__game = params['name']
             self.__player = 1
             return self.__message_parser.encode('report', {'status': '28'})
         else:
@@ -164,11 +166,9 @@ class ClientHandler:
             return
 
         # join the game
-        addr, port = self.__socket.getpeername()
-        playerid = hashlib.sha1(b(addr + str(port))).hexdigest()
-        game = self.__lobby_model.join_lobby(params['name'], playerid)
+        game = self.__lobby_model.join_lobby(params['name'], self.__id)
         if game:
-            self.__game = game
+            self.__game = params['name']
             self.__player = 2
             return self.__message_parser.encode('report', {'status': '27'})
         else:
@@ -179,9 +179,15 @@ class ClientHandler:
         if report:
             return report
 
-        self.__game.get_player(self.__player).set_nick(params['name'])
-        # send an update lobby
-        self.on_update_lobby()
+        # tell lobby to set nickname and hope for the best
+        self.__lobby_model.set_nickname(self.__id, params['name'])
+        # nothing to report lel
+        return b''
+
+    def __get_own_player_id(self):
+        addr, port = self.__socket.getpeername()
+        playerid = hashlib.sha1(b(addr + str(port))).hexdigest()
+        return playerid
 
     def __leave_lobby(self):
         # TODO handle already left

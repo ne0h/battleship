@@ -16,8 +16,8 @@ games = {}
 # Set of waiting games
 waiting_games = set()
 
-# Set of all connected player ids
-players = set()
+# Map of connected players by id
+players = {}
 
 # Map of callback lists by event type
 callbacks = {}
@@ -32,10 +32,22 @@ callbacks_lock = threading.Lock()
 
 class LobbyModel:
 
+    def add_player(self, id):
+        global players
+        global players_lock
+
+        # add client as player
+        players_lock.acquire()
+        players[id] = Player(id=id)
+        players_lock.release()
+
+        # trigger on_update event
+        self.__notify_all(LobbyEvent.on_update)
+
     def add_lobby(self, name, playerid):
         """
         Create a new lobby and make sure that the name is unique.
-        Return the new game on success and False on failure (i.e., lobby name was already taken).
+        Return True on success and False on failure (i.e., lobby name was already taken).
         """
         global games
         global waiting_games
@@ -49,21 +61,18 @@ class LobbyModel:
             games_lock.release()
             return False
 
-        # add new game to list of games and set first player id
+        # add new game to list of games
         games[name] = Game(name, playerid)
-        players_lock.acquire()
-        players.add(playerid)
-        players_lock.release()
 
         # add game to list of waiting games
         waiting_games.add(name)
+
         games_lock.release()
 
         # trigger on_update event
         self.__notify_all(LobbyEvent.on_update)
 
-        # return the new game instance
-        return games[name]
+        return True
 
     def join_lobby(self, name, playerid):
         """
@@ -89,9 +98,9 @@ class LobbyModel:
             return False, LobbyError.game_is_full
 
         # set second player id in the game and add the id to the list of players
-        games[name].get_player(2).set_id(playerid)
+        games[name].set_second_player(playerid)
         players_lock.acquire()
-        players.add(playerid)
+        players[playerid] = Player(id=playerid)
         players_lock.release()
 
         # remove game from the list of waiting games
@@ -101,8 +110,7 @@ class LobbyModel:
         # trigger on_update event
         self.__notify_all(LobbyEvent.on_update)
 
-        # return the joined game instance
-        return True, games[name]
+        return True
 
     def get_number_of_games(self):
         """
@@ -113,17 +121,25 @@ class LobbyModel:
         return len(games), len(waiting_games)
 
     def get_number_of_players(self):
-        global games
-        global waiting_games
-        return 2 * len(games) - len(waiting_games)
+        """
+        Return number of connected clients.
+        """
+        global players
+        return len(players)
 
-    def get_player_ids(self):
+    def get_players_info(self):
         global players
         global players_lock
         players_lock.acquire()
+
         result = []
-        for p in players:
-            result.append(p)
+        for _, p in players.items():
+            info = {}
+            info['nickname'] = p.get_nick()
+            info['id'] = p.get_id()
+
+            result.append(info)
+
         players_lock.release()
         return result
 
@@ -132,31 +148,58 @@ class LobbyModel:
         global waiting_games
         global games_lock
         games_lock.acquire()
-
+        # TODO
         games_lock.release()
+
+    def delete_game(self, game):
+        # TODO
+        pass
+
+    def set_nickname(self, player, nick):
+        global players
+        global players_lock
+        players_lock.acquire()
+
+        if player not in players:
+            logging.debug("This should never happen.")
+            logging.debug(player)
+            players_lock.release()
+            return False
+
+        players[player].set_nick(nick)
+
+        players_lock.release()
+
+        # trigger on_update event
+        self.__notify_all(LobbyEvent.on_update)
+
+        return True
 
     def get_games_info(self):
         global games
         global waiting_games
         global games_lock
+        global players_lock
         games_lock.acquire()
+        players_lock.acquire()
 
         result = []
         for _, g in games.items():
             info = {}
             number_of_players = 1 if g.is_waiting() else 2
             if g.is_waiting():
-                info['nicknames'] = [ g.get_player(1).get_nick() ]
-                info['ids'] = [ g.get_player(1).get_id() ]
+                info['nicknames'] = [ players[g.get_player(1)].get_nick() ]
+                info['ids'] = [ g.get_player(1) ]
             else:
-                info['nicknames'] = [ g.get_player(1).get_nick(), g.get_player(2).get_nick() ]
+                info['nicknames'] = [ players[g.get_player(1)].get_nick(), players[g.get_player(2)].get_nick() ]
                 info['ids'] = [ g.get_player(1).get_id(), g.get_player(2).get_id() ]
 
             info['game_name'] = g.get_name()
             info['number_of_players'] = number_of_players
-            
+
             result.append(info)
 
+        players_lock.release()
         games_lock.release()
         return result
 

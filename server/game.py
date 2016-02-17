@@ -21,12 +21,12 @@ class Game:
         self.__name = name
         self.__first_field = playingfield.PlayingField(16)
         self.__second_field = playingfield.PlayingField(16)
-        self.__first_player = Player(id=id)
+        self.__first_player = id
         self.__second_player = None
         self.__status = GameStatus.waiting
 
-    def add_second_player(self, player, nick, id):
-        self.__second_player = Player(nick, id)
+    def set_second_player(self, id):
+        self.__second_player = id
         self.__status = GameStatus.ready
 
     def remove_second_player(self):
