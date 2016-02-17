@@ -463,7 +463,14 @@ class Backend:
 		pass
 
 	def sendChatMessage(self, msg):
-		pass
+		self.__serverHandler.sendChatMessage(msg)
+
+	def registerChatCallback(self, callback):
+		self.__chatCallbacks.append(callback)
+
+	def onIncomingChatMessage(self, authorId, timestamp, message):
+		for cb in self.__chatCallbacks:
+			cb.onAction(authorId, timestamp, message)
 
 	def __init__(self, length, hostname, port, nickname):
 		from serverhandler import ServerHandler
@@ -492,6 +499,7 @@ class Backend:
 		self.__gamePreparationsEndedCallbacks = []
 		self.__gamePlayCallbacks = []
 		self.__shipUpdateCallbacks = []
+		self.__chatCallbacks = []
 
 		self.__serverHandler = ServerHandler(self)		
 		if hostname and port and nickname:

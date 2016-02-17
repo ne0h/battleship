@@ -207,6 +207,9 @@ class ServerHandler:
 
 		self.__sendMessage("special_attack", {"coordinate_x": target.x, "coordinate_y": target.y})
 
+	def sendChatMessage(self, msg):
+		self.__sendMessage("chat_send", {"text": msg})
+
 	def __receiveLoop(self):
 		while not self.__stopReceiveLoop:
 
@@ -223,7 +226,11 @@ class ServerHandler:
 				if status in reportCodes:
 					logging.debug("%s received: %s" % (messageType, reportCodes[status]))
 
-					if status is 16:
+					if status is 15:
+						self.__backend.onIncomingChatMessage(params["author_id"], params["timestamp"],
+															params["message_content"])
+
+					elif status is 16:
 						self.__onUpdateLobby(params)
 
 					# game creation stuff

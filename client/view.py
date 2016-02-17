@@ -494,8 +494,13 @@ class MainForm(QWidget):
 		pass
 
 	def __sendChatMessage(self):
+		# TODO: Check for empty strings
 		msg = self.__chatIpt.text()
 		self.__backend.sendChatMessage(msg)
+		self.__chatIpt.setText("")
+
+	def onIncomingChatMessage(self, authorId, timestamp, message):
+		self.__chatLog.append("(%s) %s: %s" % (timestamp, authorId, message))
 
 	def __setupGui(self, nickname=None):
 
@@ -567,10 +572,19 @@ class MainForm(QWidget):
 
 		# chat stuff
 		self.__chatLog = QTextEdit()
+		self.__chatLog.setReadOnly(True)
+		self.__chatLog.setMinimumHeight(150)
+		self.__chatLog.ensureCursorVisible()
 		self.__chatIpt = QLineEdit()
 		self.__chatIpt.setPlaceholderText("Message")
 		chatBtn = QPushButton("Send")
 		chatBtn.clicked.connect(self.__sendChatMessage)
+
+		chatLayout = QHBoxLayout()
+		chatLayout.addWidget(self.__chatIpt)
+		chatLayout.addWidget(chatBtn)
+		chatWgt = QWidget()
+		chatWgt.setLayout(chatLayout)
 
 		#
 		# place all elements
@@ -596,6 +610,8 @@ class MainForm(QWidget):
 		layout.addWidget(topWgt)
 		layout.addWidget(playingFieldWgt)
 		layout.addWidget(btnsWgt)
+		layout.addWidget(self.__chatLog)
+		layout.addWidget(chatWgt)
 
 		self.setLayout(layout)
 		self.setWindowTitle("Battleship++")
@@ -619,3 +635,8 @@ class MainForm(QWidget):
 		cb = Callback()
 		cb.onAction = lambda clientStatus: self.__onUpdateClientStatus(clientStatus)
 		self.__onUpdateClientStatus(self.__backend.registerClientStatusCallback(cb))
+
+		chatCb = Callback()
+		chatCb.onAction = lambda authorId, timestamp, message: self.__onIncomingChatMessage(authorId, timestamp,
+																							message)
+		self.__backend.registerChatCallback(chatCb)
