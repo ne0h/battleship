@@ -356,6 +356,37 @@ class OwnPlayingFieldWidget(PlayingFieldWidget):
 					self._viewModel.waitForShipPlacement = True
 				self._viewModel.newShipBow = None
 
+		#
+		# Moves
+		#
+		if self._viewModel.waitForMoveNorth:
+			# get shipId
+			shipId = self._backend.getShipAtPosition(field)
+			if shipId > 0:
+				logging.info("Moving ship #%s to the north" % str(shipId))
+				self._backend.move(shipId, Orientation.NORTH)
+
+		if self._viewModel.waitForMoveWest:
+			# get shipId
+			shipId = self._backend.getShipAtPosition(field)
+			if shipId > 0:
+				logging.info("Moving ship #%s to the west" % str(shipId))
+				self._backend.move(shipId, Orientation.WEST)
+
+		if self._viewModel.waitForMoveSouth:
+			# get shipId
+			shipId = self._backend.getShipAtPosition(field)
+			if shipId > 0:
+				logging.info("Moving ship #%s to the south" % str(shipId))
+				self._backend.move(shipId, Orientation.SOUTH)
+
+		if self._viewModel.waitForMoveEast:
+			# get shipId
+			shipId = self._backend.getShipAtPosition(field)
+			if shipId > 0:
+				logging.info("Moving ship #%s to the east" % str(shipId))
+				self._backend.move(shipId, Orientation.EAST)
+
 	def _getShips(self):
 		return self._backend.getOwnShips()
 
@@ -389,37 +420,6 @@ class EnemeysPlayingFieldWidget(PlayingFieldWidget):
 			logging.info("Special Attack at enemey's field: %s" % (field.toString()))
 			self._backend.specialAttack(field)
 			self._viewModel.waitForSpecialAttack = False
-
-		#
-		# Moves
-		#
-		if self._viewModel.waitForMoveNorth:
-			# get shipId
-			shipId = self._backend.getShipAtPosition(field)
-			if shipId > 0:
-				logging.info("Moving ship #%s to the north" % str(shipId))
-				self._backend.move(shipId, Orientation.NORTH)
-
-		if self._viewModel.waitForMoveWest:
-			# get shipId
-			shipId = self._backend.getShipAtPosition(field)
-			if shipId > 0:
-				logging.info("Moving ship #%s to the west" % str(shipId))
-				self._backend.move(shipId, Orientation.WEST)
-
-		if self._viewModel.waitForMoveSouth:
-			# get shipId
-			shipId = self._backend.getShipAtPosition(field)
-			if shipId > 0:
-				logging.info("Moving ship #%s to the south" % str(shipId))
-				self._backend.move(shipId, Orientation.SOUTH)
-
-		if self._viewModel.waitForMoveEast:
-			# get shipId
-			shipId = self._backend.getShipAtPosition(field)
-			if shipId > 0:
-				logging.info("Moving ship #%s to the east" % str(shipId))
-				self._backend.move(shipId, Orientation.EAST)
 
 	def _getShips(self):
 		return self._backend.getEnemeysShips()
