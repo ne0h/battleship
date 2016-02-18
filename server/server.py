@@ -41,8 +41,9 @@ class ClientHandler:
         # add client as player
         self.__lobby_model.add_player(self.__id)
 
-        # register on_update callback
+        # register callbacks
         self.__lobby_model.register_callback(LobbyEvent.on_update, self.on_update_lobby)
+        self.__lobby_model.register_callback(LobbyEvent.on_game_deleted, self.on_game_deleted)
 
     def handle(self):
         logging.info("Client {} connected.".format(self.__socket.getpeername()))
@@ -50,7 +51,6 @@ class ClientHandler:
             # receive 2 bytes size header
             size = self.__socket.recv(2)
             if not size:
-                logging.info("Client {} disconnected.".format(self.__socket.getpeername()))
                 break
             size = struct.unpack('>H', size)[0]
             logging.debug("Size: " + str(size))
@@ -58,7 +58,6 @@ class ClientHandler:
             # receive message body
             msg = self.__socket.recv(size)
             if not msg:
-                logging.info("Client {} disconnected.".format(self.__socket.getpeername()))
                 break
             logging.debug(b"Raw in: " + msg)
 
@@ -80,7 +79,8 @@ class ClientHandler:
                 report = self.__unknown_msg()
 
             # send answer to client
-            self.__send(report)
+            if report:
+                self.__send(report)
 
     def on_update_lobby(self):
         logging.debug("on_update_lobby()")
@@ -130,7 +130,13 @@ class ClientHandler:
         return self.__socket
 
     def finish(self):
+        logging.info("Client {} disconnected.".format(self.__socket.getpeername()))
+
+        # remove any left callbacks
         self.__lobby_model.remove_callback(LobbyEvent.on_update, self.on_update_lobby)
+        self.__lobby_model.remove_callback(LobbyEvent.on_game_deleted, self.on_game_deleted)
+
+        self.__lobby_model.delete_player(self.__id)
 
     def __create_game(self, params):
         # make sure parameter list is complete
@@ -187,10 +193,12 @@ class ClientHandler:
         if report:
             return report
 
+        # TODO len check
+
         # tell lobby to set nickname and hope for the best
         self.__lobby_model.set_nickname(self.__id, params['name'])
         # nothing to report lel
-        return b''
+        return None
 
     def __get_own_player_id(self):
         addr, port = self.__socket.getpeername()
@@ -203,12 +211,19 @@ class ClientHandler:
             return self.__message_parser.encode('report', {'status': '31'})
 
         self.__lobby_model.leave_game(self.__id)
-        # if player who created game leaves then destroy the game
-        if self.__player == 1:
-            self.__lobby_model.delete_game(self.__game)
+        # if player who created game leaves then destroy the game else just leave
+        #if self.__player == 1:
+        #    self.__lobby_model.delete_game(self.__game)
+        #else:
+        #    self.__lobby_model.leave_game(self.__game)
 
+        # nevermind lulz
+        self.__lobby_model.delete_game(self.__game)
+        return None
+
+    def on_game_deleted(self):
         self.__game = None
-        return self.__message_parser.encode('report', {'status': '19'})
+        self.__send(self.__message_parser.encode('report', {'status': '19'}))
 
     def __unknown_msg(self):
         return self.__message_parser.encode('report', {'status': '40'})

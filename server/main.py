@@ -9,7 +9,6 @@ sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '../co
 from server import *
 from socketserver import UDPServer, BaseRequestHandler
 
-USAGE = "Usage: main.py <host> <port>"
 
 class UDPDiscoveryHandler(BaseRequestHandler):
 

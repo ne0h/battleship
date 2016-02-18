@@ -8,7 +8,9 @@ class LobbyError(Enum):
     game_does_not_exist = 2
 
 class LobbyEvent(Enum):
-    on_update = 1
+    # do not forget to init the event callback list as well
+    on_update = 1,
+    on_game_deleted = 2
 
 # Map of games by name
 games = {}
@@ -23,6 +25,7 @@ players = {}
 callbacks = {}
 # Initialize an empty list for each event
 callbacks[LobbyEvent.on_update] = []
+callbacks[LobbyEvent.on_game_deleted] = []
 
 # Locks
 games_lock = threading.Lock()
@@ -110,7 +113,7 @@ class LobbyModel:
         # trigger on_update event
         self.__notify_all(LobbyEvent.on_update)
 
-        return True
+        return True, None
 
     def get_number_of_games(self):
         """
@@ -143,17 +146,55 @@ class LobbyModel:
         players_lock.release()
         return result
 
-    def leave_lobby(self, name):
+    def delete_player(self, id):
+        """
+        Delete a player and make sure that a joined game is aborted as well.
+        """
+        global games
+        global waiting_games
+        global players
+        global players_lock
+        global games_lock
+
+        # remove player
+        players_lock.acquire()
+        players.pop(id, None)
+        players_lock.release()
+
+        # remove game if joined
+        games_lock.acquire()
+        for k, g in games:
+            # id for each first and second player
+            id1 = g.get_player(1).get_id()
+            id2 = g.get_player(2).get_id()
+            if id == id1 or id == id2:
+                games.pop(k, None)
+                if k in waiting_games:
+                    waiting_games.remove(k)
+                break
+        games_lock.release()
+
+        # trigger on_game_deleted and on_update
+        self.__notify_all(LobbyEvent.on_game_deleted)
+        self.__notify_all(LobbyEvent.on_update)
+
+    def delete_game(self, game):
+        """
+        Destroy the whole game.
+        """
         global games
         global waiting_games
         global games_lock
+
         games_lock.acquire()
-        # TODO
+        games.pop(game, None)
+        if game in waiting_games:
+            waiting_games.remove(game)
         games_lock.release()
 
-    def delete_game(self, game):
-        # TODO
-        pass
+        # trigger on_game_deleted and on_update
+        self.__notify_all(LobbyEvent.on_game_deleted)
+        self.__notify_all(LobbyEvent.on_update)
 
     def set_nickname(self, player, nick):
         global players
