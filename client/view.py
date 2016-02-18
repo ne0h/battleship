@@ -586,7 +586,7 @@ class MainForm(QWidget):
 		self.__chatLog.append("(%s) %s: %s" % (timestamp, authorId, message))
 
 	def __onError(self, error):
-		self.__statusLbl.setText("Error: %s" % error.name)
+		self.__statusLbl.setText("Error: %s" % error)
 
 	def __moveNorth(self):
 		self.__viewModel.waitForMoveNorth = True

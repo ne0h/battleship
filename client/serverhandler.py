@@ -208,7 +208,7 @@ class ServerHandler:
 		self.__sendMessage("special_attack", {"coordinate_x": target.x, "coordinate_y": target.y})
 
 	def move(self, shipId, direction):
-		self.__sendMessage("move", {"ship_id": shipId, "direction": direction.name})
+		self.__sendMessage("move", {"ship_id": shipId, "direction": orientationCodes[ship.orientation]})
 
 	def sendChatMessage(self, msg):
 		self.__sendMessage("chat_send", {"text": msg})
