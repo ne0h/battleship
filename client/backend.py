@@ -15,6 +15,8 @@ class ClientStatus(Enum):
 	PREPARATIONSENDED = "preparationsended"
 	OWNTURN = "ownturn"
 	OPPONENTSTURN = "oppenentsturn"
+	YOUWIN = "youwin"
+	YOULOSE = "youlose"
 
 class Error(Enum):
 	NOTYOURTURN = "It is not your turn."
@@ -386,6 +388,14 @@ class Backend:
 
 		if status is 11:
 			self.__updateClientStatus(ClientStatus.OWNTURN)
+		elif status is 21 or status is 22 or status is 24:
+			self.__updateClientStatus(ClientStatus.OPPONENTSTURN)
+		elif status is 31:
+			self.__onError("Move not allowed")
+		elif status is 32:
+			self.__onError("Special Attack not allowed")
+		elif status is 39:
+			self.__onError("Attack not allowed")
 
 		for cb in self.__gamePlayCallbacks:
 			cb.onAction(status)
@@ -440,9 +450,9 @@ class Backend:
 		# TODO: validate field
 
 		if self.clientStatus is not ClientStatus.OWNTURN:
-			pass
+			self.__onError("It is not your turn.")
+			return
 
-		# TODO: validate client status
 		self.__serverHandler.attack(target)
 
 	def specialAttack(self, target):
@@ -453,11 +463,20 @@ class Backend:
 		    target: the address of the bottom-left field
 		"""
 		# TODO: validate field
-		# TODO: validate client status
+
+		if self.clientStatus is not ClientStatus.OWNTURN:
+			self.__onError("It is not your turn.")
+			return
+
 		self.__serverHandler.specialAttack(target)
 
-	def move(self, ship, direction):
-		pass
+	def move(self, shipId, direction):
+		# TODO: validate direction
+		if self.clientStatus is not ClientStatus.OWNTURN:
+			self.__onError("It is not your turn.")
+			return
+
+		self.__serverHandler.move(shipId, direction)
 
 	def errorResponse(self, status):
 		pass
@@ -491,6 +510,9 @@ class Backend:
 
 	def getShipAtPosition(self, field):
 		return self.__ownPlayingField.getShipAtPosition(field)
+
+	def isUnfogged(self, field):
+		return self.__ownPlayingField.isUnfogged(field)
 
 	def __init__(self, length, hostname, port, nickname):
 		from serverhandler import ServerHandler

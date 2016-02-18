@@ -246,7 +246,7 @@ class PlayingFieldWidget(QWidget):
 		Paints the playing field when an event occurs.
 
 		Args:
-			event -- information about the event that occured
+			event: information about the event that occured
 		"""
 
 		painter = QPainter()
@@ -259,7 +259,10 @@ class PlayingFieldWidget(QWidget):
 		# fill each field with water
 		for i in range(1, self._fieldLength + 1):
 			for j in range(1, self._fieldLength + 1):
-				painter.setBrush(QColor(0, 191, 255))
+				if self._backend.isUnfogged(Field(i - 1, j - 1)):
+					painter.setBrush(QColor(0, 191, 255))
+				else:
+					painter.setBrush(QColor(230, 230, 230))
 				painter.drawRect(i * self._fieldSize, j * self._fieldSize, self._fieldSize, self._fieldSize)
 
 		# add ships
@@ -336,7 +339,7 @@ class OwnPlayingFieldWidget(PlayingFieldWidget):
 		This method is called when a mouse event occurs.
 
 		Args:
-			mouseEvent -- information about the mouse event
+			mouseEvent: information about the mouse event
 		"""
 
 		fieldAddress = self._mapClickToField(mouseEvent)
@@ -369,10 +372,14 @@ class EnemeysPlayingFieldWidget(PlayingFieldWidget):
 		This method is called when a mouse event occurs.
 
 		Args:
-			mouseEvent -- information about the mouse event
+			mouseEvent: information about the mouse event
 		"""
 
 		field = self._mapClickToField(mouseEvent)
+
+		#
+		# Attacks
+		#
 		if self._viewModel.waitForAttack:
 			logging.info("Attack at enemey's field: %s" % (field.toString()))
 			self._backend.attack(field)
@@ -383,11 +390,36 @@ class EnemeysPlayingFieldWidget(PlayingFieldWidget):
 			self._backend.specialAttack(field)
 			self._viewModel.waitForSpecialAttack = False
 
+		#
+		# Moves
+		#
 		if self._viewModel.waitForMoveNorth:
 			# get shipId
 			shipId = self._backend.getShipAtPosition(field)
 			if shipId > 0:
 				logging.info("Moving ship #%s to the north" % str(shipId))
+				self._backend.move(shipId, Orientation.NORTH)
+
+		if self._viewModel.waitForMoveWest:
+			# get shipId
+			shipId = self._backend.getShipAtPosition(field)
+			if shipId > 0:
+				logging.info("Moving ship #%s to the west" % str(shipId))
+				self._backend.move(shipId, Orientation.WEST)
+
+		if self._viewModel.waitForMoveSouth:
+			# get shipId
+			shipId = self._backend.getShipAtPosition(field)
+			if shipId > 0:
+				logging.info("Moving ship #%s to the south" % str(shipId))
+				self._backend.move(shipId, Orientation.SOUTH)
+
+		if self._viewModel.waitForMoveEast:
+			# get shipId
+			shipId = self._backend.getShipAtPosition(field)
+			if shipId > 0:
+				logging.info("Moving ship #%s to the east" % str(shipId))
+				self._backend.move(shipId, Orientation.EAST)
 
 	def _getShips(self):
 		return self._backend.getEnemeysShips()
@@ -405,6 +437,20 @@ class MainForm(QWidget):
 
 	def __startPlaceShip(self):
 		self.__viewModel.waitForShipPlacement = True
+
+	def __setGamePlayButtons(self, value):
+		self.__attackBtn.setEnabled(value)
+		self.__specialAttackBtn.setEnabled(value)
+		self.__moveNorthBtn.setEnabled(value)
+		self.__moveWestBtn.setEnabled(value)
+		self.__moveSouthBtn.setEnabled(value)
+		self.__moveEastBtn.setEnabled(value)
+
+	def __enableGamePlayButtons(self):
+		self.__setGameButtons(True)
+
+	def __disableGamePlayButtons(self):
+		self.__setGamePlayButtons(False)
 
 	def __openLobby(self):
 		import sys
@@ -452,17 +498,23 @@ class MainForm(QWidget):
 			cb = Callback()
 			cb.onAction = lambda shipId: self.__onUpdateShipList(shipId)
 			self.__backend.registerShipUpdateCallback(cb)
-
 		elif status is ClientStatus.WAITINGFOROPPONENT:
 			self.__statusLbl.setText("Placement of ships successful. Waiting for opponent now.")
 			self.__placeShipBtn.setEnabled(False)
-
-			# TODO waitforgamestartcallback
-
 		elif status is ClientStatus.OWNTURN:
 			self.__status.setText("It is your turn.")
+			self.__enableGamePlayButtons()
 		elif status is ClientStatus.OPPONENTSTURN:
 			self.__statusLbl.setText("Please wait for your opponent.")
+			self.__disableGamePlayButtons()
+		elif status is ClientStatus.YOUWIN:
+			self.__statusLbl.setText("You win!")
+			self.__disableGamePlayButtons()
+			# TODO: reset client
+		elif status is ClientStatus.YOULOSE:
+			self.__statusLbl.setText("You lose!")
+			self.__disableGamePlayButtons()
+			# TODO: reset client
 
 	def __leaveGameCalled(self):
 		logging.info("Game aborted. Preparing client for a new game.")
@@ -595,6 +647,7 @@ class MainForm(QWidget):
 		moveLayout.addWidget(self.__moveEastBtn)
 		moveWgt = QWidget()
 		moveWgt.setLayout(moveLayout)
+		self.__disableGamePlayButtons()
 
 		shipsLayout = QVBoxLayout()
 		shipsLayout.addWidget(self.__shipsWgt)
