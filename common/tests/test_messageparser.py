@@ -223,6 +223,40 @@ class TestMessageParser(unittest.TestCase):
 		self.assertEqual(params["field_3_condition"],"free")
 		self.assertEqual(params["field_4_condition"],"free")
 
+	#15 Chat_Broadcast
+	def test_chatBroadcastEncoding(self):
+		"""
+		Checks the Encoding of 15 Chat_Broadcast Message by MessageParser	
+		Format: 
+			type:report;status:15;params;
+		params:
+			author_id : [identifier];
+			timestamp : [millis] ;
+			message_content : [text];
+		"""
+		params={"status": "15", "author_id": "2000", "timestamp": "1000", "message_content": "Hi All! How are you?"}		
+		msg = MessageParser().encode("report",params)									
+		msg=msg[2:].decode('utf-8') # decode it from bytes to string
+		check=True							
+		for key,value in params.items():
+			if((key+":"+value) not in msg): check=False
+		if(check): self.assertTrue(True)		
+		else: self.assertTrue(False)	
+	
+	def test_chatBroadcastDecoding(self):
+		"""
+		Checks the Decoding of 15 Chat_Broadcasr Message by MessageParser
+		"""
+		messageType, params = MessageParser().decode("type:report;status:15;author_id:2000;timestamp:1000;"+
+							     "message_content:Hi All! How are you?")
+
+		self.assertEqual(messageType, "report")
+		self.assertEqual(len(params), 4)
+		self.assertEqual(params["status"],"15")
+		self.assertEqual(params["author_id"],"2000")
+		self.assertEqual(params["timestamp"],"1000")
+		self.assertEqual(params["message_content"],"Hi All! How are you?")
+
 	#18 Begin_Ship_Placing
 	def test_beginShipPlacingEncoding(self):
 		""" 	
@@ -918,7 +952,7 @@ class TestMessageParser(unittest.TestCase):
 		"""
 		Checks the Decoding of move Message by MessageParser 
 		"""		
-		messageType, params = MessageParser().decode("type:move; ship_id:5; direction:W;")
+		messageType, params = MessageParser().decode("type:move;ship_id:5;direction:W;")
 
 		self.assertEqual(messageType, "move")
 		self.assertEqual(len(params), 2)
@@ -944,7 +978,7 @@ class TestMessageParser(unittest.TestCase):
 		"""
 		Checks the Decoding of attack Message by MessageParser
 		"""
-		messageType, params = MessageParser().decode("type:attack; coordinate_x:5; coordinate_y:14;")
+		messageType, params = MessageParser().decode("type:attack;coordinate_x:5;coordinate_y:14;")
 
 		self.assertEqual(messageType, "attack")
 		self.assertEqual(len(params), 2)
@@ -970,13 +1004,36 @@ class TestMessageParser(unittest.TestCase):
 		"""
 		Checks the Decoding of special_attack Message by MessageParser
 		"""	
-		messageType, params = MessageParser().decode("type:special_attack; coordinate_x:5; coordinate_y:14;")
+		messageType, params = MessageParser().decode("type:special_attack;coordinate_x:5;coordinate_y:14;")
 
 		self.assertEqual(messageType, "special_attack")
 		self.assertEqual(len(params), 2)
 		self.assertEqual(params["coordinate_x"], "5")		# integers are strings at this step
 		self.assertEqual(params["coordinate_y"], "14")
 	
+	#chat_send	
+	def test_chatSendEncoding(self):
+		"""
+		Checks the Encoding of chat_send Message by MessageParser
+		Format:
+			type:chat_send;text:[text];
+		"""
+		msg=MessageParser().encode("chat_send",{"text": "Hello, How are you?"})
+		msg=msg[2:].decode('utf-8') # decode it from bytes to string
+			
+		# order of parameters is not deterministic				
+		self.assertTrue(msg == "type:chat_send;text:Hello, How are you?;")
+	
+	def test_chatSendDecoding(self):
+		"""
+		Checks the Decoding of chat_send Message by MessageParser
+		"""
+		messageType, params = MessageParser().decode("type:chat_send;text:Hello, How are you?;")
+
+		self.assertEqual(messageType, "chat_send")
+		self.assertEqual(len(params), 1)
+		self.assertEqual(params["text"], "Hello, How are you?")		# integers are strings at this step
+		
 
 if __name__ == "__main__":
 	unittest.main()
