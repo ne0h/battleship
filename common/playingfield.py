@@ -12,6 +12,7 @@ class Orientation(Enum):
 	EAST  = "east"
 
 class FieldStatus(Enum):
+	FOG = "fog"
 	WATER = "water"
 	SHIP = "ship"
 	DAMAGEDSHIP = "damagedship"
@@ -82,7 +83,7 @@ class Ship:
 		rear: the ending field of the ship
 	"""
 
-	def damagePart(self, part):
+	def addDamage(self, part):
 		self.damages.append(part)
 
 	def isDamaged(self, part):
@@ -91,7 +92,7 @@ class Ship:
 	def getLength(self):
 		return len(self.parts)
 
-	def __init__(self, bow, rear):
+	def __initShip(self, bow, rear):
 		self.bow  = bow
 		self.rear = rear
 
@@ -112,6 +113,11 @@ class Ship:
 		for i in range(1, len(self.parts) - 1):
 			self.middles.append(self.parts[i])
 
+	def move(self, bowNew, rearNew):
+		self.__initShip(bowNew, rearNew)
+
+	def __init__(self, bow, rear):
+		self.__initShip(bow, rear)
 		self.damages = []
 
 class ShipList:
@@ -124,7 +130,8 @@ class ShipList:
 		for ship in ships:
 			for part in ships.parts:
 				if field.equals(part):
-					return FieldStatus.DAMAGEDSHIP if ship.isDamaged(part) else FieldStatus.SHIP
+					return FieldStatus.DAMAGEDSHIP, None if ship.isDamaged(part) else FieldStatus.SHIP, ship
+		return None, None
 
 	def __checkForCollisionWithOtherShips(self, ship):
 		"""
@@ -218,6 +225,37 @@ class ShipList:
 			and self.__maxCruiserCount is len(self.__cruisers)
 			and self.__maxDestroyerCount is len(self.__destroyers))
 
+	def __testShipPlacement(self, bow, rear):
+		import math
+
+		# check if the length of the potential ship is valid
+		if bow.x is rear.x:
+			length = int(math.fabs(bow.y - rear.y)) + 1
+		else:
+			length = int(math.fabs(bow.x - rear.x)) + 1
+
+		if length < 2 or length > 5:
+			logging.error("This type of ship does not exist.")
+			return False
+
+		# build ship
+		ship = Ship(bow, rear)
+
+		# check if the ship is diagonal
+		if self.__checkForDiagonal(ship):
+			logging.error("Diagonal ship!")
+			return False
+
+		# check for collisions with previously placed ships
+		if not self.__checkForCollisionWithOtherShips(ship):
+			logging.error("Collision with ship!")
+			return False
+
+		# check playing field borders
+		if not self.__checkForCollisionsWithBorders(ship):
+			logging.error("Collision with border!")
+			return False
+
 	def add(self, bow, rear):
 		"""
 		Adds a new Ship to the playing field. Validates if the maximum count of this kind of ship is reached.
@@ -231,34 +269,7 @@ class ShipList:
 			the user has to place more ships.
 		"""
 
-		import math
-
-		# check if the length of the potential ship is valid
-		if bow.x is rear.x:
-			length = int(math.fabs(bow.y - rear.y)) + 1
-		else:
-			length = int(math.fabs(bow.x - rear.x)) + 1
-		
-		if length < 2 or length > 5:
-			logging.error("This type of ship does not exist.")
-			return -1, True
-
-		# build ship
-		ship = Ship(bow, rear)
-
-		# check if the ship is diagonal
-		if self.__checkForDiagonal(ship):
-			logging.error("Diagonal ship!")
-			return -1, True
-		
-		# check for collisions with previously placed ships
-		if not self.__checkForCollisionWithOtherShips(ship):
-			logging.error("Collision with ship!")
-			return -1, True
-
-		# check playing field borders
-		if not self.__checkForCollisionsWithBorders(ship):
-			logging.error("Collision with border!")
+		if not self.__testShipPlacement(bow, rear):
 			return -1, True
 
 		# all checks done - add ship to specific list
@@ -297,6 +308,30 @@ class ShipList:
 	def getShipCount(self):
 		return self.getCarrierCount() + self.getBattleshipCount() + self.getCruiserCount() + self.getDestroyerCount()
 
+	def move(self, shipId, direction):
+		ship = self.getShip(shipId)
+		bow = ship.bow
+		rear = ship.rear
+
+		if direction == "N":
+			bowNew  = Field(bow.x  + 1, bow.y)
+			rearNew = Field(rear.x + 1, rear.y)
+		elif direction == "W":
+			bowNew  = Field(bow.x,  bow.y  + 1)
+			rearNew = Field(rear.y, rear.y + 1)
+		elif direction == "S":
+			bowNew  = Field(bow.x  - 1, bow.y)
+			rearNew = Field(rear.x - 1, rear.y)
+		else:
+			bowNew  = Field(bow.x,  bow.y  - 1)
+			rearNew = Field(rear.y, rear.y - 1)
+
+		success = self.__testShipPlacement(bowNew, rearNew)
+		if success:
+			ship.move(bowNew, rearNew)
+
+		return success
+
 	def __init__(self, fieldLength, maxCarrierCount=1, maxBattleshipCount=2, maxCruiserCount=3, maxDestroyerCount=4):
 		self.__fieldLength = fieldLength
 
@@ -320,10 +355,74 @@ class PlayingField:
 		length: the dimension of playing field
 	"""
 
-	def getFieldStatus(self, field):
-
+	def __getFieldStatus(self, field):
 		# check if there is a part of a ship
-		shipPart, broken = self.__ships.getFieldStatus(field)
+		shipPart, ship = self.__ships.getFieldStatus(field)
+		return shipPart if shipPart is not None else FieldStatus.WATER, ship
+
+	def attack(self, field):
+		"""
+		The enemy attacks a field.
+
+		Args:
+		    field: the field the enemy attacks
+
+		Returns:
+			Returns the status of the field after the attack together with True if it changed or False if not.
+		"""
+		status, ship = self.__getFieldStatus(field)
+		result = status
+		updated = False
+		if status is FieldStatus.SHIP:
+			result = FieldStatus.DAMAGEDSHIP
+			ship.addDamage(field)
+			updated = True
+
+		# unfog field
+		if field not in self.__unfogged:
+			updated = True
+			self.__unfogged.append(field)
+
+		return result, updated
+
+	def specialAttack(self, field):
+		"""
+		The enemy attacks a lot of fields.
+
+		Args:
+		    field: the most significant field
+
+		Returns:
+			A list of fields whose statuses has been updated.
+		"""
+
+		# calculate all the fields
+		fields = [field, Field(field.x+1, field.y), Field(field.x+2, field.y),
+				  Field(field.x+1, field.y), Field(field.x+1, field.y+1), Field(field.x+1, field.y+2),
+				  Field(field.x+2, field.y), Field(field.x+2, field.y+1), Field(field.x+2, field.y+2)]
+
+		updates = []
+		for f in fields:
+			status, updated = self.attack(f)
+			if updated:
+				updates.append(f)
+
+		return updates
+
+	def move(self, shipId, direction):
+		"""
+		Moves a ship.
+
+		Args:
+		    shipId: the id of the ship
+		    direction: the direction of the ship
+
+		Returns:
+		    Returns True if the move has been successful or False if not.
+
+		"""
+
+		return self.__ships.move(shipId, direction)
 
 	def getShips(self):
 		"""
@@ -365,3 +464,5 @@ class PlayingField:
 	def __init__(self, fieldLength):
 		self.__ships = ShipList(fieldLength)
 		self.__fieldLength = fieldLength
+
+		self.__unfogged = []
