@@ -149,7 +149,7 @@ class ServerHandler:
 			gameId: the identifier of the game
 		"""
 
-		self.__sendMessage("game_join", {"name": {gameId}})
+		self.__sendMessage("game_join", {"name": gameId})
 
 	def createGame(self, gameId):
 		"""
