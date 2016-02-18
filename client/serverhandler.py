@@ -220,7 +220,6 @@ class ServerHandler:
 			else:
 				msg = self.__sock.recv(size[0] * 256 + size[1]).decode()
 				messageType, params = self.__messageParser.decode(msg)
-				print(msg)
 
 				# validate that the status code exists
 				status = int(params["status"])
