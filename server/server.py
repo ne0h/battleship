@@ -140,12 +140,11 @@ class ClientHandler:
 
         # check if client is already in a game
         if self.__game:
-            # TODO fix this crap
             logging.debug("Client already in some game.")
-            return
+            return self.__message_parser.encode('report', {'status': '31'})
 
         # check game name length
-        if 1 > len(self.__game) or len(self.__game) > 64:
+        if 1 > len(params['name']) or len(params['name']) > 64:
             logging.debug("Game name too long.")
             return self.__message_parser.encode('report', {'status': '37'})
 
@@ -166,9 +165,8 @@ class ClientHandler:
 
         # check if client is already in a game
         if self.__game:
-            # TODO fix this crap
             logging.debug("Client already in some game.")
-            return
+            return self.__message_parser.encode('report', {'status': '31'})
 
         # join the game
         game = self.__lobby_model.join_lobby(params['name'], self.__id)
@@ -194,13 +192,12 @@ class ClientHandler:
         playerid = hashlib.sha1(b(addr + str(port))).hexdigest()
         return playerid
 
-    def __leave_lobby(self):
-        # TODO handle already left
+    def __leave_game(self):
         if self.__game is None:
             # illegal move
             return self.__message_parser.encode('report', {'status': '31'})
 
-        self.__lobby_model.leave_game(self.__game.get_player(self.__player), )
+        self.__lobby_model.leave_game(self.__id)
         # if player who created game leaves then destroy the game
         if self.__player == 1:
             self.__lobby_model.delete_game(self.__game)
