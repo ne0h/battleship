@@ -113,11 +113,11 @@ class LobbyDialog(QDialog):
 
 		gameId = self.__gamesWidget.currentItem().text().split(":")[0]
 		cb = Callback()
-		cb.onAction = lambda success: self.__joinGameCalled(success)
+		cb.onAction = lambda success: self.__onJoinGame(success)
 		self.__backend.joinGame(gameId, cb)
 		self.__interfaceEnabled(False)
 
-	def __joinGameCalled(self, success):
+	def __onJoinGame(self, success):
 		logging.info("Game joined? " + str(success))
 		if success:
 			self.__backend.prepareGame()
@@ -140,7 +140,6 @@ class LobbyDialog(QDialog):
 	def __onCreateGame(self, success):
 		logging.info("Creation of game successful: %s", (success))
 		if success:
-			self.__backend.prepareGame()
 			self.close()
 		else:
 			self.__error("Failed create join game.")
@@ -412,9 +411,10 @@ class MainForm(QWidget):
 			ship = self.__backend.getOwnShip(shipId)
 			self.__shipsWgt.addItem("#%s: %s:%s" % (shipId, ship.bow.toString(), ship.rear.toString()))
 
-	def __onUpdateClientStatus(self, status):
+	def __onUpdateClientStatus(self):
 		from backend import ClientStatus
 
+		status = self.__backend.clientStatus
 		if status is ClientStatus.NOTCONNECTED:
 			self.__statusLbl.setText("Please connect to a server.")
 		elif status is ClientStatus.NOGAMERUNNING:
@@ -426,7 +426,7 @@ class MainForm(QWidget):
 
 			self.__statusLbl.setText("Please place your ships.")
 			self.__leaveGameBtn.setEnabled(True)
-			self.__updateStatusLbl()
+			self.__updatePlayersLbl()
 
 			cb = Callback()
 			cb.onAction = lambda shipId: self.__onUpdateShipList(shipId)
@@ -497,7 +497,7 @@ class MainForm(QWidget):
 	def __onJoinGame(self):
 		self.__updateStatusLbl()
 
-	def __updateStatusLbl(self):
+	def __updatePlayersLbl(self):
 		nickname = self.__backend.lobby.getOwnNickname()
 		if self.__backend.lobby.hasGame():
 			if self.__backend.lobby.hasOpponent():
@@ -514,6 +514,9 @@ class MainForm(QWidget):
 
 	def __onIncomingChatMessage(self, authorId, timestamp, message):
 		self.__chatLog.append("(%s) %s: %s" % (timestamp, authorId, message))
+
+	def __onError(self, error):
+		self.__statusLbl.setText("Error: %s" % error.name)
 
 	def __setupGui(self, nickname=None):
 
@@ -647,15 +650,20 @@ class MainForm(QWidget):
 		super(MainForm, self).__init__()
 		self.__setupGui(nickname)
 
-		cb = Callback()
-		cb.onAction = lambda clientStatus: self.__onUpdateClientStatus(clientStatus)
-		self.__onUpdateClientStatus(self.__backend.registerClientStatusCallback(cb))
+		clientStatusCb = Callback()
+		clientStatusCb.onAction = lambda: self.__onUpdateClientStatus()
+		self.__backend.registerClientStatusCallback(clientStatusCb)
+		self.__onUpdateClientStatus()
 
 		chatCb = Callback()
 		chatCb.onAction = lambda authorId, timestamp, message: self.__onIncomingChatMessage(authorId, timestamp,
 																							message)
 		self.__backend.registerChatCallback(chatCb)
 
-		#joinGameCb = Callback()
-		#joinGameCb.onAction = lambda: self.__onJoinGame()
-		#self.__backend.registerJoinGameCallback(joinGameCb)
+		errorCb = Callback()
+		errorCb.onAction = lambda error: self.__onError(error)
+		self.__backend.registerErrorCallback(errorCb)
+
+		opponentJoinedCb = Callback()
+		opponentJoinedCb.onAction = lambda: self.__updatePlayersLbl()
+		self.__backend.registerOpponentJoinedGameCallback(opponentJoinedCb)

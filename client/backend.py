@@ -16,6 +16,9 @@ class ClientStatus(Enum):
 	OWNTURN = "ownturn"
 	OPPONENTSTURN = "oppenentsturn"
 
+class Error(Enum):
+	NOTYOURTURN = "It is not your turn."
+
 class Callback:
 	"""
 	Callback (observer pattern).
@@ -152,19 +155,11 @@ class Backend:
 
 		self.__clientStatusCallbacks.append(callback)
 		logging.debug("Client status callback added")
-		return self.clientStatus
-
-	def clientStatusUpdates(self):
-		"""
-		Calls all client status update callbacks.
-		"""
-
-		for callback in self.__clientStatusCallbacks:
-			callback.onAction(self.clientStatus)
 
 	def __updateClientStatus(self, status):
 		self.clientStatus = status
-		self.clientStatusUpdates()
+		for cb in self.__clientStatusCallbacks:
+			cb.onAction()
 
 	def registerLobbyUpdateGamesCallback(self, callback):
 		"""
@@ -216,6 +211,9 @@ class Backend:
 							self.lobby.setOpponent(game.players[1])
 							self.__onOpponentJoinsCreatedGame()
 
+					self.__onOpponentJoinedGame()
+					break
+
 		self.lobby.onUpdate(games, players)
 		for callback in self.__lobbyUpdateGamesCallbacks:
 			callback.onAction()
@@ -229,19 +227,9 @@ class Backend:
 			callback: the callback
 		"""
 
-		# get gameInformation and opponentInformation
-		for cur in self.__lobbyCurrentGames:
-			if cur.name == gameId:
-				self.game = cur
-				break
-		for i in range(0, len(self.__lobbyCurrentPlayers)):
-			if self.__lobbyCurrentPlayers[0].id == self.game.players[0]:
-				self.opponent = self.__lobbyCurrentPlayers[0]
-				break
-
 		self.__joinGameCallbacks.append(callback)
+		self.lobby.tryToGame(gameId)
 		self.__serverHandler.joinGame(gameId)
-		self.lobby.tryToJoinGame(gameId)
 
 	def onJoinGame(self, success):
 		"""
@@ -250,22 +238,18 @@ class Backend:
 		Args:
 			success: True of the query has been successful or False if not
 		"""
-
+		print("yay")
 		if success:
 			self.lobby.joinSuccessful()
 			logging.info("Successfully join game '%s' against '%s'" % (self.lobby.game.name,
 																	   self.lobby.getNickname(self.lobby.opponent)))
 
-		# validate current client status
-		if self.clientStatus is not ClientStatus.NOGAMERUNNING:
-			success = False
-
+		# TODO: validate current client status
 		self.__updateClientStatus(ClientStatus.PREPARATIONS)
 
 		for cb in self.__joinGameCallbacks:
 			cb.onAction(success)
 		self.__joinGameCallbacks = []
-		self.clientStatusUpdates()
 
 	def createGame(self, gameId, callback):
 		"""
@@ -277,9 +261,10 @@ class Backend:
 		"""
 
 		self.__createGameCallbacks.append(callback)
+		self.lobby.tryToGame(gameId)
 		self.__serverHandler.createGame(gameId)
 
-	def createGameResponse(self, success):
+	def onCreateGame(self, success):
 		"""
 		Calls all registered callbacks when the servers answers a create game query.
 
@@ -287,22 +272,14 @@ class Backend:
 			success: True of the query has been successful or False if not
 		"""
 
-		# validate current client status
-		if self.clientStatus is not ClientStatus.NOGAMERUNNING:
-			success = False
+		#TODO: validate current client status
+		if success:
+			self.lobby.createSuccessful()
+			self.__updateClientStatus(ClientStatus.PREPARATIONS)
 
 		for cb in self.__createGameCallbacks:
 			cb.onAction(success)
 		self.__createGameCallbacks = []
-		self.clientStatusUpdates()
-
-	def prepareGame(self):
-		"""
-		Startes to prepare a new game.
-		"""
-
-		self.clientStatus = ClientStatus.PREPARATIONS
-		logging.info("ClientStatus changed: Starting game preparations...")
 
 	def leaveGame(self, callback):
 		"""
@@ -315,7 +292,7 @@ class Backend:
 		self.__leaveGameCallbacks.append(callback)
 		self.__serverHandler.leaveGame()
 
-	def leaveGameResponse(self):
+	def onLeaveGame(self):
 		"""
 		Is called when the client received an answer to the leave game query.
 		"""
@@ -400,13 +377,16 @@ class Backend:
 
 		self.__gamePlayCallbacks.append(callback)
 
-	def gamePlayUpdate(self, status):
+	def onGamePlayUpdate(self, status):
 		"""
 		Is called when there is a game play update.
 
 		Args:
 			status: the received status update
 		"""
+
+		if status is 11:
+			self.__updateClientStatus(ClientStatus.OWNTURN)
 
 		for cb in self.__gamePlayCallbacks:
 			cb.onAction(status)
@@ -459,6 +439,9 @@ class Backend:
 			target: the address of the field
 		"""
 
+		if self.clientStatus is not ClientStatus.OWNTURN:
+			pass
+
 		# TODO: validate client status
 		self.__serverHandler.attack(target)
 
@@ -489,10 +472,25 @@ class Backend:
 	def registerJoinGameCallback(self, callback):
 		self.__joinGameCallbacks.append(callback)
 
+	def registerErrorCallback(self, callback):
+		self.__errorCallbacks.append(callback)
+
+	def __onError(self, error):
+		for cb in self.__errorCallbacks:
+			cb.onAction(error)
+
 	def __onJoinGame(self):
 		for cb in self.__joinGameCallbacks:
 			cb.onAction()
 		self.__joinGameCallbacks = []
+
+	def registerOpponentJoinedGameCallback(self, callback):
+		self.__opponentJoinedGameCallbacks = []
+
+	def __onOpponentJoinedGame(self):
+		for cb in self.__opponentJoinedGameCallbacks:
+			cb.onAction()
+		self.__opponentJoinedGameCallbacks = []
 
 	def __init__(self, length, hostname, port, nickname):
 		from serverhandler import ServerHandler
@@ -520,6 +518,8 @@ class Backend:
 		self.__shipUpdateCallbacks = []
 		self.__chatCallbacks = []
 		self.__joinGameCallbacks = []
+		self.__errorCallbacks = []
+		self.__opponentJoinedGameCallbacks = []
 
 		self.__serverHandler = ServerHandler(self)		
 		if hostname and port and nickname:
