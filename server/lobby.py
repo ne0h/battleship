@@ -165,8 +165,8 @@ class LobbyModel:
         games_lock.acquire()
         for k, g in games.items():
             # id for each first and second player
-            id1 = g.get_player(1).get_id()
-            id2 = g.get_player(2).get_id()
+            id1 = g.get_player(1)
+            id2 = g.get_player(2)
             if id == id1 or id == id2:
                 games.pop(k, None)
                 if k in waiting_games:
