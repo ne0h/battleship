@@ -1,7 +1,20 @@
 import playingfield
 import logging
 from enum import Enum
+import threading
 
+# all the callback shit
+class GameEvent(Enum):
+    on_ship_edit = 1,
+    on_game_start = 2,
+    on_update_field = 3
+
+callbacks = {}
+callbacks[GameEvent.on_ship_edit] = []
+callbacks[GameEvent.on_game_start] = []
+callbacks[GameEvent.on_update_field] = []
+
+callbacks_lock = threading.Lock()
 
 class GameStatus(Enum):
     waiting = 1,
@@ -54,9 +67,18 @@ class Game:
             return self.__second_player
         return False
 
-    def place_ship(self, player, id, x, y, direction):
-        field = self.__get_field_by_player(player)
+    def place_ship(self, player, x, y, direction, id):
         logging.debug('place_ship()')
+
+        bow, rear = self.__x_y_direction_id_to_bow_rear(x, y, direction, id)
+
+        res = self.__get_field_by_player(player).placeShip(bow, rear)
+
+        # trigger on_game_start if ship placement is done
+        if self.__is_game_preparation_done():
+            self.__notify_all(GameEvent.on_ship_edit)
+
+        return res is not None
 
     def move_ship(self, player, id, direction):
         field = self.__get_field_by_player(player)
@@ -70,12 +92,58 @@ class Game:
         field = self.__get_field_by_player(player)
         logging.debug('nuke()')
 
+    def just_begin_ship_placement_already(self):
+        # this is bullshit
+        self.__notify_all(GameEvent.on_ship_edit)
+
     def __get_field_by_player(self, player):
         if player == 1:
             return self.__first_field
         elif player == 2:
             return self.__second_field
         return None
+
+    def __is_game_preparation_done(self):
+        # TODO
+        pass
+
+    def __x_y_direction_id_to_bow_rear(self):
+        # TODO
+        pass
+
+    def register_callback(self, event, callback):
+        """
+        Register a callback that will be triggered as a given event occurs.
+        """
+        logging.debug("Game register_callback({})".format(event))
+
+        global callbacks
+        global callbacks_lock
+
+        callbacks_lock.acquire()
+        callbacks[event].append(callback)
+        callbacks_lock.release()
+
+    def remove_callback(self, event, callback):
+        """
+        Remove a callback.
+        """
+        logging.debug("Game remove_callback({})".format(event))
+
+        global callbacks
+        global callbacks_lock
+
+        callbacks_lock.acquire()
+        callbacks[event].remove(callback)
+        callbacks_lock.release()
+
+    def __notify_all(self, event):
+        logging.debug("Game __notify_all({})".format(event))
+        global callbacks
+        callbacks_lock.acquire()
+        for cb in callbacks[event]:
+            cb()
+        callbacks_lock.release()
 
 
 class Player:

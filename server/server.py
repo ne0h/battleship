@@ -7,6 +7,7 @@ import hashlib
 from messageparser import MessageParser
 import messages
 from lobby import *
+from game import *
 from helpers import *
 
 
@@ -42,6 +43,7 @@ class ClientHandler:
         self.__lobby_model.add_player(self.__id)
 
         # register callbacks
+        # TODO consistently rename on_update into on_update_lobby
         self.__lobby_model.register_callback(LobbyEvent.on_update, self.on_update_lobby)
         self.__lobby_model.register_callback(LobbyEvent.on_game_deleted, self.on_game_deleted)
 
@@ -70,19 +72,21 @@ class ClientHandler:
 
             # dispatch message type
             if msgtype == messages.CREATE_GAME:
-                report = self.__create_game(msgparams)
+                self.__create_game(msgparams)
             elif msgtype == messages.JOIN_GAME:
-                report = self.__join_game(msgparams)
+                self.__join_game(msgparams)
             elif msgtype == messages.SET_NICK:
-                report = self.__set_nickname(msgparams)
+                self.__set_nickname(msgparams)
             elif msgtype == messages.LEAVE_GAME:
-                report = self.__leave_game()
+                self.__leave_game()
+            elif msgtype == messages.INIT_BOARD:
+                self.__init_board()
             else:
-                report = self.__unknown_msg()
+                self.__unknown_msg()
 
-            # send answer to client
-            if report:
-                self.__send(report)
+    #
+    # Callbacks
+    #
 
     def on_update_lobby(self):
         logging.debug("on_update_lobby()")
@@ -132,6 +136,17 @@ class ClientHandler:
         self.__game = None
         self.__send(self.__message_parser.encode('report', {'status': '19'}))
 
+    def on_ship_edit(self):
+        logging.debug('on_ship_edit()')
+        self.__send(self.__message_parser.encode('report', {'status': '18'}))
+
+    def on_game_start(self):
+        logging.debug('on_game_start()')
+        self.__send(self.__message_parser.encode('report', {'status': '48'}))
+
+    def on_update_field(self):
+        logging.debug('on_update_field()')
+
     def get_socket(self):
         return self.__socket
 
@@ -144,41 +159,50 @@ class ClientHandler:
 
         self.__lobby_model.delete_player(self.__id)
 
+        # TODO remove game callbacks
+
     def __create_game(self, params):
         # make sure parameter list is complete
-        report = self.__expect_parameter(['name'], params)
-        if report:
-            return report
+        if not self.__expect_parameter(['name'], params):
+            return
 
         # check if client is already in a game
         if self.__game:
             logging.debug("Client already in some game.")
-            return self.__message_parser.encode('report', {'status': '31'})
+            self.__send(self.__message_parser.encode('report', {'status': '31'}))
+            return
 
         # check game name length
         if 1 > len(params['name']) or len(params['name']) > 64:
             logging.debug("Game name too long.")
-            return self.__message_parser.encode('report', {'status': '37'})
+            self.__send(self.__message_parser.encode('report', {'status': '37'}))
+            return
 
         # create the game
         game = self.__lobby_model.add_lobby(params['name'], self.__id)
         if game:
             self.__game = params['name']
             self.__player = 1
-            return self.__message_parser.encode('report', {'status': '28'})
-        else:
-            return self.__message_parser.encode('report', {'status': '37'})
+            self.__send(self.__message_parser.encode('report', {'status': '28'}))
+            return
+
+        self.__send(self.__message_parser.encode('report', {'status': '37'}))
+
+        # register game callbacks
+        self.__lobby_model.get_game(self.__game).register_callback(GameEvent.on_ship_edit, self.on_ship_edit)
+        self.__lobby_model.get_game(self.__game).register_callback(GameEvent.on_game_start, self.on_game_start)
+        self.__lobby_model.get_game(self.__game).register_callback(GameEvent.on_update_field, self.on_update_field)
 
     def __join_game(self, params):
         # make sure parameter list is complete
-        report = self.__expect_parameter(['name'], params)
-        if report:
-            return report
+        if not self.__expect_parameter(['name'], params):
+            return
 
         # check if client is already in a game
         if self.__game:
             logging.debug("Client already in some game.")
-            return self.__message_parser.encode('report', {'status': '31'})
+            self.__send(self.__message_parser.encode('report', {'status': '31'}))
+            return
 
         # join the game
         game, e = self.__lobby_model.join_lobby(params['name'], self.__id)
@@ -186,38 +210,60 @@ class ClientHandler:
         # handle game join errors
         if e:
             if e == LobbyError.game_is_full:
-                return self.__message_parser.encode('report', {'status': '47'})
+                self.__send(self.__message_parser.encode('report', {'status': '47'}))
+                return
             elif e == LobbyError.game_does_not_exist:
-                return self.__message_parser.encode('report', {'status': '37'})
+                self.__send(self.__message_parser.encode('report', {'status': '37'}))
+                return
+
+        # ack game join
+        self.__send(self.__message_parser.encode('report', {'status': '27'}))
 
         self.__game = params['name']
         self.__player = 2
-        return self.__message_parser.encode('report', {'status': '27'})
+
+        # register game callbacks
+        self.__lobby_model.get_game(self.__game).register_callback(GameEvent.on_ship_edit, self.on_ship_edit)
+        self.__lobby_model.get_game(self.__game).register_callback(GameEvent.on_game_start, self.on_game_start)
+        self.__lobby_model.get_game(self.__game).register_callback(GameEvent.on_update_field, self.on_update_field)
+
+        self.__lobby_model.get_game(self.__game).just_begin_ship_placement_already()
 
     def __set_nickname(self, params):
-        report = self.__expect_parameter(['name'], params)
-        if report:
-            return report
+        if not self.__expect_parameter(['name'], params):
+            return
 
         if len(params['name']) > 64:
             logging.debug("Nickname too long.")
             # 31 is the new 42
-            return self.__message_parser.encode('report', {'status': '31'})
+            self.__send(self.__message_parser.encode('report', {'status': '31'}))
+            return
 
         # tell lobby to set nickname and hope for the best
         self.__lobby_model.set_nickname(self.__id, params['name'])
-        # nothing to report lel
-        return None
 
     def __get_own_player_id(self):
         addr, port = self.__socket.getpeername()
         playerid = hashlib.sha1(b(addr + str(port))).hexdigest()
         return playerid
 
+    def __init_board(self):
+        if not self.__expect_parameter(
+            ['ship_{}_x'.format(i) for i in range(0, 10)] +
+            ['ship_{}_y'.format(i) for i in range(0, 10)] +
+            ['ship_{}_direction'.format(i) for i in range(0, 10)], params):
+            return
+
+        # TODO init board
+
+        # ack init board
+        self.__send(self.__message_parser.encode('report', {'status': '29'}))
+
     def __leave_game(self):
         if self.__game is None:
             # illegal move
-            return self.__message_parser.encode('report', {'status': '31'})
+            self.__send(self.__message_parser.encode('report', {'status': '31'}))
+            return
 
         self.__lobby_model.leave_game(self.__id)
         # if player who created game leaves then destroy the game else just leave
@@ -228,17 +274,19 @@ class ClientHandler:
 
         # nevermind lulz
         self.__lobby_model.delete_game(self.__game)
-        return None
+
+        # TODO remove game callbacks
 
     def __unknown_msg(self):
-        return self.__message_parser.encode('report', {'status': '40'})
+        self.__send(self.__message_parser.encode('report', {'status': '40'}))
 
     def __expect_parameter(self, expected, actual):
         keys = list(actual.keys())
         for p in expected:
             if p not in keys:
-                return self.__unknown_msg()
-        return None
+                self.__unknown_msg()
+                return False
+        return True
 
     def __send(self, msg):
         logging.debug(b"Raw out: " + msg)

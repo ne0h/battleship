@@ -244,11 +244,20 @@ class LobbyModel:
         games_lock.release()
         return result
 
+    def get_game(self, name):
+        global games
+        global games_lock
+
+        games_lock.acquire()
+        g = games[name]
+        games_lock.release()
+        return g
+
     def register_callback(self, event, callback):
         """
         Register a callback that will be triggered as a given event occurs.
         """
-        logging.debug("register_callback({})".format(event))
+        logging.debug("Lobby register_callback({})".format(event))
 
         global callbacks
         global callbacks_lock
@@ -261,7 +270,7 @@ class LobbyModel:
         """
         Remove a callback.
         """
-        logging.debug("remove_callback({})".format(event))
+        logging.debug("Lobby remove_callback({})".format(event))
 
         global callbacks
         global callbacks_lock
@@ -271,7 +280,7 @@ class LobbyModel:
         callbacks_lock.release()
 
     def __notify_all(self, event):
-        logging.debug("__notify_all({})".format(event))
+        logging.debug("Lobby __notify_all({})".format(event))
         global callbacks
         callbacks_lock.acquire()
         for cb in callbacks[event]:
