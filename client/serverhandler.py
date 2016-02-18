@@ -183,7 +183,7 @@ class ServerHandler:
 			params["ship_" + str(i) + "_x"] = str(ship.bow.x)
 			params["ship_" + str(i) + "_y"] = str(ship.bow.y)
 			params["ship_" + str(i) + "_direction"] = orientationCodes[ship.orientation]
-			i = i + 1
+			i += 1
 
 		self.__sendMessage("board_init", params)
 
@@ -237,7 +237,7 @@ class ServerHandler:
 					elif status is 19:														# Game_Aborted
 						self.__backend.leaveGameResponse()
 					elif status is 27 or status is 47:										# Successful_Game_Join
-						self.__backend.joinGameResponse(status is 27)						# or Game_Join_Denied
+						self.__backend.onJoinGame(status is 27)						# or Game_Join_Denied
 					elif status is 28:														# Successful_Game_Create
 						self.__backend.createGameResponse(True)
 					elif status is 29 or status is 38:										# Successful_Ship_Placement

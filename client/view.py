@@ -131,13 +131,13 @@ class LobbyDialog(QDialog):
 
 		# TODO validate ipt length
 		gameId = self.__createGameIpt.text()
-		logging.info("Creating game: %s", (gameId))
+		logging.info("Creating game: %s", gameId)
 		cb = Callback()
-		cb.onAction = lambda success: self.__createGameCalled(success)
+		cb.onAction = lambda success: self.__onCreateGame(success)
 		self.__backend.createGame(gameId, cb)
 		self.__interfaceEnabled(False)
 
-	def __createGameCalled(self, success):
+	def __onCreateGame(self, success):
 		logging.info("Creation of game successful: %s", (success))
 		if success:
 			self.__backend.prepareGame()
@@ -177,14 +177,15 @@ class LobbyDialog(QDialog):
 
 		self.setLayout(layout)
 		self.setWindowTitle("Lobby")
-		self.resize(500, 300)
+		self.resize(600, 500)
 		self.show()
 
-	def __onUpdateGamesList(self, players, games):
-		self.__statusLbl.setText("%s players currently online and %s games are open!" % (len(players), len(games)))
+	def __onUpdateGamesList(self):
+		self.__statusLbl.setText("%s players currently online and %s games are open!"
+								 % (len(self.__backend.lobby.players), len(self.__backend.lobby.games)))
 
 		# only add new games
-		for game in games:
+		for game in self.__backend.lobby.games:
 			found = -1
 			for i in range(0, self.__gamesWidget.count()):
 				# this validation is sufficient, because colons are not allowed as values in the protocol
@@ -192,13 +193,9 @@ class LobbyDialog(QDialog):
 					found = i
 					break
 
-			text = game.name
-			if game.players[0] == "":
-				text = ": %s" % ("An unnamed player")
-			else:
-				text = "%s: %s" % (text, game.players[0])
+			text = "%s: %s" % (game.name, self.__backend.lobby.getNickname(game.players[0]))
 			if len(game.players) is 1:
-				text = "%s is waiting for an oppenent" % (text)
+				text = "%s is waiting for an oppenent" % text
 			else:
 				text = "%s vs. %s" % (text, game.players[1])
 
@@ -210,19 +207,20 @@ class LobbyDialog(QDialog):
 				self.__gamesWidget.addItem(text)
 
 	def closeEvent(self, event):
-		self.__backend.removeLobbyUpdateGamesCallback(self.__gamesListCb)
+		#self.__backend.removeLobbyUpdateGamesCallback(self.__gamesListCb)
+		pass
 
 	def __init__(self, backend):
 		from backend import Callback
 
 		self.__backend = backend
 		self.__gamesListCb = Callback()
-		self.__gamesListCb.onAction = lambda players, games: self.__onUpdateGamesList(players, games)
+		self.__gamesListCb.onAction = lambda: self.__onUpdateGamesList()
 		players, games = self.__backend.registerLobbyUpdateGamesCallback(self.__gamesListCb)
 
 		super(LobbyDialog, self).__init__()
 		self.__setupGui()
-		self.__onUpdateGamesList(players, games)
+		self.__onUpdateGamesList()
 
 class PlayingFieldWidget(QWidget):
 	"""
@@ -266,18 +264,28 @@ class PlayingFieldWidget(QWidget):
 
 			# draw bow
 			bow = ship.bow
-			painter.drawPixmap((bow.x + 1) * self._fieldSize, (16 - bow.y) * self._fieldSize, self._fieldSize,
-				self._fieldSize, QPixmap(dir + "/img/bow_" + ship.orientation.value + ".png"))
+			if ship.isDamaged(bow):
+				pass
+			else:
+				painter.drawPixmap((bow.x + 1) * self._fieldSize, (16 - bow.y) * self._fieldSize, self._fieldSize,
+									self._fieldSize, QPixmap(dir + "/img/bow_" + ship.orientation.value + ".png"))
 
 			# draw rear
 			rear = ship.rear
-			painter.drawPixmap((rear.x + 1) * self._fieldSize, (16 - rear.y) * self._fieldSize, self._fieldSize,
-				self._fieldSize, QPixmap(dir + "/img/rear_" + ship.orientation.value + ".png"))
+			if ship.isDamaged(rear):
+				pass
+			else:
+				painter.drawPixmap((rear.x + 1) * self._fieldSize, (16 - rear.y) * self._fieldSize, self._fieldSize,
+									self._fieldSize, QPixmap(dir + "/img/rear_" + ship.orientation.value + ".png"))
 
 			# draw the rest
 			for middle in ship.middles:
-				painter.drawPixmap((middle.x + 1) * self._fieldSize, (16 - middle.y) * self._fieldSize, self._fieldSize,
-					self._fieldSize, QPixmap(dir + "/img/middle_" + ship.orientation.value + ".png"))
+				if ship.isDamaged(middle):
+					pass
+				else:
+					painter.drawPixmap((middle.x + 1) * self._fieldSize, (16 - middle.y) * self._fieldSize,
+										self._fieldSize, self._fieldSize,
+										QPixmap(dir + "/img/middle_" + ship.orientation.value + ".png"))
 
 		# draw horizontal and vertical enumeration
 		painter.setPen(QColor(0, 0, 0))
@@ -418,14 +426,7 @@ class MainForm(QWidget):
 
 			self.__statusLbl.setText("Please place your ships.")
 			self.__leaveGameBtn.setEnabled(True)
-
-			# TODO
-			if self.__backend.opponent:
-				if self.__backend.opponent.nickname:
-					opponent = self.__backend.opponent.nickname
-				else:
-					opponent = self.__backend.opponent.id
-				self.__playersLbl.setText("Current game: %s vs. %s" % (self.__backend.nickname, opponent))
+			self.__updateStatusLbl()
 
 			cb = Callback()
 			cb.onAction = lambda shipId: self.__onUpdateShipList(shipId)
@@ -493,13 +494,25 @@ class MainForm(QWidget):
 	def __moveShip(self):
 		pass
 
+	def __onJoinGame(self):
+		self.__updateStatusLbl()
+
+	def __updateStatusLbl(self):
+		nickname = self.__backend.lobby.getOwnNickname()
+		if self.__backend.lobby.hasGame():
+			if self.__backend.lobby.hasOpponent():
+				opponent = self.__backend.lobby.getNickname(self.__backend.lobby.opponent)
+				self.__playersLbl.setText("Current game: %s vs. %s" % (nickname, opponent))
+			else:
+				self.__playersLbl.setText("Current game: %s vs." % nickname)
+
 	def __sendChatMessage(self):
 		# TODO: Check for empty strings
 		msg = self.__chatIpt.text()
 		self.__backend.sendChatMessage(msg)
 		self.__chatIpt.setText("")
 
-	def onIncomingChatMessage(self, authorId, timestamp, message):
+	def __onIncomingChatMessage(self, authorId, timestamp, message):
 		self.__chatLog.append("(%s) %s: %s" % (timestamp, authorId, message))
 
 	def __setupGui(self, nickname=None):
@@ -562,7 +575,9 @@ class MainForm(QWidget):
 		self.__playersLbl = QLabel()
 		self.__playersLbl.setStyleSheet("color: #00b")
 		if nickname:
-			self.__playersLbl.setText("Nickname: %s" % (nickname))
+			self.__playersLbl.setText("Nickname: %s" % nickname)
+		else:
+			self.__playersLbl.setText("Nickname: Unnamed Player")
 
 		topLayout = QHBoxLayout()
 		topLayout.addWidget(self.__statusLbl)
@@ -640,3 +655,7 @@ class MainForm(QWidget):
 		chatCb.onAction = lambda authorId, timestamp, message: self.__onIncomingChatMessage(authorId, timestamp,
 																							message)
 		self.__backend.registerChatCallback(chatCb)
+
+		#joinGameCb = Callback()
+		#joinGameCb.onAction = lambda: self.__onJoinGame()
+		#self.__backend.registerJoinGameCallback(joinGameCb)
