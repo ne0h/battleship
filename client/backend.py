@@ -440,9 +440,9 @@ class Backend:
 		# TODO: validate field
 
 		if self.clientStatus is not ClientStatus.OWNTURN:
-			pass
+			self.__onError("It is not your turn.")
+			return
 
-		# TODO: validate client status
 		self.__serverHandler.attack(target)
 
 	def specialAttack(self, target):
@@ -453,11 +453,20 @@ class Backend:
 		    target: the address of the bottom-left field
 		"""
 		# TODO: validate field
-		# TODO: validate client status
+
+		if self.clientStatus is not ClientStatus.OWNTURN:
+			self.__onError("It is not your turn.")
+			return
+
 		self.__serverHandler.specialAttack(target)
 
-	def move(self, ship, direction):
-		pass
+	def move(self, shipId, direction):
+		# TODO: validate direction
+		if self.clientStatus is not ClientStatus.OWNTURN:
+			self.__onError("It is not your turn.")
+			return
+
+		self.__serverHandler.move(shipId, direction)
 
 	def errorResponse(self, status):
 		pass

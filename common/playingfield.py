@@ -6,10 +6,10 @@ class Orientation(Enum):
 	The different directions.
 	"""
 
-	NORTH = "north"
-	WEST  = "west"
-	SOUTH = "south"
-	EAST  = "east"
+	NORTH = "N"
+	WEST  = "W"
+	SOUTH = "S"
+	EAST  = "E"
 
 class FieldStatus(Enum):
 	FOG = "fog"

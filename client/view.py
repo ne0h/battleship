@@ -246,7 +246,7 @@ class PlayingFieldWidget(QWidget):
 		Paints the playing field when an event occurs.
 
 		Args:
-			event -- information about the event that occured
+			event: information about the event that occured
 		"""
 
 		painter = QPainter()
@@ -336,7 +336,7 @@ class OwnPlayingFieldWidget(PlayingFieldWidget):
 		This method is called when a mouse event occurs.
 
 		Args:
-			mouseEvent -- information about the mouse event
+			mouseEvent: information about the mouse event
 		"""
 
 		fieldAddress = self._mapClickToField(mouseEvent)
@@ -369,10 +369,14 @@ class EnemeysPlayingFieldWidget(PlayingFieldWidget):
 		This method is called when a mouse event occurs.
 
 		Args:
-			mouseEvent -- information about the mouse event
+			mouseEvent: information about the mouse event
 		"""
 
 		field = self._mapClickToField(mouseEvent)
+
+		#
+		# Attacks
+		#
 		if self._viewModel.waitForAttack:
 			logging.info("Attack at enemey's field: %s" % (field.toString()))
 			self._backend.attack(field)
@@ -383,11 +387,36 @@ class EnemeysPlayingFieldWidget(PlayingFieldWidget):
 			self._backend.specialAttack(field)
 			self._viewModel.waitForSpecialAttack = False
 
+		#
+		# Moves
+		#
 		if self._viewModel.waitForMoveNorth:
 			# get shipId
 			shipId = self._backend.getShipAtPosition(field)
 			if shipId > 0:
 				logging.info("Moving ship #%s to the north" % str(shipId))
+				self._backend.move(shipId, Orientation.NORTH)
+
+		if self._viewModel.waitForMoveWest:
+			# get shipId
+			shipId = self._backend.getShipAtPosition(field)
+			if shipId > 0:
+				logging.info("Moving ship #%s to the west" % str(shipId))
+				self._backend.move(shipId, Orientation.WEST)
+
+		if self._viewModel.waitForMoveSouth:
+			# get shipId
+			shipId = self._backend.getShipAtPosition(field)
+			if shipId > 0:
+				logging.info("Moving ship #%s to the south" % str(shipId))
+				self._backend.move(shipId, Orientation.SOUTH)
+
+		if self._viewModel.waitForMoveEast:
+			# get shipId
+			shipId = self._backend.getShipAtPosition(field)
+			if shipId > 0:
+				logging.info("Moving ship #%s to the east" % str(shipId))
+				self._backend.move(shipId, Orientation.EAST)
 
 	def _getShips(self):
 		return self._backend.getEnemeysShips()
