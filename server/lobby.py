@@ -103,7 +103,7 @@ class LobbyModel:
         # set second player id in the game and add the id to the list of players
         games[name].set_second_player(playerid)
         players_lock.acquire()
-        players[playerid] = Player(id=playerid)
+        players[playerid].set_id(playerid)
         players_lock.release()
 
         # remove game from the list of waiting games
