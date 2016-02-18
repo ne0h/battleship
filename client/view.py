@@ -436,12 +436,12 @@ class MainForm(QWidget):
 		self.__viewModel.waitForShipPlacement = True
 
 	def __setGamePlayButtons(self, value):
-		self.__attackBtn.enabled(value)
-		self.__specialAttackBtn(value)
-		self.__moveNorthBtn(value)
-		self.__moveWestBtn(value)
-		self.__moveSouthBtn(value)
-		self.__moveEastBtn(value)
+		self.__attackBtn.setEnabled(value)
+		self.__specialAttackBtn.setEnabled(value)
+		self.__moveNorthBtn.setEnabled(value)
+		self.__moveWestBtn.setEnabled(value)
+		self.__moveSouthBtn.setEnabled(value)
+		self.__moveEastBtn.setEnabled(value)
 
 	def __enableGamePlayButtons(self):
 		self.__setGameButtons(True)
