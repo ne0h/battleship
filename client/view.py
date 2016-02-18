@@ -259,7 +259,10 @@ class PlayingFieldWidget(QWidget):
 		# fill each field with water
 		for i in range(1, self._fieldLength + 1):
 			for j in range(1, self._fieldLength + 1):
-				painter.setBrush(QColor(0, 191, 255))
+				if self._backend.isUnfogged(Field(i - 1, j - 1)):
+					painter.setBrush(QColor(0, 191, 255))
+				else:
+					painter.setBrush(QColor(230, 230, 230))
 				painter.drawRect(i * self._fieldSize, j * self._fieldSize, self._fieldSize, self._fieldSize)
 
 		# add ships

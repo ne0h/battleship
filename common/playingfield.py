@@ -484,6 +484,12 @@ class PlayingField:
 
 		return self.__ships.add(bow, rear)
 
+	def unfog(self, fields):
+		self.__unfogged + fields
+
+	def isUnfogged(self, field):
+		return field in self.__unfogged
+
 	def __init__(self, fieldLength):
 		self.__ships = ShipList(fieldLength)
 		self.__fieldLength = fieldLength

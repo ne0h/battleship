@@ -511,6 +511,9 @@ class Backend:
 	def getShipAtPosition(self, field):
 		return self.__ownPlayingField.getShipAtPosition(field)
 
+	def isUnfogged(self, field):
+		return self.__ownPlayingField.isUnfogged(field)
+
 	def __init__(self, length, hostname, port, nickname):
 		from serverhandler import ServerHandler
 		from udpdiscoverer import UDPDiscoverer
