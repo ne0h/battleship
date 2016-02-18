@@ -4,6 +4,7 @@ import os
 import sys
 import logging
 import threading
+import argparse
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '../common'))
 from server import *
 from socketserver import UDPServer, BaseRequestHandler
@@ -20,12 +21,11 @@ class UDPDiscoveryHandler(BaseRequestHandler):
 def main():
     logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s", level=logging.DEBUG)
 
-    # TODO use argparse
-    if len(sys.argv) != 3:
-        print(USAGE)
-        sys.exit(1)
-
-    host, port = sys.argv[1], int(sys.argv[2])
+    # parse host and port args
+    parser = argparse.ArgumentParser(description="battleshit++ server")
+    parser.add_argument('host')
+    parser.add_argument('port', type=int)
+    args = parser.parse_args()
 
     # start UPD discovery service
     udpdiscovery_server = UDPServer(("", 12345), UDPDiscoveryHandler)
@@ -34,8 +34,8 @@ def main():
     udpdiscovery_server_thread.start()
     logging.debug("UDP discovery server running in thread: " + udpdiscovery_server_thread.name)
 
-    server = TCPServer((host, port), RequestHandler)
-    logging.info("Listening on {}:{}".format(host, port))
+    server = TCPServer((args.host, args.port), RequestHandler)
+    logging.info("Listening on {}:{}".format(args.host, args.port))
 
     server_thread = threading.Thread(target=server.serve_forever)
     server_thread.daemon = True
