@@ -168,7 +168,7 @@ class ServerHandler:
 
 		self.__sendMessage("game_abort", {})
 
-	def initBoard(self, ships):
+	def boardInit(self, ships):
 		"""
 		Sends the playing field to the server.
 

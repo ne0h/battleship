@@ -9,6 +9,14 @@ class ViewModel:
 
 	def __init__(self):
 		self.waitForShipPlacement = False
+		self.waitForAttack = False
+		self.waitForSpecialAttack = False
+
+		self.waitForMoveNorth = False
+		self.waitForMoveWest  = False
+		self.waitForMoveSouth = False
+		self.waitForMoveEast  = False
+
 		self.newShipBow = None
 
 class ConnectDialog(QDialog):
@@ -365,7 +373,21 @@ class EnemeysPlayingFieldWidget(PlayingFieldWidget):
 		"""
 
 		field = self._mapClickToField(mouseEvent)
-		logging.debug("Click event at enemey's field: %s" % (field.toString()))
+		if self._viewModel.waitForAttack:
+			logging.info("Attack at enemey's field: %s" % (field.toString()))
+			self._backend.attack(field)
+			self._viewModel.waitForAttack = False
+
+		if self._viewModel.waitForSpecialAttack:
+			logging.info("Special Attack at enemey's field: %s" % (field.toString()))
+			self._backend.specialAttack(field)
+			self._viewModel.waitForSpecialAttack = False
+
+		if self._viewModel.waitForMoveNorth:
+			# get shipId
+			shipId = self._backend.getShipAtPosition(field)
+			if shipId > 0:
+				logging.info("Moving ship #%s to the north" % str(shipId))
 
 	def _getShips(self):
 		return self._backend.getEnemeysShips()
@@ -482,10 +504,7 @@ class MainForm(QWidget):
 		pass
 
 	def __attack(self):
-		from backend import Callback
-
-		cb = Callback()
-		cb.onAction = lambda success, result: self.__attackResponse(success, result)
+		self.__waitForAttack = True
 
 	def __specialAttack(self):
 		pass
@@ -517,23 +536,41 @@ class MainForm(QWidget):
 	def __onError(self, error):
 		self.__statusLbl.setText("Error: %s" % error.name)
 
+	def __moveNorth(self):
+		self.__viewModel.waitForMoveNorth = True
+
+	def __moveWest(self):
+		self.__viewModel.waitForMoveWest = True
+
+	def __moveSouth(self):
+		self.__viewModel.waitForMoveSouth = True
+
+	def __moveEast(self):
+		self.__viewModel.waitForEast = True
+
 	def __setupGui(self, nickname=None):
 
+		#
 		# own playing field stuff
+		#
 		ownPlayingFieldBox = QGroupBox("Your own playing field")
 		ownPlayingFieldWgt = OwnPlayingFieldWidget(self.__backend, self.__viewModel, self.__fieldLength)
 		ownPlayingFieldLayout = QVBoxLayout()
 		ownPlayingFieldLayout.addWidget(ownPlayingFieldWgt)
 		ownPlayingFieldBox.setLayout(ownPlayingFieldLayout)
 
+		#
 		# enemies playing field stuff
+		#
 		enemeysPlayingFieldBox = QGroupBox("Your enemey's playing field")
 		enemeysPlayingFieldWgt = EnemeysPlayingFieldWidget(self.__backend, self.__viewModel, self.__fieldLength)
 		enemiesPlayingFieldLayout = QVBoxLayout()
 		enemiesPlayingFieldLayout.addWidget(enemeysPlayingFieldWgt)
 		enemeysPlayingFieldBox.setLayout(enemiesPlayingFieldLayout)
 
+		#
 		# shiplist with game play buttons
+		#
 		shipsBox = QGroupBox("Your ships")
 		self.__shipsWgt = QListWidget()
 		self.__shipsWgt.setMaximumWidth(200)
@@ -542,14 +579,28 @@ class MainForm(QWidget):
 		self.__attackBtn.clicked.connect(self.__attack)
 		self.__specialAttackBtn = QPushButton("Special Attack")
 		self.__specialAttackBtn.clicked.connect(self.__specialAttack)
-		self.__moveShipBtn = QPushButton("Move Ship")
-		self.__moveShipBtn.clicked.connect(self.__moveShip)
+
+		self.__moveNorthBtn = QPushButton("N")
+		self.__moveNorthBtn.clicked.connect(self.__moveNorth)
+		self.__moveWestBtn  = QPushButton("W")
+		self.__moveWestBtn.clicked.connect(self.__moveWest)
+		self.__moveSouthBtn = QPushButton("S")
+		self.__moveSouthBtn.clicked.connect(self.__moveSouth)
+		self.__moveEastBtn  = QPushButton("E")
+		self.__moveEastBtn.clicked.connect(self.__moveEast)
+		moveLayout = QHBoxLayout()
+		moveLayout.addWidget(self.__moveNorthBtn)
+		moveLayout.addWidget(self.__moveWestBtn)
+		moveLayout.addWidget(self.__moveSouthBtn)
+		moveLayout.addWidget(self.__moveEastBtn)
+		moveWgt = QWidget()
+		moveWgt.setLayout(moveLayout)
 
 		shipsLayout = QVBoxLayout()
 		shipsLayout.addWidget(self.__shipsWgt)
 		shipsLayout.addWidget(self.__attackBtn)
 		shipsLayout.addWidget(self.__specialAttackBtn)
-		shipsLayout.addWidget(self.__moveShipBtn)
+		shipsLayout.addWidget(moveWgt)
 		shipsBox.setLayout(shipsLayout)
 
 		# buttons
@@ -612,7 +663,7 @@ class MainForm(QWidget):
 		playingFieldLayout.addWidget(enemeysPlayingFieldBox)
 		playingFieldWgt = QWidget()
 		playingFieldWgt.setLayout(playingFieldLayout)
-		playingFieldWgt.setMinimumWidth(1200)
+		playingFieldWgt.setMinimumWidth(1300)
 		playingFieldWgt.setMinimumHeight(510)
 
 		btnsLayout = QHBoxLayout()

@@ -256,6 +256,8 @@ class ShipList:
 			logging.error("Collision with border!")
 			return False
 
+		return True
+
 	def add(self, bow, rear):
 		"""
 		Adds a new Ship to the playing field. Validates if the maximum count of this kind of ship is reached.
@@ -268,11 +270,18 @@ class ShipList:
 			Returns the id of the newly built ship or -1 if there was any game rule violation. In addition returns if
 			the user has to place more ships.
 		"""
+		import math
+
+		if bow.x is rear.x:
+			length = int(math.fabs(bow.y - rear.y)) + 1
+		else:
+			length = int(math.fabs(bow.x - rear.x)) + 1
 
 		if not self.__testShipPlacement(bow, rear):
 			return -1, True
 
 		# all checks done - add ship to specific list
+		ship = Ship(bow, rear)
 		shipId = -1
 		if length is 5 and len(self.__carriers) < self.__maxCarrierCount:
 			self.__carriers.append(ship)
@@ -356,6 +365,16 @@ class PlayingField:
 	"""
 
 	def __getFieldStatus(self, field):
+		"""
+		Returns the status of a field together with the ship (if there is one).
+
+		Args:
+		    field: the address of the field
+
+		Returns:
+			Returns the status of a field together with the ship (if there is one).
+		"""
+
 		# check if there is a part of a ship
 		shipPart, ship = self.__ships.getFieldStatus(field)
 		return shipPart if shipPart is not None else FieldStatus.WATER, ship
@@ -370,7 +389,7 @@ class PlayingField:
 		Returns:
 			Returns the status of the field after the attack together with True if it changed or False if not.
 		"""
-		status, ship = self.__getFieldStatus(field)
+		status, ship = self.getFieldStatus(field)
 		result = status
 		updated = False
 		if status is FieldStatus.SHIP:
@@ -446,6 +465,10 @@ class PlayingField:
 		"""
 
 		return self.__ships.getShip(shipId)
+
+	def getShipAtPosition(self, field):
+		_, shipId = self.__getFieldStatus(field)
+		return -1 if shipId is None else shipId
 
 	def placeShip(self, bow, rear):
 		"""
