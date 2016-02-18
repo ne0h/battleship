@@ -219,8 +219,8 @@ class ServerHandler:
 				continue
 			else:
 				msg = self.__sock.recv(size[0] * 256 + size[1]).decode()
-				print("!!!!!!! %s" % msg)
 				messageType, params = self.__messageParser.decode(msg)
+				print(msg)
 
 				# validate that the status code exists
 				status = int(params["status"])
@@ -236,7 +236,7 @@ class ServerHandler:
 
 					# game creation stuff
 					elif status is 19:														# Game_Aborted
-						self.__backend.leaveGameResponse()
+						self.__backend.onLeaveGame()
 					elif status is 27 or status is 47:										# Successful_Game_Join
 						self.__backend.onJoinGame(status is 27)								# or Game_Join_Denied
 					elif status is 28:														# Successful_Game_Create

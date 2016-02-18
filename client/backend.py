@@ -198,6 +198,8 @@ class Backend:
 			games: complete list of the current games
 		"""
 
+		self.lobby.onUpdate(games, players)
+
 		# check if there was an update with the own game. E.g. opponent joined or changed nickname
 		if self.lobby.hasGame():
 			for game in games:
@@ -209,12 +211,9 @@ class Backend:
 						# check if anybody joined
 						if len(game.players) > 1:
 							self.lobby.setOpponent(game.players[1])
-							self.__onOpponentJoinsCreatedGame()
-
-					self.__onOpponentJoinedGame()
+							self.__onOpponentJoinedGame()
 					break
 
-		self.lobby.onUpdate(games, players)
 		for callback in self.__lobbyUpdateGamesCallbacks:
 			callback.onAction()
 
@@ -238,7 +237,7 @@ class Backend:
 		Args:
 			success: True of the query has been successful or False if not
 		"""
-		print("yay")
+
 		if success:
 			self.lobby.joinSuccessful()
 			logging.info("Successfully join game '%s' against '%s'" % (self.lobby.game.name,
@@ -480,12 +479,11 @@ class Backend:
 			cb.onAction(error)
 
 	def registerOpponentJoinedGameCallback(self, callback):
-		self.__opponentJoinedGameCallbacks = []
+		self.__opponentJoinedGameCallbacks.append(callback)
 
 	def __onOpponentJoinedGame(self):
 		for cb in self.__opponentJoinedGameCallbacks:
 			cb.onAction()
-		self.__opponentJoinedGameCallbacks = []
 
 	def __init__(self, length, hostname, port, nickname):
 		from serverhandler import ServerHandler
