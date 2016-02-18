@@ -144,6 +144,11 @@ class ClientHandler:
             logging.debug("Client already in some game.")
             return
 
+        # check game name length
+        if 1 > len(self.__game) or len(self.__game) > 64:
+            logging.debug("Game name too long.")
+            return self.__message_parser.encode('report', {'status': '37'})
+
         # create the game
         game = self.__lobby_model.add_lobby(params['name'], self.__id)
         if game:
