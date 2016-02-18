@@ -1,6 +1,7 @@
 import logging
 
 from playingfield import *
+from lobby import Lobby
 
 class ClientStatus(Enum):
 	"""
@@ -173,7 +174,7 @@ class Backend:
 			callback: the callback
 
 		Returns:
-			A tuple constisting of the players and the games.
+			A tuple consisting of the players and the games.
 		"""
 
 		self.__lobbyUpdateGamesCallbacks.append(callback)
@@ -202,11 +203,22 @@ class Backend:
 			games: complete list of the current games
 		"""
 
-		self.__lobbyCurrentPlayers = players
-		self.__lobbyCurrentGames = games
+		# check if there was an update with the own game. E.g. opponent joined or changed nickname
+		if self.lobby.hasGame():
+			for game in games:
+				if game.name == self.lobby.game.name:
+					if self.lobby.hasOpponent():
+						# TODO: Check if opponent changed nickname
+						pass
+					else:
+						# check if anybody joined
+						if len(game.players) > 1:
+							self.lobby.setOpponent(game.players[1])
+							self.__onOpponentJoinsCreatedGame()
 
+		self.lobby.onUpdate(games, players)
 		for callback in self.__lobbyUpdateGamesCallbacks:
-			callback.onAction(players, games)
+			callback.onAction()
 
 	def joinGame(self, gameId, callback):
 		"""
@@ -229,8 +241,9 @@ class Backend:
 
 		self.__joinGameCallbacks.append(callback)
 		self.__serverHandler.joinGame(gameId)
+		self.lobby.tryToJoinGame(gameId)
 
-	def joinGameResponse(self, success):
+	def onJoinGame(self, success):
 		"""
 		Calls all registered callbacks when the server answers a game join query.
 
@@ -239,8 +252,9 @@ class Backend:
 		"""
 
 		if success:
-			logging.info("Successfully join game '%s' against '%s'" % (self.game.name,
-																	   self.opponent.id))
+			self.lobby.joinSuccessful()
+			logging.info("Successfully join game '%s' against '%s'" % (self.lobby.game.name,
+																	   self.lobby.getNickname(self.lobby.opponent)))
 
 		# validate current client status
 		if self.clientStatus is not ClientStatus.NOGAMERUNNING:
@@ -472,17 +486,22 @@ class Backend:
 		for cb in self.__chatCallbacks:
 			cb.onAction(authorId, timestamp, message)
 
+	def registerJoinGameCallback(self, callback):
+		self.__joinGameCallbacks.append(callback)
+
+	def __onJoinGame(self):
+		for cb in self.__joinGameCallbacks:
+			cb.onAction()
+		self.__joinGameCallbacks = []
+
 	def __init__(self, length, hostname, port, nickname):
 		from serverhandler import ServerHandler
 		from udpdiscoverer import UDPDiscoverer
 
+		self.lobby = Lobby(nickname)
 		self.__ownPlayingField = PlayingField(length)
 		self.__enemeysPlayingField = PlayingField(length)
 		self.clientStatus = ClientStatus.NOTCONNECTED
-
-		self.nickname = nickname
-		self.game = None
-		self.opponent = None
 
 		# callback stuff
 		self.__udpDiscoveryCallbacks = []
@@ -500,6 +519,7 @@ class Backend:
 		self.__gamePlayCallbacks = []
 		self.__shipUpdateCallbacks = []
 		self.__chatCallbacks = []
+		self.__joinGameCallbacks = []
 
 		self.__serverHandler = ServerHandler(self)		
 		if hostname and port and nickname:

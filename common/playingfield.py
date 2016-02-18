@@ -11,13 +11,18 @@ class Orientation(Enum):
 	SOUTH = "south"
 	EAST  = "east"
 
+class FieldStatus(Enum):
+	WATER = "water"
+	SHIP = "ship"
+	DAMAGEDSHIP = "damagedship"
+
 class Field:
 	"""
 	Describes a single field on the playing field.
 
 	Args:
-		x -- horizontal coordinate starting in the top left corner
-		y -- vertical coordinate starting in the top left corner
+		x: horizontal coordinate starting in the top left corner
+		y: vertical coordinate starting in the top left corner
 	"""
 
 	def toString(self):
@@ -39,8 +44,8 @@ def splitShip(bow, rear):
 	Splits a ship up.
 
 	Args:
-		bow -- the bow of the ship
-		rear -- the rear of the ship
+		bow: the bow of the ship
+		rear: the rear of the ship
 
 	Return:
 		Returns a list of fields.
@@ -73,9 +78,15 @@ class Ship:
 	Describes a ship.
 
 	Args:
-		bow -- the starting field of the ship
-		rear -- the ending field of the ship
+		bow: the starting field of the ship
+		rear: the ending field of the ship
 	"""
+
+	def damagePart(self, part):
+		self.damages.append(part)
+
+	def isDamaged(self, part):
+		return part in self.damages
 
 	def getLength(self):
 		return len(self.parts)
@@ -101,17 +112,26 @@ class Ship:
 		for i in range(1, len(self.parts) - 1):
 			self.middles.append(self.parts[i])
 
+		self.damages = []
+
 class ShipList:
 	"""
 	Manages all ships on the playing field.
 	"""
+
+	def getFieldStatus(self, field):
+		ships = self.getShips()
+		for ship in ships:
+			for part in ships.parts:
+				if field.equals(part):
+					return FieldStatus.DAMAGEDSHIP if ship.isDamaged(part) else FieldStatus.SHIP
 
 	def __checkForCollisionWithOtherShips(self, ship):
 		"""
 		Validates that there is no collision with an existing Ship.
 
 		Args:
-			field -- the field to validate
+			field: the field to validate
 
 		Return:
 			Returns true if there is no collision or false if not.
@@ -131,16 +151,16 @@ class ShipList:
 		Validates that the Ship does not collides of any of the game border.
 
 		Args:
-			ship -- the ship to validate
+			ship: the ship to validate
 
 		Return:
 			Returns true if there is no collision or false if not.
 		"""
 
-		return (ship.bow.x  >= 0 and ship.bow.x  < self.__fieldLength
-			and ship.bow.y  >= 0 and ship.bow.y  < self.__fieldLength
-			and ship.rear.x >= 0 and ship.rear.x < self.__fieldLength
-			and ship.rear.y >= 0 and ship.rear.y < self.__fieldLength)
+		return (0 <= ship.bow.x < self.__fieldLength
+			and  0 <= ship.bow.y < self.__fieldLength
+			and 0 <= ship.rear.x < self.__fieldLength
+			and 0 <= ship.rear.y < self.__fieldLength)
 
 	def __checkForDiagonal(self, ship):
 		return not (ship.bow.x == ship.rear.x or ship.bow.y == ship.rear.y)
@@ -166,7 +186,7 @@ class ShipList:
 		Returns a specified ship from the own playing field.
 
 		Args:
-		    shipId - the id of the ship
+		    shipId: the id of the ship
 
 		Returns:
 			Returns a specified ship from the own playing field.
@@ -203,8 +223,8 @@ class ShipList:
 		Adds a new Ship to the playing field. Validates if the maximum count of this kind of ship is reached.
 
 		Args:
-			bow -- the bow of the Ship to add
-			rear -- the rear of the Ship to add
+			bow: the bow of the Ship to add
+			rear: the rear of the Ship to add
 
 		Return:
 			Returns the id of the newly built ship or -1 if there was any game rule violation. In addition returns if
@@ -294,11 +314,16 @@ class ShipList:
 
 class PlayingField:
 	"""
-	A complete playing field the consists of 16x16 fields
+	A complete playing field that consists of 16x16 fields.
 
 	Args:
-		length -- the dimension of playing field
+		length: the dimension of playing field
 	"""
+
+	def getFieldStatus(self, field):
+
+		# check if there is a part of a ship
+		shipPart, broken = self.__ships.getFieldStatus(field)
 
 	def getShips(self):
 		"""
@@ -315,7 +340,7 @@ class PlayingField:
 		Returns a specified ship.
 
 		Args:
-		    shipId - the id of the ship
+		    shipId: the id of the ship
 
 		Returns:
 			Returns a specified ship.
@@ -328,8 +353,8 @@ class PlayingField:
 		Places a ship on the playing field.
 
 		Args:
-			bow -- bow of the ship
-			rear -- rear of the ship
+			bow: bow of the ship
+			rear: rear of the ship
 
 		Return:
 			Returns the newly built ship or None of the Ship could not be placed, because of violation of a game rule.
