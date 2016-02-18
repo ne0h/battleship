@@ -219,6 +219,7 @@ class ServerHandler:
 				continue
 			else:
 				msg = self.__sock.recv(size[0] * 256 + size[1]).decode()
+				print("!!!!!!! %s" % msg)
 				messageType, params = self.__messageParser.decode(msg)
 
 				# validate that the status code exists
@@ -237,17 +238,18 @@ class ServerHandler:
 					elif status is 19:														# Game_Aborted
 						self.__backend.leaveGameResponse()
 					elif status is 27 or status is 47:										# Successful_Game_Join
-						self.__backend.onJoinGame(status is 27)						# or Game_Join_Denied
+						self.__backend.onJoinGame(status is 27)								# or Game_Join_Denied
 					elif status is 28:														# Successful_Game_Create
-						self.__backend.createGameResponse(True)
+						self.__backend.onCreateGame(True)
 					elif status is 29 or status is 38:										# Successful_Ship_Placement
 						self.__backend.placeShipsResponse(status is 29)						# or Illegal_Ship_Placement
 					elif status is 37:														# Illegal_Game_Definition
-						self.__backend.createGameResponse(False)
+						self.__backend.onCreateGame(False)
 					elif status is 48:														# Game_Preparation_Ended
 						self.__backend.gamePreparationsEndedResponse()
 
 					# game play stuff
+					#  _ Begin_Turn
 					#  - Successful_Move
 					#  - Successful_Attack
 					#  - Surrender_Accepted
@@ -258,9 +260,9 @@ class ServerHandler:
 					#  - Illegal_Ship_Index
 					#  - Illegal_Attack
 					#  - Not_Your_Turn
-					elif status is 21 or status is 22 or status is 23 or status is 24 or status is 31 or status is 32 \
-							or status is 33 or status is 34 or status is 39 or status is 41:
-						self.__backend.gamePlayUpdate(status)
+					elif status is 11 or status is 21 or status is 22 or status is 23 or status is 24 or status is 31 \
+							or status is 32 or status is 33 or status is 34 or status is 39 or status is 41:
+						self.__backend.onGamePlayUpdate(status)
 
 					# bad error stuff
 					#  - Message_Not_Recognized

@@ -24,14 +24,20 @@ class Lobby:
 		from backend import PlayerInformation
 		self.opponent = PlayerInformation(opponentId, self.getNickname(opponentId))
 
-	def tryToJoinGame(self, gameId):
-		self.__tryToJoinGameId = gameId
+	def tryToGame(self, gameId):
+		self.__tryToGameId = gameId
 
 	def joinSuccessful(self):
 		for game in self.games:
-			if game.name == self.__tryToJoinGameId:
+			if game.name == self.__tryToGameId:
 				self.game = game
 				self.opponent = game.players[0]
+				break
+
+	def createSuccessful(self):
+		for game in self.games:
+			if game.name == self.__tryToGameId:
+				self.game = game
 				break
 
 	def __init__(self, nickname=None):
