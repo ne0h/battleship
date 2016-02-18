@@ -15,10 +15,10 @@ def spawn_server():
             logging.info("Server running in thread: {}".format(serv_thread.name))
             return serv, port
         except OSError as e:
-            logging.debug("Port {} still in use. Skipping.".format(str(port)))
+            logging.debug("Port {} in use. Skipping.".format(str(port)))
 
 def main():
-    logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s", level=logging.DEBUG)
+    logging.basicConfig(format="%(asctime)s - SERVER - %(levelname)s - %(message)s", level=logging.DEBUG)
 
     parser = argparse.ArgumentParser()
     parser.add_argument('-n', '--number', type=int, default=2)
@@ -27,10 +27,11 @@ def main():
 
     # spawn server and get final port that the server is listening on
     serv, port = spawn_server()
+    logging.info("Server is now listening on port {}.".format(str(port)))
 
     # spawn clients
     for x in range(n):
-        cmd = 'python3 {} -c localhost {} {} >/dev/null 2>&1'.format(os.path.join(os.path.dirname(os.path.realpath(__file__)), '../client/main.py'), str(port), 'Player' + str(x))
+        cmd = 'python3 {} -c localhost {} {}'.format(os.path.join(os.path.dirname(os.path.realpath(__file__)), '../client/main.py'), str(port), 'Player' + str(x))
         logging.info("Spawn client #{}: ".format(str(x), cmd))
         t = threading.Thread(target = lambda: os.system(cmd))
         t.daemon = True
