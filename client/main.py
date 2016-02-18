@@ -21,6 +21,7 @@ if __name__ == "__main__":
 	Starts the game client.
 	"""
 	fieldLength = 16
+	devmode = True
 
 	logging.basicConfig(format="%(asctime)s - CLIENT - %(levelname)s - %(message)s", level=logging.DEBUG)
 	logging.info("Starting client...")
@@ -37,9 +38,9 @@ if __name__ == "__main__":
 			port = int(args.connect[1])
 			nickname = args.connect[2]
 
-	backend = Backend(fieldLength, hostname, port, nickname)
+	backend = Backend(fieldLength, hostname, port, nickname, devmode)
 
 	app = QApplication(sys.argv)
-	screen = MainForm(backend, fieldLength, nickname)
+	screen = MainForm(backend, fieldLength, devmode, nickname)
 	screen.show()
 	sys.exit(app.exec_())

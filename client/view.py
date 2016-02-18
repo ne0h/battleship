@@ -319,11 +319,12 @@ class PlayingFieldWidget(QWidget):
 		x, y  = mouseEvent.x() // self._fieldSize, mouseEvent.y() // self._fieldSize
 		return Field(x - 1, 16 - y)
 
-	def __init__(self, backend, viewModel, fieldLength, fieldSize=25):
+	def __init__(self, backend, viewModel, fieldLength, devmode, fieldSize=25):
 		self._viewModel = viewModel
 		self._backend = backend
 		self._fieldSize = fieldSize
 		self._fieldLength = fieldLength
+		self._devmode = devmode
 
 		super(PlayingFieldWidget, self).__init__()
 		self.setMinimumWidth(450)
@@ -387,11 +388,14 @@ class OwnPlayingFieldWidget(PlayingFieldWidget):
 				logging.info("Moving ship #%s to the east" % str(shipId))
 				self._backend.move(shipId, Orientation.EAST)
 
+		if self._devmode:
+			self.repaint()
+
 	def _getShips(self):
 		return self._backend.getOwnShips()
 
-	def __init__(self, backend, viewModel, fieldLength):
-		PlayingFieldWidget.__init__(self, backend, viewModel, fieldLength)
+	def __init__(self, backend, viewModel, fieldLength, devmode):
+		PlayingFieldWidget.__init__(self, backend, viewModel, fieldLength, devmode)
 
 class EnemeysPlayingFieldWidget(PlayingFieldWidget):
 	"""
@@ -421,11 +425,14 @@ class EnemeysPlayingFieldWidget(PlayingFieldWidget):
 			self._backend.specialAttack(field)
 			self._viewModel.waitForSpecialAttack = False
 
+		if self._devmode:
+			self.repaint()
+
 	def _getShips(self):
 		return self._backend.getEnemeysShips()
 
-	def __init__(self, backend, viewModel, fieldLength):
-		PlayingFieldWidget.__init__(self, backend, viewModel, fieldLength)
+	def __init__(self, backend, viewModel, fieldLength, devmode):
+		PlayingFieldWidget.__init__(self, backend, viewModel, fieldLength, devmode)
 
 class MainForm(QWidget):
 	"""
@@ -600,13 +607,13 @@ class MainForm(QWidget):
 	def __moveEast(self):
 		self.__viewModel.waitForEast = True
 
-	def __setupGui(self, nickname=None):
+	def __setupGui(self, nickname, devmode):
 
 		#
 		# own playing field stuff
 		#
 		ownPlayingFieldBox = QGroupBox("Your own playing field")
-		ownPlayingFieldWgt = OwnPlayingFieldWidget(self.__backend, self.__viewModel, self.__fieldLength)
+		ownPlayingFieldWgt = OwnPlayingFieldWidget(self.__backend, self.__viewModel, self.__fieldLength, devmode)
 		ownPlayingFieldLayout = QVBoxLayout()
 		ownPlayingFieldLayout.addWidget(ownPlayingFieldWgt)
 		ownPlayingFieldBox.setLayout(ownPlayingFieldLayout)
@@ -615,7 +622,7 @@ class MainForm(QWidget):
 		# enemies playing field stuff
 		#
 		enemeysPlayingFieldBox = QGroupBox("Your enemey's playing field")
-		enemeysPlayingFieldWgt = EnemeysPlayingFieldWidget(self.__backend, self.__viewModel, self.__fieldLength)
+		enemeysPlayingFieldWgt = EnemeysPlayingFieldWidget(self.__backend, self.__viewModel, self.__fieldLength, devmode)
 		enemiesPlayingFieldLayout = QVBoxLayout()
 		enemiesPlayingFieldLayout.addWidget(enemeysPlayingFieldWgt)
 		enemeysPlayingFieldBox.setLayout(enemiesPlayingFieldLayout)
@@ -741,7 +748,7 @@ class MainForm(QWidget):
 	def closeEvent(self, event):
 		self.__backend.close()
 
-	def __init__(self, backend, fieldLength, nickname=None):
+	def __init__(self, backend, fieldLength, devmode, nickname=None):
 		from backend import Callback
 
 		self.__backend = backend
@@ -751,7 +758,7 @@ class MainForm(QWidget):
 		self.__lobbyAlreadyOpen = False
 
 		super(MainForm, self).__init__()
-		self.__setupGui(nickname)
+		self.__setupGui(nickname, devmode)
 
 		clientStatusCb = Callback()
 		clientStatusCb.onAction = lambda: self.__onUpdateClientStatus()

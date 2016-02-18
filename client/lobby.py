@@ -42,6 +42,12 @@ class Lobby:
 				self.game = game
 				break
 
+	def existsGame(self, gameId):
+		for game in self.games:
+			if gameId == game.id:
+				return True
+		return False
+
 	def __init__(self, nickname=None):
 		self.nickname = nickname
 		self.games = []
