@@ -199,7 +199,10 @@ class ClientHandler:
         if report:
             return report
 
-        # TODO len check
+        if len(params['name']) > 64:
+            logging.debug("Nickname too long.")
+            # 31 is the new 42
+            return self.__message_parser.encode('report', {'status': '31'})
 
         # tell lobby to set nickname and hope for the best
         self.__lobby_model.set_nickname(self.__id, params['name'])
