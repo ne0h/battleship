@@ -15,6 +15,8 @@ class ClientStatus(Enum):
 	PREPARATIONSENDED = "preparationsended"
 	OWNTURN = "ownturn"
 	OPPONENTSTURN = "oppenentsturn"
+	YOUWIN = "youwin"
+	YOULOSE = "youlose"
 
 class Error(Enum):
 	NOTYOURTURN = "It is not your turn."
@@ -386,6 +388,14 @@ class Backend:
 
 		if status is 11:
 			self.__updateClientStatus(ClientStatus.OWNTURN)
+		elif status is 21 or status is 22 or status is 24:
+			self.__updateClientStatus(ClientStatus.OPPONENTSTURN)
+		elif status is 31:
+			self.__onError("Move not allowed")
+		elif status is 32:
+			self.__onError("Special Attack not allowed")
+		elif status is 39:
+			self.__onError("Attack not allowed")
 
 		for cb in self.__gamePlayCallbacks:
 			cb.onAction(status)
