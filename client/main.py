@@ -22,7 +22,7 @@ if __name__ == "__main__":
 	"""
 	fieldLength = 16
 
-	logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s - CLIENT", level=logging.DEBUG)
+	logging.basicConfig(format="%(asctime)s - CLIENT - %(levelname)s - %(message)s", level=logging.DEBUG)
 	logging.info("Starting client...")
 
 	args = setupArgparse().parse_args()

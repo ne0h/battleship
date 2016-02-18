@@ -18,7 +18,7 @@ class UDPDiscoveryHandler(BaseRequestHandler):
             socket.sendto("I_AM_A_BATTLESHIP_PLUS_PLUS_SERVER".encode("UTF-8"), self.client_address)
 
 def main():
-    logging.basicConfig(format="%(asctime)s - %(levelname)s - %(message)s - SERVER", level=logging.DEBUG)
+    logging.basicConfig(format="%(asctime)s - SERVER - %(levelname)s - %(message)s", level=logging.DEBUG)
 
     # parse host and port args
     parser = argparse.ArgumentParser(description="battleshit++ server")
