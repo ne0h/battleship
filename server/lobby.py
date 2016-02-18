@@ -163,7 +163,7 @@ class LobbyModel:
 
         # remove game if joined
         games_lock.acquire()
-        for k, g in games:
+        for k, g in games.items():
             # id for each first and second player
             id1 = g.get_player(1).get_id()
             id2 = g.get_player(2).get_id()
@@ -233,7 +233,7 @@ class LobbyModel:
                 info['ids'] = [ g.get_player(1) ]
             else:
                 info['nicknames'] = [ players[g.get_player(1)].get_nick(), players[g.get_player(2)].get_nick() ]
-                info['ids'] = [ g.get_player(1).get_id(), g.get_player(2).get_id() ]
+                info['ids'] = [ g.get_player(1), g.get_player(2) ]
 
             info['game_name'] = g.get_name()
             info['number_of_players'] = number_of_players
@@ -273,5 +273,7 @@ class LobbyModel:
     def __notify_all(self, event):
         logging.debug("__notify_all({})".format(event))
         global callbacks
+        callbacks_lock.acquire()
         for cb in callbacks[event]:
             cb()
+        callbacks_lock.release()
