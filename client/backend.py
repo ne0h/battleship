@@ -479,11 +479,6 @@ class Backend:
 		for cb in self.__errorCallbacks:
 			cb.onAction(error)
 
-	def __onJoinGame(self):
-		for cb in self.__joinGameCallbacks:
-			cb.onAction()
-		self.__joinGameCallbacks = []
-
 	def registerOpponentJoinedGameCallback(self, callback):
 		self.__opponentJoinedGameCallbacks = []
 
