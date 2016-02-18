@@ -51,6 +51,7 @@ class ClientHandler:
             # receive 2 bytes size header
             size = self.__socket.recv(2)
             if not size:
+                logging.debug("Did not receive 2 bytes header.")
                 break
             size = struct.unpack('>H', size)[0]
             logging.debug("Size: " + str(size))
@@ -58,6 +59,7 @@ class ClientHandler:
             # receive message body
             msg = self.__socket.recv(size)
             if not msg:
+                logging.debug("Did not receive {} bytes body.".format(str(size)))
                 break
             logging.debug(b"Raw in: " + msg)
 
@@ -125,6 +127,10 @@ class ClientHandler:
 
         msg = self.__message_parser.encode('report', data)
         self.__send(msg)
+
+    def on_game_deleted(self):
+        self.__game = None
+        self.__send(self.__message_parser.encode('report', {'status': '19'}))
 
     def get_socket(self):
         return self.__socket
@@ -220,10 +226,6 @@ class ClientHandler:
         # nevermind lulz
         self.__lobby_model.delete_game(self.__game)
         return None
-
-    def on_game_deleted(self):
-        self.__game = None
-        self.__send(self.__message_parser.encode('report', {'status': '19'}))
 
     def __unknown_msg(self):
         return self.__message_parser.encode('report', {'status': '40'})
