@@ -120,7 +120,6 @@ class LobbyDialog(QDialog):
 	def __onJoinGame(self, success):
 		logging.info("Game joined? " + str(success))
 		if success:
-			self.__backend.prepareGame()
 			self.close()
 		else:
 			self.__error("Failed to join game. Please choose another one.")

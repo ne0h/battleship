@@ -1,3 +1,5 @@
+import logging
+
 class Lobby:
 
 	def onUpdate(self, games, players):
@@ -5,24 +7,24 @@ class Lobby:
 		self.players = players
 
 		self.__playerNicks = {}
-		for player in players:
+		for player in self.players:
 			self.__playerNicks[player.id] = player.nickname
 
 	def getOwnNickname(self):
 		return self.nickname if self.nickname else "Unnamed Player"
 
 	def getNickname(self, playerId):
-		return "Unnamed Player" if self.__playerNicks[playerId] is "" else self.__playerNicks[playerId]
+		return "Unnamed Player" if self.__playerNicks[playerId] is None \
+								   or self.__playerNicks[playerId] is "" else self.__playerNicks[playerId]
 
 	def hasOpponent(self):
-		return self.opponent
+		return False if self.opponent is None else True
 
 	def hasGame(self):
 		return False if self.game is None else True
 
 	def setOpponent(self, opponentId):
-		from backend import PlayerInformation
-		self.opponent = PlayerInformation(opponentId, self.getNickname(opponentId))
+		self.opponent = opponentId
 
 	def tryToGame(self, gameId):
 		self.__tryToGameId = gameId
