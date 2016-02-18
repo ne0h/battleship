@@ -13,10 +13,6 @@ class Game:
     def __init__(self, name, id):
         """
         Create a new game.
-        Args:
-            name : The name of the game
-            nick : The nickname of the player who created the game
-            id : The player's id
         """
         self.__name = name
         self.__first_field = playingfield.PlayingField(16)
@@ -24,6 +20,8 @@ class Game:
         self.__first_player = id
         self.__second_player = None
         self.__status = GameStatus.waiting
+        # turn is either 1 or 2
+        self.__turn = 1
 
     def set_second_player(self, id):
         self.__second_player = id
@@ -32,6 +30,13 @@ class Game:
     def remove_second_player(self):
         self.__second_player = None
         self.__status = GameStatus.waiting
+
+    def get_turn(self):
+        return self.__turn
+
+    def next_turn(self):
+        # toggle between 1 and 2
+        self.__turn = 3 - self.__turn
 
     def get_name(self):
         return self.__name
