@@ -169,13 +169,18 @@ class ClientHandler:
             return self.__message_parser.encode('report', {'status': '31'})
 
         # join the game
-        game = self.__lobby_model.join_lobby(params['name'], self.__id)
-        if game:
-            self.__game = params['name']
-            self.__player = 2
-            return self.__message_parser.encode('report', {'status': '27'})
-        else:
-            return self.__message_parser.encode('report', {'status': '37'})
+        game, e = self.__lobby_model.join_lobby(params['name'], self.__id)
+
+        # handle game join errors
+        if e:
+            if e == LobbyError.game_is_full:
+                return self.__message_parser.encode('report', {'status': '47'})
+            elif e == LobbyError.game_does_not_exist:
+                return self.__message_parser.encode('report', {'status': '37'})
+
+        self.__game = params['name']
+        self.__player = 2
+        return self.__message_parser.encode('report', {'status': '27'})
 
     def __set_nickname(self, params):
         report = self.__expect_parameter(['name'], params)
