@@ -159,8 +159,6 @@ class ClientHandler:
 
         self.__lobby_model.delete_player(self.__id)
 
-        # TODO remove game callbacks
-
     def __create_game(self, params):
         # make sure parameter list is complete
         if not self.__expect_parameter(['name'], params):
@@ -302,8 +300,6 @@ class ClientHandler:
 
         # nevermind lulz
         self.__lobby_model.delete_game(self.__game)
-
-        # TODO remove game callbacks
 
     def __unknown_msg(self):
         self.__send(self.__message_parser.encode('report', {'status': '40'}))
