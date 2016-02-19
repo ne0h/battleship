@@ -71,7 +71,7 @@ class Game:
         bow, rear = self.__x_y_direction_id_to_bow_rear(x, y, direction, id)
 
         logging.debug('place_ship x:{} y:{} dir:{} id:{} --> bow.x:{} bow.y:{} rear.x:{} rear.y:{}'.format(x, y, direction, id, bow.x, bow.y, rear.x, rear.y))
-        
+
         suc, left = self.__get_field_by_player(player).placeShip(bow, rear)
 
         # trigger on_game_start if ship placement is done
@@ -87,6 +87,7 @@ class Game:
     def fire(self, player, x, y):
         field = self.__get_field_by_player(player)
         logging.debug('fire()')
+        field.attack(playingfield.Field(x, y))
 
     def nuke(self, player, x, y):
         field = self.__get_field_by_player(player)
@@ -117,6 +118,7 @@ class Game:
             length = 2
 
         bow = playingfield.Field(x, y)
+        rear = None
 
         if direction == "N":
             rear = playingfield.Field(x, y + (length - 1))
@@ -126,6 +128,8 @@ class Game:
             rear = playingfield.Field(x + (length - 1), y)
         elif direction == "W":
             rear = playingfield.Field(x - (length - 1), y)
+        else:
+            logging.debug("Weird board init direction received: {}".format(direction))
 
         return bow, rear
 

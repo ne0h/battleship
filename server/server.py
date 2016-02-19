@@ -81,6 +81,14 @@ class ClientHandler:
                 self.__leave_game()
             elif msgtype == messages.INIT_BOARD:
                 self.__init_board(msgparams)
+            elif msgtype == messages.FIRE:
+                self.__fire(msgparams)
+            elif msgtype == messages.NUKE:
+                self.__nuke()
+            elif msgtype == messages.MOVE:
+                self.__move()
+            elif msgtype == messages.SURRENDER:
+                self.__surrender()
             else:
                 self.__unknown_msg()
 
@@ -178,13 +186,14 @@ class ClientHandler:
 
         # create the game
         game = self.__lobby_model.add_lobby(params['name'], self.__id)
-        if game:
-            self.__game = params['name']
-            self.__player = 1
-            self.__send(self.__message_parser.encode('report', {'status': '28'}))
+        
+        if not game:
+            self.__send(self.__message_parser.encode('report', {'status': '37'}))
             return
 
-        self.__send(self.__message_parser.encode('report', {'status': '37'}))
+        self.__game = params['name']
+        self.__player = 1
+        self.__send(self.__message_parser.encode('report', {'status': '28'}))
 
         # register game callbacks
         self.__lobby_model.get_game(self.__game).register_callback(GameEvent.on_ship_edit, self.on_ship_edit)
@@ -299,6 +308,25 @@ class ClientHandler:
 
         # nevermind lulz
         self.__lobby_model.delete_game(self.__game)
+
+    def __fire(self, params):
+        if not self.__expect_parameter(['coordinate_x', 'coordinate_y']):
+            return
+
+        # check if it's actually your turn
+        if self.__lobby_model.get_game(self.__game).get_turn() != self.__player:
+            self.__send(self.__message_parser.encode('report', {'status': '41'}))
+
+        self.__lobby_model.get_game(self.__game).fire(params['coordinate_x'], params['coordinate_y'])
+
+    def __nuke(self):
+        pass
+
+    def __move(self):
+        pass
+
+    def __surrender(self):
+        pass
 
     def __unknown_msg(self):
         self.__send(self.__message_parser.encode('report', {'status': '40'}))
