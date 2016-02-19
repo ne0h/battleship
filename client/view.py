@@ -63,6 +63,7 @@ class ConnectDialog(QDialog):
 		self.__nicknameIpt = QLineEdit()
 		self.__nicknameIpt.setFixedWidth(100)
 		self.__nicknameIpt.setFixedHeight(20)
+		self.__nicknameIpt.setText("Max")
 		self.__nicknameIpt.setPlaceholderText("Nickname")
 
 		self.__hostnameIpt = QLineEdit()
@@ -74,7 +75,7 @@ class ConnectDialog(QDialog):
 		self.__portIpt = QLineEdit()
 		self.__portIpt.setFixedWidth(60)
 		self.__portIpt.setFixedHeight(20)
-		self.__portIpt.setText("44444")
+		self.__portIpt.setText("12345")
 		self.__portIpt.setPlaceholderText("Port")
 
 		self.__returnBtn = QPushButton("Connect")
@@ -516,21 +517,22 @@ class MainForm(QWidget):
 			self.__statusLbl.setText("No game running, please use the lobby to connect to a game.")
 			self.__lobbyBtn.setEnabled(True)
 			self.__connectBtn.setEnabled(False)
+		elif status is ClientStatus.WAITINGFOROPPONENT:
+			self.__statusLbl.setText("Waiting for opponent now.")
+			self.__placeShipBtn.setEnabled(False)
+			self.__connectBtn.setEnabled(False)
+			self.__lobbyBtn.setEnabled(False)
 		elif status is ClientStatus.PREPARATIONS:
 			from backend import Callback
 
 			self.__statusLbl.setText("Please place your ships.")
 			self.__leaveGameBtn.setEnabled(True)
+			self.__placeShipBtn.setEnabled(True)
 			self.__updatePlayersLbl()
 
 			cb = Callback()
 			cb.onAction = lambda shipId: self.__onUpdateShipList(shipId)
 			self.__backend.registerShipUpdateCallback(cb)
-		elif status is ClientStatus.WAITINGFOROPPONENT:
-			self.__statusLbl.setText("Placement of ships successful. Waiting for opponent now.")
-			self.__placeShipBtn.setEnabled(False)
-			self.__connectBtn.setEnabled(False)
-			self.__lobbyBtn.setEnabled(False)
 		elif status is ClientStatus.OWNTURN:
 			self.__status.setText("It is your turn.")
 			self.__enableGamePlayButtons()
@@ -613,7 +615,9 @@ class MainForm(QWidget):
 		self.__chatIpt.setText("")
 
 	def __onIncomingChatMessage(self, authorId, timestamp, message):
-		self.__chatLog.append("(%s) %s: %s" % (timestamp, authorId, message))
+		import datetime
+		self.__chatLog.append("(%s) %s: %s" % (datetime.datetime.fromtimestamp(int(timestamp) / 1000).strftime("%H:%M:%S"),
+											   self.__backend.lobby.getNickname(authorId), message))
 
 	def __onError(self, error):
 		self.__statusLbl.setText("Error: %s" % error)

@@ -81,6 +81,7 @@ class ServerHandler:
 		# TODO remove already read values from map that the method runs in O(n)
 		# TODO Validate message length (should be already done in the receiveLoop)
 		# TODO Validate if empty nicknames work correctly (that there is not 'None' in wireshark)
+		# TODO: Validate players_count
 
 		games   = []
 		players = []
@@ -264,6 +265,10 @@ class ServerHandler:
 					elif status is 11 or status is 21 or status is 22 or status is 23 or status is 24 or status is 31 \
 							or status is 32 or status is 33 or status is 34 or status is 39 or status is 41:
 						self.__backend.onGamePlayUpdate(status)
+
+					# Begin_Ship_Placing
+					elif status is 18:
+						self.__backend.onBeginShipPlacing()
 
 					# field updates
 					elif status is 13:
