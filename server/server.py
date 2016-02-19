@@ -291,7 +291,6 @@ class ClientHandler:
             self.__send(self.__message_parser.encode('report', {'status': '31'}))
             return
 
-        self.__lobby_model.leave_game(self.__id)
         # if player who created game leaves then destroy the game else just leave
         #if self.__player == 1:
         #    self.__lobby_model.delete_game(self.__game)

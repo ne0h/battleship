@@ -11,8 +11,8 @@ from backend import Backend
 
 def setupArgparse():
 	parser = argparse.ArgumentParser(description="Battleship++ Client Application")
-	parser.add_argument("-c", "--connect", metavar=("<HOSTNAME>", "<PORT>", "<NICKNAME>"),
-						help="Connect directly without settings dialog.", nargs=3, type=str)
+	parser.add_argument("-c", "--connect", metavar=("<HOSTNAME>", "<PORT>"),
+						help="Connect directly without settings dialog.", nargs=2, type=str)
 	parser.add_argument('-d', '--devmode', help="Dev mode.", action='store_true')
 	parser.add_argument('-n', '--nick', help="Nickname.", default="Max")
 
