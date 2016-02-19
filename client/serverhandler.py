@@ -81,6 +81,7 @@ class ServerHandler:
 		# TODO remove already read values from map that the method runs in O(n)
 		# TODO Validate message length (should be already done in the receiveLoop)
 		# TODO Validate if empty nicknames work correctly (that there is not 'None' in wireshark)
+		# TODO: Validate players_count
 
 		games   = []
 		players = []
