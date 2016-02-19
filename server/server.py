@@ -80,7 +80,7 @@ class ClientHandler:
             elif msgtype == messages.LEAVE_GAME:
                 self.__leave_game()
             elif msgtype == messages.INIT_BOARD:
-                self.__init_board()
+                self.__init_board(msgparams)
             else:
                 self.__unknown_msg()
 
@@ -247,7 +247,7 @@ class ClientHandler:
         playerid = hashlib.sha1(b(addr + str(port))).hexdigest()
         return playerid
 
-    def __init_board(self):
+    def __init_board(self, params):
         if not self.__expect_parameter(
             ['ship_{}_x'.format(i) for i in range(0, 10)] +
             ['ship_{}_y'.format(i) for i in range(0, 10)] +
@@ -255,6 +255,7 @@ class ClientHandler:
             return
 
         # TODO init board
+        
 
         # ack init board
         self.__send(self.__message_parser.encode('report', {'status': '29'}))

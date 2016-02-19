@@ -104,12 +104,30 @@ class Game:
         return None
 
     def __is_game_preparation_done(self):
-        # TODO
-        pass
+        return self.__first_field.moreShipsLeftToPlace() and self.__second_field.moreShipsLeftToPlace()
 
-    def __x_y_direction_id_to_bow_rear(self):
-        # TODO
-        pass
+    def __x_y_direction_id_to_bow_rear(self, x, y, direction, id):
+        if id == 0:
+            length = 5
+        elif 1 <= id <= 2:
+            length = 4
+        elif 3 <= id <= 5:
+            length = 3
+        elif 6 <= id <= 9:
+            length = 2
+
+        bow = playingfield.Field(x, y)
+
+        if direction == "N":
+            rear = playingfield.Field(x, y + (length - 1))
+        elif direction == "S":
+            rear = playingfield.Field(x, y - (length - 1))
+        elif direction == "E":
+            rear = playingfield.Field(x + (length - 1), y)
+        elif direction == "W":
+            rear = playingfield.Field(x - (length - 1), y)
+
+        return bow, rear
 
     def register_callback(self, event, callback):
         """
