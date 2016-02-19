@@ -391,6 +391,8 @@ class Backend:
 			if status is 24:
 				self.__onSpecialAttack()
 			self.__updateClientStatus(ClientStatus.OPPONENTSTURN)
+		elif status is 23:
+			self.__updateClientStatus(ClientStatus.YOULOSE)
 		elif status is 31:
 			self.__onError("Move not allowed")
 		elif status is 32:
@@ -400,6 +402,9 @@ class Backend:
 
 		for cb in self.__gamePlayCallbacks:
 			cb.onAction(status)
+
+	def capitulate(self):
+		self.__serverHandler.capitulate()
 
 	def registerGamePreparationsEndedCallback(self, callback):
 		"""

@@ -421,6 +421,12 @@ class EnemeysPlayingFieldWidget(PlayingFieldWidget):
 		import os
 		dir = os.path.join(os.path.dirname(os.path.realpath(__file__)))
 
+		# fill each field with fog
+		for i in range(1, self._fieldLength + 1):
+			for j in range(1, self._fieldLength + 1):
+				painter.setBrush(QColor(230, 230, 230))
+				painter.drawRect(i * self._fieldSize, j * self._fieldSize, self._fieldSize, self._fieldSize)
+
 		fields = self._backend.getEnemyPlayingField()
 		for i in range(1, self._fieldLength + 1):
 			for j in range(1, self._fieldLength + 1):
@@ -558,6 +564,10 @@ class MainForm(QWidget):
 		elif status is ClientStatus.OWNTURN:
 			self.__statusLbl.setText("It is your turn.")
 			self.__enableGamePlayButtons()
+
+			if self.__leaveGameBtn.text() == "Leave Game":
+				self.__leaveGameBtn.setText("Capitulate")
+
 		elif status is ClientStatus.OPPONENTSTURN:
 			self.__statusLbl.setText("Please wait for your opponent.")
 			self.__disableGamePlayButtons()
@@ -578,9 +588,12 @@ class MainForm(QWidget):
 	def __leaveGame(self):
 		from backend import Callback
 
-		cb = Callback()
-		cb.onAction = lambda: self.__leaveGameCalled()
-		self.__backend.leaveGame(cb)
+		if self.__leaveGameBtn.text() == "Capitulate":
+			self.__backend.capitulate()
+		else:
+			cb = Callback()
+			cb.onAction = lambda: self.__leaveGameCalled()
+			self.__backend.leaveGame(cb)
 
 	def __resetClient(self):
 		self.__lobbyBtn.setEnabled(True)
@@ -642,8 +655,9 @@ class MainForm(QWidget):
 
 	def __onIncomingChatMessage(self, authorId, timestamp, message):
 		import datetime
-		self.__chatLog.append("(%s) %s: %s" % (datetime.datetime.fromtimestamp(int(timestamp) / 1000).strftime("%H:%M:%S"),
-											   self.__backend.lobby.getNickname(authorId), message))
+		self.__chatLog.append("(%s) %s: %s" %
+								(datetime.datetime.fromtimestamp(int(timestamp) / 1000).strftime("%H:%M:%S"),
+								self.__backend.lobby.getNickname(authorId), message))
 
 	def __onError(self, error):
 		self.__statusLbl.setText("Error: %s" % error)
