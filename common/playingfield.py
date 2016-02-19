@@ -395,7 +395,7 @@ class PlayingField:
 		Returns:
 			Returns the status of the field after the attack together with True if it changed or False if not.
 		"""
-		status, ship = self.getFieldStatus(field)
+		status, ship = self.__getFieldStatus(field)
 		result = status
 		updated = False
 		if status is FieldStatus.SHIP:

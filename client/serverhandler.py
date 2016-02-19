@@ -272,9 +272,9 @@ class ServerHandler:
 
 					# field updates
 					elif status is 13:
-						self.onUpdateOwnFields(params)
+						self.__backend.onUpdateOwnFields(params)
 					elif status is 14:
-						self.onUpdateEnemyFields(params)
+						self.__backend.onUpdateEnemyFields(params)
 
 					# bad error stuff
 					#  - Message_Not_Recognized
