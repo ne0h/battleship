@@ -479,7 +479,8 @@ class PlayingField:
 			rear: rear of the ship
 
 		Return:
-			Returns the newly built ship or None of the Ship could not be placed, because of violation of a game rule.
+			Returns the id of the newly built ship or -1 if there was any game rule violation. In addition returns if
+			the user has to place more ships.
 		"""
 
 		return self.__ships.add(bow, rear)
