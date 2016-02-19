@@ -44,7 +44,7 @@ class Lobby:
 
 	def existsGame(self, gameId):
 		for game in self.games:
-			if gameId == game.id:
+			if gameId == game.name:
 				return True
 		return False
 
