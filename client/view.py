@@ -314,7 +314,7 @@ class OwnPlayingFieldWidget(PlayingFieldWidget):
 		self._getUnfogged()
 		for field in self._unfogged:
 			painter.setBrush(QColor(0, 191, 255))
-			painter.drawRect((field.x - 1) * self._fieldSize, (field.y - 1) * self._fieldSize, self._fieldSize,
+			painter.drawRect((field.x) * self._fieldSize, (16 - field.y) * self._fieldSize, self._fieldSize,
 							 self._fieldSize)
 
 		# add ships
@@ -356,14 +356,14 @@ class OwnPlayingFieldWidget(PlayingFieldWidget):
 			mouseEvent: information about the mouse event
 		"""
 
-		fieldAddress = self._mapClickToField(mouseEvent)
-		logging.debug("Click event at own field: %s" % (fieldAddress.toString()))
+		field = self._mapClickToField(mouseEvent)
+		logging.debug("Click event at own field: %s" % (field.toString()))
 
 		if self._viewModel.waitForShipPlacement:
 			if self._viewModel.newShipBow is None:
-				self._viewModel.newShipBow = fieldAddress
+				self._viewModel.newShipBow = field
 			else:
-				moreShips = self._backend.placeShip(fieldAddress, self._viewModel.newShipBow)
+				moreShips = self._backend.placeShip(field, self._viewModel.newShipBow)
 				self.repaint()
 
 				if not moreShips:
@@ -419,7 +419,7 @@ class EnemeysPlayingFieldWidget(PlayingFieldWidget):
 		fields = self._backend.getEnemyPlayingField()
 		for i in range(1, self._fieldLength + 1):
 			for j in range(1, self._fieldLength + 1):
-				status = fields[i - 1][j - 1]
+				status = fields[i - 1][16 - j]
 				if status is FieldStatus.FOG:
 					painter.setBrush(QColor(230, 230, 230))
 					painter.drawRect(i * self._fieldSize, j * self._fieldSize, self._fieldSize, self._fieldSize)
@@ -441,12 +441,12 @@ class EnemeysPlayingFieldWidget(PlayingFieldWidget):
 		# Attacks
 		#
 		if self._viewModel.waitForAttack:
-			logging.info("Attack at enemey's field: %s" % (field.toString()))
+			logging.info("Attack at enemey's field: %s" % field.toString())
 			self._backend.attack(field)
 			self._viewModel.waitForAttack = False
 
 		if self._viewModel.waitForSpecialAttack:
-			logging.info("Special Attack at enemey's field: %s" % (field.toString()))
+			logging.info("Special Attack at enemey's field: %s" % field.toString())
 			self._backend.specialAttack(field)
 			self._viewModel.waitForSpecialAttack = False
 
@@ -510,6 +510,10 @@ class MainForm(QWidget):
 	def __onUpdateClientStatus(self):
 		from backend import ClientStatus
 
+		# repaints
+		self.__ownPlayingFieldWgt.repaint()
+		self.__enemeysPlayingFieldWgt.repaint()
+
 		status = self.__backend.clientStatus
 		if status is ClientStatus.NOTCONNECTED:
 			self.__statusLbl.setText("Please connect to a server.")
@@ -522,11 +526,11 @@ class MainForm(QWidget):
 			self.__placeShipBtn.setEnabled(False)
 			self.__connectBtn.setEnabled(False)
 			self.__lobbyBtn.setEnabled(False)
+			self.__leaveGameBtn.setEnabled(True)
 		elif status is ClientStatus.PREPARATIONS:
 			from backend import Callback
 
 			self.__statusLbl.setText("Please place your ships.")
-			self.__leaveGameBtn.setEnabled(True)
 			self.__placeShipBtn.setEnabled(True)
 			self.__updatePlayersLbl()
 
@@ -585,13 +589,13 @@ class MainForm(QWidget):
 		"""
 
 	def __attack(self):
-		self.__viewModel.__waitForAttack = True
+		self.__viewModel.waitForAttack = True
 
 	def __specialAttack(self):
-		pass
+		self.__viewModel.waitForSpecialAttack = True
 
 	def __moveShip(self):
-		pass
+		self.__viewModel.waitForMove = True
 
 	def __onJoinGame(self):
 		self.__updateStatusLbl()
@@ -637,18 +641,18 @@ class MainForm(QWidget):
 		# own playing field stuff
 		#
 		ownPlayingFieldBox = QGroupBox("Your own playing field")
-		ownPlayingFieldWgt = OwnPlayingFieldWidget(self.__backend, self.__viewModel, self.__fieldLength, devmode)
+		self.__ownPlayingFieldWgt = OwnPlayingFieldWidget(self.__backend, self.__viewModel, self.__fieldLength, devmode)
 		ownPlayingFieldLayout = QVBoxLayout()
-		ownPlayingFieldLayout.addWidget(ownPlayingFieldWgt)
+		ownPlayingFieldLayout.addWidget(self.__ownPlayingFieldWgt)
 		ownPlayingFieldBox.setLayout(ownPlayingFieldLayout)
 
 		#
 		# enemies playing field stuff
 		#
 		enemeysPlayingFieldBox = QGroupBox("Your enemey's playing field")
-		enemeysPlayingFieldWgt = EnemeysPlayingFieldWidget(self.__backend, self.__viewModel, self.__fieldLength, devmode)
+		self.__enemeysPlayingFieldWgt = EnemeysPlayingFieldWidget(self.__backend, self.__viewModel, self.__fieldLength, devmode)
 		enemiesPlayingFieldLayout = QVBoxLayout()
-		enemiesPlayingFieldLayout.addWidget(enemeysPlayingFieldWgt)
+		enemiesPlayingFieldLayout.addWidget(self.__enemeysPlayingFieldWgt)
 		enemeysPlayingFieldBox.setLayout(enemiesPlayingFieldLayout)
 
 		#

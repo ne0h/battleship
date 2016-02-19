@@ -134,9 +134,12 @@ class ShipList:
 	def getFieldStatus(self, field):
 		ships = self.getShips()
 		for ship in ships:
-			for part in ships.parts:
+			for part in ship.parts:
 				if field.equals(part):
-					return FieldStatus.DAMAGEDSHIP, None if ship.isDamaged(part) else FieldStatus.SHIP, ship
+					if ship.isDamaged(part):
+						FieldStatus.DAMAGEDSHIP, None
+					else:
+						FieldStatus.SHIP, ship
 		return None, None
 
 	def __checkForCollisionWithOtherShips(self, ship):
@@ -528,10 +531,10 @@ class EnemyPlayingField:
 
 	def onUpdate(self, params):
 		for i in range(0, int(params["number_of_updated_fields"])):
-			x = params["field_%s_x" % i]
-			y = params["field_%s_y" % i]
+			x = int(params["field_%s_x" % i])
+			y = int(params["field_%s_y" % i])
 			status = conditionCodes[params["field_%s_condition" % i]]
-			logging.debug("Update at enemy field: (%s | %s) %s" % (x, y, status))
+			logging.debug("Update at enemy field: (%s|%s) %s" % (x, y, status))
 			self.__fields[x][y] = status
 
 	def __init__(self, fieldLength):
