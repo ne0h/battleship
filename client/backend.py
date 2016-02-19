@@ -531,11 +531,13 @@ class Backend:
 		#
 		if self.lobby.existsGame(gameId):
 			# join game
+			logging.debug("Joining game: '%s'" % gameId)
 			cb = Callback()
 			cb.onAction = lambda success: self.__onDevMode(True)
 			self.joinGame(gameId, cb)
 		else:
 			# create game
+			logging.debug("Creating game: '%s'" % gameId)
 			cb = Callback()
 			cb.onAction = lambda success: self.__onDevMode(True)
 			self.createGame(gameId, cb)
@@ -543,6 +545,7 @@ class Backend:
 		#
 		# Build ship list and send to server. Shipslist will be send automatically to the server afterwards
 		#
+		time.sleep(1)
 		self.placeShip(Field(2,  3), Field(2,  7))
 		self.placeShip(Field(3,  3), Field(3,  6))
 		self.placeShip(Field(4,  3), Field(4,  6))
