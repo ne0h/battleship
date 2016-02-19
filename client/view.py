@@ -328,27 +328,30 @@ class OwnPlayingFieldWidget(PlayingFieldWidget):
 			# draw bow
 			bow = ship.bow
 			if ship.isDamaged(bow):
-				pass
+				img = dir + "/img/bow_" + ship.orientation.value + "_damaged.png"
+				logging.error("DAMAGE!")
 			else:
-				painter.drawPixmap((bow.x + 1) * self._fieldSize, (16 - bow.y) * self._fieldSize, self._fieldSize,
-									self._fieldSize, QPixmap(dir + "/img/bow_" + ship.orientation.value + ".png"))
+				img = dir + "/img/bow_" + ship.orientation.value + ".png"
+			painter.drawPixmap((bow.x + 1) * self._fieldSize, (16 - bow.y) * self._fieldSize, self._fieldSize,
+									self._fieldSize, QPixmap(img))
 
 			# draw rear
 			rear = ship.rear
 			if ship.isDamaged(rear):
-				pass
+				img = dir + "/img/rear_" + ship.orientation.value + "_damaged.png"
 			else:
-				painter.drawPixmap((rear.x + 1) * self._fieldSize, (16 - rear.y) * self._fieldSize, self._fieldSize,
-									self._fieldSize, QPixmap(dir + "/img/rear_" + ship.orientation.value + ".png"))
+				img = dir + "/img/rear_" + ship.orientation.value + ".png"
+			painter.drawPixmap((rear.x + 1) * self._fieldSize, (16 - rear.y) * self._fieldSize, self._fieldSize,
+									self._fieldSize, QPixmap(img))
 
 			# draw the rest of the ships
 			for middle in ship.middles:
 				if ship.isDamaged(middle):
-					pass
+					img = dir + "/img/middle_" + ship.orientation.value + "_damaged.png"
 				else:
-					painter.drawPixmap((middle.x + 1) * self._fieldSize, (16 - middle.y) * self._fieldSize,
-										self._fieldSize, self._fieldSize,
-										QPixmap(dir + "/img/middle_" + ship.orientation.value + ".png"))
+					img = dir + "/img/middle_" + ship.orientation.value + ".png"
+				painter.drawPixmap((middle.x + 1) * self._fieldSize, (16 - middle.y) * self._fieldSize,	self._fieldSize,
+								   self._fieldSize,	QPixmap(img))
 
 	def mousePressEvent(self, mouseEvent):
 		"""
@@ -578,7 +581,8 @@ class MainForm(QWidget):
 		elif status is ClientStatus.YOULOSE:
 			self.__statusLbl.setText("You lose!")
 			self.__disableGamePlayButtons()
-			# TODO: reset client
+			# TODO: show as messagebox and ...
+			# TODO: ... reset client
 
 	def __leaveGameCalled(self):
 		logging.info("Game aborted. Preparing client for a new game.")

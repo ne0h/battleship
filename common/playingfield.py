@@ -93,7 +93,10 @@ class Ship:
 		self.damages.append(part)
 
 	def isDamaged(self, part):
-		return part in self.damages
+		for damage in self.damages:
+			if damage.equals(part):
+				return True
+		return False
 
 	def getLength(self):
 		return len(self.parts)
@@ -132,15 +135,14 @@ class ShipList:
 	"""
 
 	def getFieldStatus(self, field):
-		ships = self.getShips()
-		for ship in ships:
+		for ship in self.getShips():
 			for part in ship.parts:
 				if field.equals(part):
 					if ship.isDamaged(part):
-						FieldStatus.DAMAGEDSHIP, None
+						return FieldStatus.DAMAGEDSHIP, ship
 					else:
-						FieldStatus.SHIP, ship
-		return None, None
+						return FieldStatus.SHIP, ship
+		return FieldStatus.WATER, None
 
 	def __checkForCollisionWithOtherShips(self, ship):
 		"""
@@ -385,8 +387,7 @@ class PlayingField:
 		"""
 
 		# check if there is a part of a ship
-		shipPart, ship = self.__ships.getFieldStatus(field)
-		return shipPart if shipPart is not None else FieldStatus.WATER, ship
+		return self.__ships.getFieldStatus(field)
 
 	def attack(self, field):
 		"""
@@ -510,13 +511,13 @@ class PlayingField:
 				  Field(field.x + 1, field.y), Field(field.x + 1, field.y + 1), Field(field.x + 1, field.y + 2),
 				  Field(field.x+2, field.y), Field(field.x+2, field.y+1), Field(field.x+2, field.y+2)]
 
-		for f in  fields:
+		for f in fields:
 			status, ship = self.__getFieldStatus(f)
-			logging.debug("Updating field '%s'" % f.toString())
+			logging.debug("Updating field '%s' with status '%s'" % (f.toString(), status))
 
 			if status is FieldStatus.SHIP:
-				result = FieldStatus.DAMAGEDSHIP
 				ship.addDamage(f)
+				logging.error("Added damage at '%s'" % f.toString())
 
 			# unfog field
 			if f not in self.__unfogged:

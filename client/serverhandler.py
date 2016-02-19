@@ -214,7 +214,7 @@ class ServerHandler:
 	def sendChatMessage(self, msg):
 		self.__sendMessage("chat_send", {"text": msg})
 
-	def capitualte(self):
+	def capitulate(self):
 		self.__sendMessage("surrender", {})
 
 	def __receiveLoop(self):
