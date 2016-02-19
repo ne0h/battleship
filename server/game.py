@@ -68,10 +68,10 @@ class Game:
         return False
 
     def place_ship(self, player, x, y, direction, id):
-        logging.debug('place_ship(p={}, x={}, y={}, dir={}, id={})'.format(player, x, y, direction, id))
-
         bow, rear = self.__x_y_direction_id_to_bow_rear(x, y, direction, id)
 
+        logging.debug('place_ship x:{} y:{} dir:{} id:{} --> bow.x:{} bow.y:{} rear.x:{} rear.y:{}'.format(x, y, direction, id, bow.x, bow.y, rear.x, rear.y))
+        
         suc, left = self.__get_field_by_player(player).placeShip(bow, rear)
 
         # trigger on_game_start if ship placement is done
