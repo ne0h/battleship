@@ -17,7 +17,9 @@ package "Controller" {
 }
 
 package "Model" {
-	[Backend] --> [PlayingFields] : storeData()
+	[Backend] --> [OwnPlayingField] : storeOwnFieldData()
+	[Backend] --> [EnemyPlayingField] : storeEnemysFieldData()
+	[Backend] --> [Lobby] : storeLobbyData()
 }
 
 package "View" {
