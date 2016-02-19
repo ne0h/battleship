@@ -14,6 +14,7 @@ def setupArgparse():
 	parser.add_argument("-c", "--connect", metavar=("<HOSTNAME>", "<PORT>", "<NICKNAME>"),
 						help="Connect directly without settings dialog.", nargs=3, type=str)
 	parser.add_argument('-d', '--devmode', help="Dev mode.", action='store_true')
+	parser.add_argument('-n', '--nick', help="Nickname.", default="Max")
 
 	return parser
 
@@ -28,10 +29,10 @@ if __name__ == "__main__":
 
 	args = setupArgparse().parse_args()
 
+	nickname = args.nick
 
 	devmode = args.devmode
 	hostname = None
-	nickname = None
 	port = None
 	if args.connect:
 		if not args.connect[1].isdigit():
@@ -39,7 +40,6 @@ if __name__ == "__main__":
 		else:
 			hostname = args.connect[0]
 			port = int(args.connect[1])
-			nickname = args.connect[2]
 
 	backend = Backend(fieldLength, hostname, port, nickname, devmode)
 
