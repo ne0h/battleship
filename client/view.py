@@ -517,21 +517,22 @@ class MainForm(QWidget):
 			self.__statusLbl.setText("No game running, please use the lobby to connect to a game.")
 			self.__lobbyBtn.setEnabled(True)
 			self.__connectBtn.setEnabled(False)
+		elif status is ClientStatus.WAITINGFOROPPONENT:
+			self.__statusLbl.setText("Waiting for opponent now.")
+			self.__placeShipBtn.setEnabled(False)
+			self.__connectBtn.setEnabled(False)
+			self.__lobbyBtn.setEnabled(False)
 		elif status is ClientStatus.PREPARATIONS:
 			from backend import Callback
 
 			self.__statusLbl.setText("Please place your ships.")
 			self.__leaveGameBtn.setEnabled(True)
+			self.__placeShipBtn.setEnabled(True)
 			self.__updatePlayersLbl()
 
 			cb = Callback()
 			cb.onAction = lambda shipId: self.__onUpdateShipList(shipId)
 			self.__backend.registerShipUpdateCallback(cb)
-		elif status is ClientStatus.WAITINGFOROPPONENT:
-			self.__statusLbl.setText("Placement of ships successful. Waiting for opponent now.")
-			self.__placeShipBtn.setEnabled(False)
-			self.__connectBtn.setEnabled(False)
-			self.__lobbyBtn.setEnabled(False)
 		elif status is ClientStatus.OWNTURN:
 			self.__status.setText("It is your turn.")
 			self.__enableGamePlayButtons()

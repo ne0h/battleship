@@ -274,7 +274,7 @@ class Backend:
 		#TODO: validate current client status
 		if success:
 			self.lobby.createSuccessful()
-			self.__updateClientStatus(ClientStatus.PREPARATIONS)
+			self.__updateClientStatus(ClientStatus.WAITINGFOROPPONENT)
 
 		for cb in self.__createGameCallbacks:
 			cb.onAction(success)
@@ -523,6 +523,9 @@ class Backend:
 
 	def getEnemyUnfogged(self):
 		return self.__enemeysPlayingField.getUnfogged()
+
+	def onBeginShipPlacing(self):
+		self.__updateClientStatus(ClientStatus.PREPARATIONS)
 
 	def __onDevMode(self, result):
 		pass
