@@ -254,6 +254,8 @@ class ClientHandler:
         shipx = 'ship_{}_x'
         shipy = 'ship_{}_y'
         shipdir = 'ship_{}_direction'
+
+        # make sure that all parameters exist
         if not self.__expect_parameter(
             [shipx.format(i) for i in range(0, 10)] +
             [shipy.format(i) for i in range(0, 10)] +
@@ -263,8 +265,8 @@ class ClientHandler:
         # init board
         left = True
         for id in range(0, 10):
-            x = params[shipx.format(id)]
-            y = params[shipy.format(id)]
+            x = int(params[shipx.format(id)])
+            y = int(params[shipy.format(id)])
             dir = params[shipdir.format(id)]
             logging.debug('self.__lobby_model :: {}'.format(repr(self.__lobby_model)))
             logging.debug('self.__lobby_model.get_game(self.__game) :: {}'.format(repr(self.__lobby_model.get_game(self.__game))))

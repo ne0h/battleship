@@ -116,16 +116,16 @@ class Game:
         elif 6 <= id <= 9:
             length = 2
 
-        bow = playingfield.Field(int(x), int(y))
+        bow = playingfield.Field(x, y)
 
         if direction == "N":
-            rear = playingfield.Field(int(x), int(y) + (length - 1))
+            rear = playingfield.Field(x, y + (length - 1))
         elif direction == "S":
-            rear = playingfield.Field(int(x), int(y) - (length - 1))
+            rear = playingfield.Field(x, y - (length - 1))
         elif direction == "E":
-            rear = playingfield.Field(int(x) + (length - 1), int(y))
+            rear = playingfield.Field(x + (length - 1), y)
         elif direction == "W":
-            rear = playingfield.Field(int(x) - (length - 1), int(y))
+            rear = playingfield.Field(x - (length - 1), y)
 
         return bow, rear
 
