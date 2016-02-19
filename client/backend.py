@@ -517,6 +517,11 @@ class Backend:
 		gameId = "magickgame"
 		time.sleep(1)
 
+		# Validates that the client is connected to a server
+		if not self.__serverHandler.isConnected():
+			logging.error("Not connected to a server - exciting devmode.")
+			return
+
 		#
 		# Check if there is already a magick game
 		#
@@ -532,7 +537,7 @@ class Backend:
 			self.createGame(gameId, cb)
 
 		#
-		# Build ship list and send to server
+		# Build ship list and send to server. Shipslist will be send automatically to the server afterwards
 		#
 		self.placeShip(Field(2,  3), Field(2,  7))
 		self.placeShip(Field(3,  3), Field(3,  6))

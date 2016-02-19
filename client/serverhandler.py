@@ -291,6 +291,9 @@ class ServerHandler:
 
 		self.__stopReceiveLoop = True
 
+	def isConnected(self):
+		return self.__connected
+
 	def connect(self, hostname, port):
 		"""
 		Connects to a server.
