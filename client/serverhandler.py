@@ -22,8 +22,6 @@ reportCodes = {
 	29: "Successful_Ship_Placement",
 	31: "Illegal_Move",
 	32: "Illegal_Special_Attack",
-	33: "Illegal_Field",
-	34: "Illegal_Ship_Index",
 	37: "Illegal_Game_Definition",
 	38: "Illegal_Ship_Placement",
 	39: "Illegal_Attack",
