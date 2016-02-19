@@ -22,8 +22,10 @@ def main():
 
     parser = argparse.ArgumentParser()
     parser.add_argument('-n', '--number', type=int, default=2)
+    parser.add_argument('-d', '--devmode', help="Dev mode.", action='store_true')
     args = parser.parse_args()
     n = args.number
+    devmode = args.devmode
 
     # spawn server and get final port that the server is listening on
     serv, port = spawn_server()
@@ -31,7 +33,7 @@ def main():
 
     # spawn clients
     for x in range(n):
-        cmd = 'python3 {} -c localhost {} {}'.format(os.path.join(os.path.dirname(os.path.realpath(__file__)), '../client/main.py'), str(port), 'Player' + str(x))
+        cmd = 'python3 {}{} -c localhost {} {}'.format(os.path.join(os.path.dirname(os.path.realpath(__file__)), '../client/main.py'), ' --devmode' if devmode else '', str(port), 'Player' + str(x))
         logging.info("Spawn client #{}: ".format(str(x), cmd))
         t = threading.Thread(target = lambda: os.system(cmd))
         t.daemon = True

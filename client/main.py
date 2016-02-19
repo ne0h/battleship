@@ -13,6 +13,7 @@ def setupArgparse():
 	parser = argparse.ArgumentParser(description="Battleship++ Client Application")
 	parser.add_argument("-c", "--connect", metavar=("<HOSTNAME>", "<PORT>", "<NICKNAME>"),
 						help="Connect directly without settings dialog.", nargs=3, type=str)
+	parser.add_argument('-d', '--devmode', help="Dev mode.", action='store_true')
 
 	return parser
 
@@ -21,12 +22,14 @@ if __name__ == "__main__":
 	Starts the game client.
 	"""
 	fieldLength = 16
-	devmode = True
 
 	logging.basicConfig(format="%(asctime)s - CLIENT - %(levelname)s - %(message)s", level=logging.DEBUG)
 	logging.info("Starting client...")
 
 	args = setupArgparse().parse_args()
+
+
+	devmode = args.devmode
 	hostname = None
 	nickname = None
 	port = None
