@@ -502,51 +502,28 @@ class TestMessageParser(unittest.TestCase):
 		self.assertEqual(messageType, "report")
 		self.assertEqual(len(params), 1)
 		self.assertEqual(params["status"],"32")
-	
-	#33 Illegal_Field	
-	def test_illegalFieldEncoding(self):
+	#36 Illegal_Nickname
+	def test_illegalNicknameEncoding(self):
 		"""
-		Checks the Encoding of 33 Illegal_Field Message by MessageParser
+		Checks the Encoding of 36 Illegal_Nickname Message by MessageParser
 		Format: 
-			type:report;status:33;
+			type:report;status:36;
 		"""
-		msg = MessageParser().encode("report",{"status": "33"})						
+		msg = MessageParser().encode("report",{"status": "36"})						
 		msg=msg[2:].decode('utf-8') # decode it from bytes to string								
 						
-		self.assertTrue(msg == "type:report;status:33;")
+		self.assertTrue(msg == "type:report;status:36;")
 
-	def test_illegalFieldDecoding(self):
+	def test_illegalNicknameDecoding(self):
 		"""
-		Checks the Decoding of 33 Illegal_Field Message by MessageParser
+		Checks the Decoding of 36 Illegal_Nickname Message by MessageParser
 		"""
-		messageType, params = MessageParser().decode("type:report;status:33;")
+		messageType, params = MessageParser().decode("type:report;status:36;")
 
 		self.assertEqual(messageType, "report")
 		self.assertEqual(len(params), 1)
-		self.assertEqual(params["status"],"33")
-
-	#34 Illegal_Ship_Index	
-	def test_illegalShipIndexEncoding(self):
-		"""
-		Checks the Encoding of 34 Illegal_Ship_Index Message by MessageParser
-		Format: 
-			type:report;status:34;
-		"""
-		msg = MessageParser().encode("report",{"status": "34"})						
-		msg=msg[2:].decode('utf-8') # decode it from bytes to string								
-						
-		self.assertTrue(msg == "type:report;status:34;")
-
-	def test_illegalShipIndexDecoding(self):
-		"""
-		Checks the Decoding of 34 Illegal_Ship_Index Message by MessageParser
-		"""		
-		messageType, params = MessageParser().decode("type:report;status:34;")
-
-		self.assertEqual(messageType, "report")
-		self.assertEqual(len(params), 1)
-		self.assertEqual(params["status"],"34")
-
+		self.assertEqual(params["status"],"36")
+		
 	#37 Illegal_Game_Definition	
 	def test_illegalGameDefinitionEncoding(self):
 		"""

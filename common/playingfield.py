@@ -17,6 +17,12 @@ class FieldStatus(Enum):
 	SHIP = "ship"
 	DAMAGEDSHIP = "damagedship"
 
+conditionCodes = {
+	"free":      FieldStatus.WATER,
+	"damaged":   FieldStatus.DAMAGEDSHIP,
+	"undamaged": FieldStatus.SHIP
+}
+
 class Field:
 	"""
 	Describes a single field on the playing field.
@@ -488,14 +494,52 @@ class PlayingField:
 	def moreShipsLeftToPlace(self):
 		return self.__ships.moreShipsLeftToPlace()
 
+	def onUpdate(self, params):
+		# TODO: validate input
+		wasSpecialAttack = True if params["was_special_attack"] == "true" else False
+		field = Field(int(params["coordinate_x"]), int(params["coordinate_y"]))
+
+		if wasSpecialAttack:
+			self.specialAttack(field)
+		else:
+			self.attack(field)
+
 	def unfog(self, fields):
 		self.__unfogged + fields
 
 	def isUnfogged(self, field):
 		return field in self.__unfogged
 
+	def getUnfogged(self):
+		return self.__unfogged
+
 	def __init__(self, fieldLength):
 		self.__ships = ShipList(fieldLength)
 		self.__fieldLength = fieldLength
-
 		self.__unfogged = []
+
+class EnemyPlayingField:
+
+	def getField(self):
+		return self.__fields
+
+	def getUnfogged(self):
+		return self.__unfogged
+
+	def onUpdate(self, params):
+		for i in range(0, int(params["number_of_updated_fields"])):
+			x = params["field_%s_x" % i]
+			y = params["field_%s_y" % i]
+			status = conditionCodes[params["field_%s_condition" % i]]
+			logging.debug("Update at enemy field: (%s | %s) %s" % (x, y, status))
+			self.__fields[x][y] = status
+
+	def __init__(self, fieldLength):
+		self.__fieldLength = fieldLength
+		self.__unfogged = []
+		self.__fields = [[0 for x in range(fieldLength)] for x in range(fieldLength)]
+
+		# fill with fog everywhere
+		for i in range(0, self.__fieldLength):
+			for j in range(0, self.__fieldLength):
+				self.__fields[i][j] = FieldStatus.FOG

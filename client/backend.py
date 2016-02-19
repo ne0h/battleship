@@ -106,7 +106,7 @@ class Backend:
 
 		return self.__ownPlayingField.getShip(shipId)
 
-	def getEnemeysShips(self):
+	def getEnemyPlayingField(self):
 		"""
 		Returns the enemey's ships.
 
@@ -114,7 +114,7 @@ class Backend:
 			Returns the enemey's ships.
 		"""
 
-		return self.__enemeysPlayingField.getShips()
+		return self.__enemeysPlayingField.getField()
 
 	def placeShip(self, bow, rear):
 		"""
@@ -512,6 +512,18 @@ class Backend:
 	def isUnfogged(self, field):
 		return self.__ownPlayingField.isUnfogged(field)
 
+	def onUpdateOwnFields(self, params):
+		self.__ownPlayingField.onUpdate(params)
+
+	def onUpdateEnemyFields(self, params):
+		self.__enemeysPlayingField.onUpdate(params)
+
+	def getOwnUnfogged(self):
+		return self.__ownPlayingField.getUnfogged()
+
+	def getEnemyUnfogged(self):
+		return self.__enemeysPlayingField.getUnfogged()
+
 	def __onDevMode(self, result):
 		pass
 
@@ -563,7 +575,7 @@ class Backend:
 
 		self.lobby = Lobby(nickname)
 		self.__ownPlayingField = PlayingField(length)
-		self.__enemeysPlayingField = PlayingField(length)
+		self.__enemeysPlayingField = EnemyPlayingField(length)
 		self.clientStatus = ClientStatus.NOTCONNECTED
 
 		# callback stuff

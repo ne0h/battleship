@@ -22,8 +22,6 @@ reportCodes = {
 	29: "Successful_Ship_Placement",
 	31: "Illegal_Move",
 	32: "Illegal_Special_Attack",
-	33: "Illegal_Field",
-	34: "Illegal_Ship_Index",
 	37: "Illegal_Game_Definition",
 	38: "Illegal_Ship_Placement",
 	39: "Illegal_Attack",
@@ -37,7 +35,8 @@ orientationCodes = {
 	Orientation.NORTH: "N",
 	Orientation.WEST:  "W",
 	Orientation.SOUTH: "S",
-	Orientation.EAST:  "E"}
+	Orientation.EAST:  "E"
+}
 
 class ServerHandler:
 
@@ -265,6 +264,12 @@ class ServerHandler:
 					elif status is 11 or status is 21 or status is 22 or status is 23 or status is 24 or status is 31 \
 							or status is 32 or status is 33 or status is 34 or status is 39 or status is 41:
 						self.__backend.onGamePlayUpdate(status)
+
+					# field updates
+					elif status is 13:
+						self.onUpdateOwnFields(params)
+					elif status is 14:
+						self.onUpdateEnemyFields(params)
 
 					# bad error stuff
 					#  - Message_Not_Recognized
