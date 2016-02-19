@@ -476,7 +476,7 @@ class MainForm(QWidget):
 		self.__moveEastBtn.setEnabled(value)
 
 	def __enableGamePlayButtons(self):
-		self.__setGameButtons(True)
+		self.__setGamePlayButtons(True)
 
 	def __disableGamePlayButtons(self):
 		self.__setGamePlayButtons(False)
@@ -534,7 +534,7 @@ class MainForm(QWidget):
 			cb.onAction = lambda shipId: self.__onUpdateShipList(shipId)
 			self.__backend.registerShipUpdateCallback(cb)
 		elif status is ClientStatus.OWNTURN:
-			self.__status.setText("It is your turn.")
+			self.__statusLbl.setText("It is your turn.")
 			self.__enableGamePlayButtons()
 		elif status is ClientStatus.OPPONENTSTURN:
 			self.__statusLbl.setText("Please wait for your opponent.")
@@ -584,11 +584,8 @@ class MainForm(QWidget):
 		#self.__backend.connect()
 		"""
 
-	def __attackResponse(self, success, result):
-		pass
-
 	def __attack(self):
-		self.__waitForAttack = True
+		self.__viewModel.__waitForAttack = True
 
 	def __specialAttack(self):
 		pass
