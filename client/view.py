@@ -306,16 +306,16 @@ class OwnPlayingFieldWidget(PlayingFieldWidget):
 
 	def _drawPlayingField(self, painter):
 
-		# fill each field with fog
+		# fill each field with water
 		for i in range(1, self._fieldLength + 1):
 			for j in range(1, self._fieldLength + 1):
-				painter.setBrush(QColor(230, 230, 230))
+				painter.setBrush(QColor(0, 191, 255))
 				painter.drawRect(i * self._fieldSize, j * self._fieldSize, self._fieldSize, self._fieldSize)
 
 		# draw unfogged
 		self._getUnfogged()
 		for field in self._unfogged:
-			painter.setBrush(QColor(0, 191, 255))
+			painter.setBrush(QColor(125, 0, 0))
 			painter.drawRect((field.x + 1) * self._fieldSize, (16 - field.y) * self._fieldSize, self._fieldSize,
 							 self._fieldSize)
 
