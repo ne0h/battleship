@@ -485,6 +485,9 @@ class PlayingField:
 
 		return self.__ships.add(bow, rear)
 
+	def moreShipsLeftToPlace(self):
+		return self.__ships.moreShipsLeftToPlace()
+
 	def unfog(self, fields):
 		self.__unfogged + fields
 
