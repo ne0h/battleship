@@ -230,9 +230,9 @@ class ShipList:
 
 		# check if the length of the potential ship is valid
 		if bow.x is rear.x:
-			length = int(math.fabs(bow.y - rear.y)) + 1
+			length = abs(bow.y - rear.y) + 1
 		else:
-			length = int(math.fabs(bow.x - rear.x)) + 1
+			length = abs(bow.x - rear.x) + 1
 
 		if length < 2 or length > 5:
 			logging.error("This type of ship does not exist.")
@@ -273,9 +273,9 @@ class ShipList:
 		import math
 
 		if bow.x is rear.x:
-			length = int(math.fabs(bow.y - rear.y)) + 1
+			length = abs(bow.y - rear.y) + 1
 		else:
-			length = int(math.fabs(bow.x - rear.x)) + 1
+			length = abs(bow.x - rear.x) + 1
 
 		if not self.__testShipPlacement(bow, rear):
 			return -1, True

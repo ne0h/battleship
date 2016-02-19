@@ -248,6 +248,9 @@ class ClientHandler:
         return playerid
 
     def __init_board(self, params):
+        logging.debug('__init_board()')
+        #logging.debug('X'*2**8)
+
         shipx = 'ship_{}_x'
         shipy = 'ship_{}_y'
         shipdir = 'ship_{}_direction'
@@ -260,10 +263,14 @@ class ClientHandler:
         # init board
         left = True
         for id in range(0, 10):
-            x = params[shipx.format(i)]
-            y = params[shipy.format(i)]
-            dir = params[shipdir.format(i)]
+            x = params[shipx.format(id)]
+            y = params[shipy.format(id)]
+            dir = params[shipdir.format(id)]
+            logging.debug('self.__lobby_model :: {}'.format(repr(self.__lobby_model)))
+            logging.debug('self.__lobby_model.get_game(self.__game) :: {}'.format(repr(self.__lobby_model.get_game(self.__game))))
+            logging.debug('self.__game :: {}'.format(repr(self.__game)))
             suc, left = self.__lobby_model.get_game(self.__game).place_ship(self.__player, x, y, dir, id)
+
             # catch illegal placement
             if suc == -1:
                 logging.debug("Nonsense ship placement.")

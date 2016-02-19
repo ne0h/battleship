@@ -72,13 +72,13 @@ class Game:
 
         bow, rear = self.__x_y_direction_id_to_bow_rear(x, y, direction, id)
 
-        res = self.__get_field_by_player(player).placeShip(bow, rear)
+        suc, left = self.__get_field_by_player(player).placeShip(bow, rear)
 
         # trigger on_game_start if ship placement is done
         if self.__is_game_preparation_done():
             self.__notify_all(GameEvent.on_ship_edit)
 
-        return res is not None
+        return suc, left
 
     def move_ship(self, player, id, direction):
         field = self.__get_field_by_player(player)
@@ -116,16 +116,16 @@ class Game:
         elif 6 <= id <= 9:
             length = 2
 
-        bow = playingfield.Field(x, y)
+        bow = playingfield.Field(int(x), int(y))
 
         if direction == "N":
-            rear = playingfield.Field(x, y + (length - 1))
+            rear = playingfield.Field(int(x), int(y) + (length - 1))
         elif direction == "S":
-            rear = playingfield.Field(x, y - (length - 1))
+            rear = playingfield.Field(int(x), int(y) - (length - 1))
         elif direction == "E":
-            rear = playingfield.Field(x + (length - 1), y)
+            rear = playingfield.Field(int(x) + (length - 1), int(y))
         elif direction == "W":
-            rear = playingfield.Field(x - (length - 1), y)
+            rear = playingfield.Field(int(x) - (length - 1), int(y))
 
         return bow, rear
 
