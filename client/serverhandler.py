@@ -179,8 +179,8 @@ class ServerHandler:
 		
 		i = 0
 		for ship in ships:
-			params["ship_" + str(i) + "_x"] = str(ship.bow.x)
-			params["ship_" + str(i) + "_y"] = str(ship.bow.y)
+			params["ship_" + str(i) + "_x"] = str(ship.rear.x)
+			params["ship_" + str(i) + "_y"] = str(ship.rear.y)
 			params["ship_" + str(i) + "_direction"] = orientationCodes[ship.orientation]
 			i += 1
 
