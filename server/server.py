@@ -248,14 +248,32 @@ class ClientHandler:
         return playerid
 
     def __init_board(self, params):
+        shipx = 'ship_{}_x'
+        shipy = 'ship_{}_y'
+        shipdir = 'ship_{}_direction'
         if not self.__expect_parameter(
-            ['ship_{}_x'.format(i) for i in range(0, 10)] +
-            ['ship_{}_y'.format(i) for i in range(0, 10)] +
-            ['ship_{}_direction'.format(i) for i in range(0, 10)], params):
+            [shipx.format(i) for i in range(0, 10)] +
+            [shipy.format(i) for i in range(0, 10)] +
+            [shipdir.format(i) for i in range(0, 10)], params):
             return
 
-        # TODO init board
-        
+        # init board
+        left = True
+        for id in range(0, 10):
+            x = params[shipx.format(i)]
+            y = params[shipy.format(i)]
+            dir = params[shipdir.format(i)]
+            suc, left = self.__lobby_model.get_game(self.__game).place_ship(self.__player, x, y, dir, id)
+            # catch illegal placement
+            if suc == -1:
+                logging.debug("Nonsense ship placement.")
+                self.__send(self.__message_parser.encode('report', {'status': '38'}))
+                return
+
+        if left:
+            logging.debug("Something is still wrong with ship placement.")
+            self.__send(self.__message_parser.encode('report', {'status': '38'}))
+            return
 
         # ack init board
         self.__send(self.__message_parser.encode('report', {'status': '29'}))

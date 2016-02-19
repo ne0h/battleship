@@ -68,7 +68,7 @@ class Game:
         return False
 
     def place_ship(self, player, x, y, direction, id):
-        logging.debug('place_ship()')
+        logging.debug('place_ship(p={}, x={}, y={}, dir={}, id={})'.format(player, x, y, direction, id))
 
         bow, rear = self.__x_y_direction_id_to_bow_rear(x, y, direction, id)
 
@@ -104,7 +104,7 @@ class Game:
         return None
 
     def __is_game_preparation_done(self):
-        return self.__first_field.moreShipsLeftToPlace() and self.__second_field.moreShipsLeftToPlace()
+        return not (self.__first_field.moreShipsLeftToPlace() and self.__second_field.moreShipsLeftToPlace())
 
     def __x_y_direction_id_to_bow_rear(self, x, y, direction, id):
         if id == 0:
