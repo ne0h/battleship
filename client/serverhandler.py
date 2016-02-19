@@ -266,6 +266,12 @@ class ServerHandler:
 							or status is 32 or status is 33 or status is 34 or status is 39 or status is 41:
 						self.__backend.onGamePlayUpdate(status)
 
+					# field updates
+					elif status is 13:
+						self.onUpdateOwnFields(params)
+					elif status is 14:
+						self.onUpdateEnemyFields(params)
+
 					# bad error stuff
 					#  - Message_Not_Recognized
 					#  - Not_In_Any_Game (what? wtf? :D)

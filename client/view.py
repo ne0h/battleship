@@ -238,7 +238,7 @@ class PlayingFieldWidget(QWidget):
 		self.setMaximumHeight(self._fieldSize * 18 + 1)
 
 	@abc.abstractmethod
-	def _getShips(self):
+	def _getUnfogged(self):
 		pass
 
 	def paintEvent(self, event):
@@ -251,50 +251,6 @@ class PlayingFieldWidget(QWidget):
 
 		painter = QPainter()
 		painter.begin(self)
-		self._drawPlayingField(painter)
-		painter.end()
-
-	def _drawPlayingField(self, painter):
-
-		# fill each field with water
-		for i in range(1, self._fieldLength + 1):
-			for j in range(1, self._fieldLength + 1):
-				if self._backend.isUnfogged(Field(i - 1, j - 1)):
-					painter.setBrush(QColor(0, 191, 255))
-				else:
-					painter.setBrush(QColor(230, 230, 230))
-				painter.drawRect(i * self._fieldSize, j * self._fieldSize, self._fieldSize, self._fieldSize)
-
-		# add ships
-		painter.setBrush(QColor(210, 105, 30))
-		for ship in self._getShips():
-			import os
-			dir = os.path.join(os.path.dirname(os.path.realpath(__file__)))
-
-			# draw bow
-			bow = ship.bow
-			if ship.isDamaged(bow):
-				pass
-			else:
-				painter.drawPixmap((bow.x + 1) * self._fieldSize, (16 - bow.y) * self._fieldSize, self._fieldSize,
-									self._fieldSize, QPixmap(dir + "/img/bow_" + ship.orientation.value + ".png"))
-
-			# draw rear
-			rear = ship.rear
-			if ship.isDamaged(rear):
-				pass
-			else:
-				painter.drawPixmap((rear.x + 1) * self._fieldSize, (16 - rear.y) * self._fieldSize, self._fieldSize,
-									self._fieldSize, QPixmap(dir + "/img/rear_" + ship.orientation.value + ".png"))
-
-			# draw the rest
-			for middle in ship.middles:
-				if ship.isDamaged(middle):
-					pass
-				else:
-					painter.drawPixmap((middle.x + 1) * self._fieldSize, (16 - middle.y) * self._fieldSize,
-										self._fieldSize, self._fieldSize,
-										QPixmap(dir + "/img/middle_" + ship.orientation.value + ".png"))
 
 		# draw horizontal and vertical enumeration
 		painter.setPen(QColor(0, 0, 0))
@@ -315,6 +271,13 @@ class PlayingFieldWidget(QWidget):
 			box = QRectF(17*self._fieldSize, (17-i)*self._fieldSize, self._fieldSize, self._fieldSize)
 			painter.drawText(box, Qt.AlignCenter, str(i))
 
+		self._drawPlayingField(painter)
+		painter.end()
+
+	@abc.abstractmethod
+	def _drawPlayingField(self, painter):
+		pass
+
 	def _mapClickToField(self, mouseEvent):
 		x, y  = mouseEvent.x() // self._fieldSize, mouseEvent.y() // self._fieldSize
 		return Field(x - 1, 16 - y)
@@ -334,6 +297,55 @@ class OwnPlayingFieldWidget(PlayingFieldWidget):
 	"""
 	Shows the playing field of the user.
 	"""
+
+	def _getUnfogged(self):
+		self._unfogged = self._backend.getOwnUnfogged()
+
+	def _drawPlayingField(self, painter):
+
+		# fill each field with fog
+		for i in range(1, self._fieldLength + 1):
+			for j in range(1, self._fieldLength + 1):
+				painter.setBrush(QColor(230, 230, 230))
+				painter.drawRect(i * self._fieldSize, j * self._fieldSize, self._fieldSize, self._fieldSize)
+
+		# draw unfogged
+		self._getUnfogged()
+		for field in self._unfogged:
+			painter.setBrush(QColor(0, 191, 255))
+			painter.drawRect((field.x - 1) * self._fieldSize, (field.y - 1) * self._fieldSize, self._fieldSize,
+							 self._fieldSize)
+
+		# add ships
+		painter.setBrush(QColor(210, 105, 30))
+		for ship in self._backend.getOwnShips():
+			import os
+			dir = os.path.join(os.path.dirname(os.path.realpath(__file__)))
+
+			# draw bow
+			bow = ship.bow
+			if ship.isDamaged(bow):
+				pass
+			else:
+				painter.drawPixmap((bow.x + 1) * self._fieldSize, (16 - bow.y) * self._fieldSize, self._fieldSize,
+									self._fieldSize, QPixmap(dir + "/img/bow_" + ship.orientation.value + ".png"))
+
+			# draw rear
+			rear = ship.rear
+			if ship.isDamaged(rear):
+				pass
+			else:
+				painter.drawPixmap((rear.x + 1) * self._fieldSize, (16 - rear.y) * self._fieldSize, self._fieldSize,
+									self._fieldSize, QPixmap(dir + "/img/rear_" + ship.orientation.value + ".png"))
+
+			# draw the rest of the ships
+			for middle in ship.middles:
+				if ship.isDamaged(middle):
+					pass
+				else:
+					painter.drawPixmap((middle.x + 1) * self._fieldSize, (16 - middle.y) * self._fieldSize,
+										self._fieldSize, self._fieldSize,
+										QPixmap(dir + "/img/middle_" + ship.orientation.value + ".png"))
 
 	def mousePressEvent(self, mouseEvent):
 		"""
@@ -391,9 +403,6 @@ class OwnPlayingFieldWidget(PlayingFieldWidget):
 		if self._devmode:
 			self.repaint()
 
-	def _getShips(self):
-		return self._backend.getOwnShips()
-
 	def __init__(self, backend, viewModel, fieldLength, devmode):
 		PlayingFieldWidget.__init__(self, backend, viewModel, fieldLength, devmode)
 
@@ -401,6 +410,21 @@ class EnemeysPlayingFieldWidget(PlayingFieldWidget):
 	"""
 	Shows the playing field of the enemey.
 	"""
+
+	def _getUnfogged(self):
+		self._unfogged = self._backend.getEnemyUnfogged()
+
+	def _drawPlayingField(self, painter):
+		fields = self._backend.getEnemyPlayingField()
+		for i in range(1, self._fieldLength + 1):
+			for j in range(1, self._fieldLength + 1):
+				status = fields[i - 1][j - 1]
+				if status is FieldStatus.FOG:
+					painter.setBrush(QColor(230, 230, 230))
+					painter.drawRect(i * self._fieldSize, j * self._fieldSize, self._fieldSize, self._fieldSize)
+				elif status is FieldStatus.WATER:
+					painter.setBrush(QColor(0, 191, 255))
+					painter.drawRect(i * self._fieldSize, j * self._fieldSize, self._fieldSize, self._fieldSize)
 
 	def mousePressEvent(self, mouseEvent):
 		"""
@@ -427,9 +451,6 @@ class EnemeysPlayingFieldWidget(PlayingFieldWidget):
 
 		if self._devmode:
 			self.repaint()
-
-	def _getShips(self):
-		return self._backend.getEnemeysShips()
 
 	def __init__(self, backend, viewModel, fieldLength, devmode):
 		PlayingFieldWidget.__init__(self, backend, viewModel, fieldLength, devmode)
