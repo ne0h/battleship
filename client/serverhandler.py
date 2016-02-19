@@ -29,7 +29,8 @@ reportCodes = {
 	41: "Not_Your_Turn",
 	43: "Not_In_Any_Game",
 	47: "Game_Join_Denied",
-	48: "Game_Preparation_Ended"}
+	48: "Game_Preparation_Ended"
+}
 
 orientationCodes = {
 	Orientation.NORTH: "N",

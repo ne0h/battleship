@@ -500,25 +500,27 @@ class PlayingField:
 	def onAttack(self, params):
 		# TODO: validate input
 		wasSpecialAttack = True if params["was_special_attack"] == "true" else False
-		fields = [Field(int(params["coordinate_x"]), int(params["coordinate_y"]))]
+		field  = Field(int(params["coordinate_x"]), int(params["coordinate_y"]))
+		fields = [field]
 
 		# add other fields if special attack
 		if wasSpecialAttack:
-			fields += [field, Field(field.x+1, field.y), Field(field.x+2, field.y),
-				  Field(field.x+1, field.y), Field(field.x+1, field.y+1), Field(field.x+1, field.y+2),
+			print(params)
+			fields += [Field(field.x, field.y + 1), Field(field.x, field.y + 2),
+				  Field(field.x + 1, field.y), Field(field.x + 1, field.y + 1), Field(field.x + 1, field.y + 2),
 				  Field(field.x+2, field.y), Field(field.x+2, field.y+1), Field(field.x+2, field.y+2)]
 
-		for field in  fields:
-			status, ship = self.__getFieldStatus(field)
-			logging.debug("Updating field '%s'" % field.toString())
+		for f in  fields:
+			status, ship = self.__getFieldStatus(f)
+			logging.debug("Updating field '%s'" % f.toString())
 
 			if status is FieldStatus.SHIP:
 				result = FieldStatus.DAMAGEDSHIP
-				ship.addDamage(field)
+				ship.addDamage(f)
 
 			# unfog field
-			if field not in self.__unfogged:
-				self.__unfogged.append(field)
+			if f not in self.__unfogged:
+				self.__unfogged.append(f)
 
 	def unfog(self, fields):
 		self.__unfogged + fields

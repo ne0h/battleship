@@ -8,6 +8,8 @@ from playingfield import *
 class ViewModel:
 
 	def __init__(self):
+		self.specialAttacksLeft = 3
+
 		self.waitForShipPlacement = False
 		self.waitForAttack = False
 		self.waitForSpecialAttack = False
@@ -488,6 +490,9 @@ class MainForm(QWidget):
 		self.__moveSouthBtn.setEnabled(value)
 		self.__moveEastBtn.setEnabled(value)
 
+		if self.__viewModel.specialAttacksLeft < 1:
+			self.__specialAttackBtn.setEnabled(False)
+
 	def __enableGamePlayButtons(self):
 		self.__setGamePlayButtons(True)
 
@@ -607,6 +612,13 @@ class MainForm(QWidget):
 	def __specialAttack(self):
 		self.__viewModel.waitForSpecialAttack = True
 
+	def __onSpecialAttack(self):
+		logging.debug("Reduced special attacks left...")
+		self.__viewModel.specialAttacksLeft -= 1
+		self.__specialAttackBtn.setText("Special Attack (%s left)" % self.__viewModel.specialAttacksLeft)
+		if self.__viewModel.specialAttacksLeft < 1:
+			self.__specialAttackBtn.setEnabled(False)
+
 	def __moveShip(self):
 		self.__viewModel.waitForMove = True
 
@@ -678,7 +690,7 @@ class MainForm(QWidget):
 		self.__shipsWgt.setSortingEnabled(True)
 		self.__attackBtn = QPushButton("Attack")
 		self.__attackBtn.clicked.connect(self.__attack)
-		self.__specialAttackBtn = QPushButton("Special Attack")
+		self.__specialAttackBtn = QPushButton("Special Attack (%s left)" % self.__viewModel.specialAttacksLeft)
 		self.__specialAttackBtn.clicked.connect(self.__specialAttack)
 
 		self.__moveNorthBtn = QPushButton("N")
@@ -823,3 +835,7 @@ class MainForm(QWidget):
 		opponentJoinedCb = Callback()
 		opponentJoinedCb.onAction = lambda: self.__updatePlayersLbl()
 		self.__backend.registerOpponentJoinedGameCallback(opponentJoinedCb)
+
+		specialAttackCb = Callback()
+		specialAttackCb.onAction = lambda: self.__onSpecialAttack()
+		self.__backend.registerSpecialAttackCallback(specialAttackCb)

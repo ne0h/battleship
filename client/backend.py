@@ -388,6 +388,8 @@ class Backend:
 		if status is 11:
 			self.__updateClientStatus(ClientStatus.OWNTURN)
 		elif status is 21 or status is 22 or status is 24:
+			if status is 24:
+				self.__onSpecialAttack()
 			self.__updateClientStatus(ClientStatus.OPPONENTSTURN)
 		elif status is 31:
 			self.__onError("Move not allowed")
@@ -533,6 +535,13 @@ class Backend:
 	def registerRepaintCallback(self, callback):
 		self.__repaintCallbacks.append(callback)
 
+	def registerSpecialAttackCallback(self, callback):
+		self.__specialAttackCallbacks.append(callback)
+
+	def __onSpecialAttack(self):
+		for cb in self.__specialAttackCallbacks:
+			cb.onAction()
+
 	def __onRepaint(self):
 		for cb in self.__repaintCallbacks:
 			cb.onAction()
@@ -612,6 +621,7 @@ class Backend:
 		self.__errorCallbacks = []
 		self.__opponentJoinedGameCallbacks = []
 		self.__repaintCallbacks = []
+		self.__specialAttackCallbacks = []
 
 		self.__serverHandler = ServerHandler(self)		
 		if hostname and port and nickname:
