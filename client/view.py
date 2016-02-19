@@ -314,7 +314,7 @@ class OwnPlayingFieldWidget(PlayingFieldWidget):
 		self._getUnfogged()
 		for field in self._unfogged:
 			painter.setBrush(QColor(0, 191, 255))
-			painter.drawRect((field.x) * self._fieldSize, (16 - field.y) * self._fieldSize, self._fieldSize,
+			painter.drawRect((field.x + 1) * self._fieldSize, (16 - field.y) * self._fieldSize, self._fieldSize,
 							 self._fieldSize)
 
 		# add ships
@@ -416,6 +416,9 @@ class EnemeysPlayingFieldWidget(PlayingFieldWidget):
 		self._unfogged = self._backend.getEnemyUnfogged()
 
 	def _drawPlayingField(self, painter):
+		import os
+		dir = os.path.join(os.path.dirname(os.path.realpath(__file__)))
+
 		fields = self._backend.getEnemyPlayingField()
 		for i in range(1, self._fieldLength + 1):
 			for j in range(1, self._fieldLength + 1):
@@ -426,6 +429,16 @@ class EnemeysPlayingFieldWidget(PlayingFieldWidget):
 				elif status is FieldStatus.WATER:
 					painter.setBrush(QColor(0, 191, 255))
 					painter.drawRect(i * self._fieldSize, j * self._fieldSize, self._fieldSize, self._fieldSize)
+				elif status is FieldStatus.SHIP:
+					painter.setBrush(QColor(0, 191, 255))
+					painter.drawRect(i * self._fieldSize, j * self._fieldSize, self._fieldSize, self._fieldSize)
+					painter.drawPixmap(i * self._fieldSize, j * self._fieldSize, self._fieldSize,
+									   self._fieldSize, QPixmap(dir + "/img/mainpart.png"))
+				elif status is FieldStatus.DAMAGEDSHIP:
+					painter.setBrush(QColor(0, 191, 255))
+					painter.drawRect(i * self._fieldSize, j * self._fieldSize, self._fieldSize, self._fieldSize)
+					painter.drawPixmap(i * self._fieldSize, j * self._fieldSize, self._fieldSize,
+									   self._fieldSize, QPixmap(dir + "/img/mainpart_damaged.png"))
 
 	def mousePressEvent(self, mouseEvent):
 		"""
@@ -507,12 +520,12 @@ class MainForm(QWidget):
 			ship = self.__backend.getOwnShip(shipId)
 			self.__shipsWgt.addItem("#%s: %s:%s" % (shipId, ship.bow.toString(), ship.rear.toString()))
 
+	def __onRepaint(self):
+		self.__ownPlayingFieldWgt.update()
+		self.__enemeysPlayingFieldWgt.update()
+
 	def __onUpdateClientStatus(self):
 		from backend import ClientStatus
-
-		# repaints
-		self.__ownPlayingFieldWgt.repaint()
-		self.__enemeysPlayingFieldWgt.repaint()
 
 		status = self.__backend.clientStatus
 		if status is ClientStatus.NOTCONNECTED:
@@ -659,8 +672,9 @@ class MainForm(QWidget):
 		# shiplist with game play buttons
 		#
 		shipsBox = QGroupBox("Your ships")
+		shipsBox.setMaximumWidth(300)
 		self.__shipsWgt = QListWidget()
-		self.__shipsWgt.setMaximumWidth(200)
+		self.__shipsWgt.setMaximumWidth(300)
 		self.__shipsWgt.setSortingEnabled(True)
 		self.__attackBtn = QPushButton("Attack")
 		self.__attackBtn.clicked.connect(self.__attack)
@@ -792,6 +806,10 @@ class MainForm(QWidget):
 		clientStatusCb.onAction = lambda: self.__onUpdateClientStatus()
 		self.__backend.registerClientStatusCallback(clientStatusCb)
 		self.__onUpdateClientStatus()
+
+		repaintCb = Callback()
+		repaintCb.onAction = lambda: self.__onRepaint()
+		self.__backend.registerRepaintCallback(repaintCb)
 
 		chatCb = Callback()
 		chatCb.onAction = lambda authorId, timestamp, message: self.__onIncomingChatMessage(authorId, timestamp,

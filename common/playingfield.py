@@ -497,15 +497,28 @@ class PlayingField:
 	def moreShipsLeftToPlace(self):
 		return self.__ships.moreShipsLeftToPlace()
 
-	def onUpdate(self, params):
+	def onAttack(self, params):
 		# TODO: validate input
 		wasSpecialAttack = True if params["was_special_attack"] == "true" else False
-		field = Field(int(params["coordinate_x"]), int(params["coordinate_y"]))
+		fields = [Field(int(params["coordinate_x"]), int(params["coordinate_y"]))]
 
+		# add other fields if special attack
 		if wasSpecialAttack:
-			self.specialAttack(field)
-		else:
-			self.attack(field)
+			fields += [field, Field(field.x+1, field.y), Field(field.x+2, field.y),
+				  Field(field.x+1, field.y), Field(field.x+1, field.y+1), Field(field.x+1, field.y+2),
+				  Field(field.x+2, field.y), Field(field.x+2, field.y+1), Field(field.x+2, field.y+2)]
+
+		for field in  fields:
+			status, ship = self.__getFieldStatus(field)
+			logging.debug("Updating field '%s'" % field.toString())
+
+			if status is FieldStatus.SHIP:
+				result = FieldStatus.DAMAGEDSHIP
+				ship.addDamage(field)
+
+			# unfog field
+			if field not in self.__unfogged:
+				self.__unfogged.append(field)
 
 	def unfog(self, fields):
 		self.__unfogged + fields
@@ -529,12 +542,12 @@ class EnemyPlayingField:
 	def getUnfogged(self):
 		return self.__unfogged
 
-	def onUpdate(self, params):
+	def onAttack(self, params):
 		for i in range(0, int(params["number_of_updated_fields"])):
 			x = int(params["field_%s_x" % i])
 			y = int(params["field_%s_y" % i])
 			status = conditionCodes[params["field_%s_condition" % i]]
-			logging.debug("Update at enemy field: (%s|%s) %s" % (x, y, status))
+			logging.debug("Update at enemy field '%s' to '%s'" % (Field(x, y).toString(), status))
 			self.__fields[x][y] = status
 
 	def __init__(self, fieldLength):

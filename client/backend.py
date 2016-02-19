@@ -132,7 +132,8 @@ class Backend:
 		shipId, moreShips = self.__ownPlayingField.placeShip(bow, rear)
 		if 0 <= shipId < 10:
 			self.shipUpdate(shipId)
-		if not moreShips:
+		if not moreShips and not self.__boardAlreadySent:
+			self.__boardAlreadySent = True
 			self.__serverHandler.boardInit(self.__ownPlayingField.getShips())
 			self.__updateClientStatus(ClientStatus.WAITINGFOROPPONENT)
 
@@ -513,10 +514,12 @@ class Backend:
 		return self.__ownPlayingField.isUnfogged(field)
 
 	def onUpdateOwnFields(self, params):
-		self.__ownPlayingField.onUpdate(params)
+		self.__ownPlayingField.onAttack(params)
+		self.__onRepaint()
 
 	def onUpdateEnemyFields(self, params):
-		self.__enemeysPlayingField.onUpdate(params)
+		self.__enemeysPlayingField.onAttack(params)
+		self.__onRepaint()
 
 	def getOwnUnfogged(self):
 		return self.__ownPlayingField.getUnfogged()
@@ -526,6 +529,13 @@ class Backend:
 
 	def onBeginShipPlacing(self):
 		self.__updateClientStatus(ClientStatus.PREPARATIONS)
+
+	def registerRepaintCallback(self, callback):
+		self.__repaintCallbacks.append(callback)
+
+	def __onRepaint(self):
+		for cb in self.__repaintCallbacks:
+			cb.onAction()
 
 	def __onDevMode(self, result):
 		pass
@@ -580,6 +590,7 @@ class Backend:
 		self.__ownPlayingField = PlayingField(length)
 		self.__enemeysPlayingField = EnemyPlayingField(length)
 		self.clientStatus = ClientStatus.NOTCONNECTED
+		self.__boardAlreadySent = False
 
 		# callback stuff
 		self.__udpDiscoveryCallbacks = []
@@ -600,6 +611,7 @@ class Backend:
 		self.__joinGameCallbacks = []
 		self.__errorCallbacks = []
 		self.__opponentJoinedGameCallbacks = []
+		self.__repaintCallbacks = []
 
 		self.__serverHandler = ServerHandler(self)		
 		if hostname and port and nickname:
