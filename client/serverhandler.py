@@ -35,7 +35,8 @@ orientationCodes = {
 	Orientation.NORTH: "N",
 	Orientation.WEST:  "W",
 	Orientation.SOUTH: "S",
-	Orientation.EAST:  "E"}
+	Orientation.EAST:  "E"
+}
 
 class ServerHandler:
 

@@ -17,6 +17,12 @@ class FieldStatus(Enum):
 	SHIP = "ship"
 	DAMAGEDSHIP = "damagedship"
 
+conditionCodes = {
+	"free":      FieldStatus.WATER,
+	"damaged":   FieldStatus.DAMAGEDSHIP,
+	"undamaged": FieldStatus.SHIP
+}
+
 class Field:
 	"""
 	Describes a single field on the playing field.
@@ -520,8 +526,13 @@ class EnemyPlayingField:
 	def getUnfogged(self):
 		return self.__unfogged
 
-	def onUpdate(self, fields):
-		pass
+	def onUpdate(self, params):
+		for i in range(0, int(params["number_of_updated_fields"])):
+			x = params["field_%s_x" % i]
+			y = params["field_%s_y" % i]
+			status = conditionCodes[params["field_%s_condition" % i]]
+			logging.debug("Update at enemy field: (%s | %s) %s" % (x, y, status))
+			self.__fields[x][y] = status
 
 	def __init__(self, fieldLength):
 		self.__fieldLength = fieldLength
