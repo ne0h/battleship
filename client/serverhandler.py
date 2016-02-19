@@ -244,7 +244,7 @@ class ServerHandler:
 					elif status is 28:														# Successful_Game_Create
 						self.__backend.onCreateGame(True)
 					elif status is 29 or status is 38:										# Successful_Ship_Placement
-						self.__backend.placeShipsResponse(status is 29)						# or Illegal_Ship_Placement
+						self.__backend.onPlaceShips(status is 29)							# or Illegal_Ship_Placement
 					elif status is 37:														# Illegal_Game_Definition
 						self.__backend.onCreateGame(False)
 					elif status is 48:														# Game_Preparation_Ended

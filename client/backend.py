@@ -138,6 +138,10 @@ class Backend:
 
 		return moreShips
 
+	def onPlaceShips(self, success):
+		if not success:
+			self.__onError("Failed to place ships")
+
 	def registerClientStatusCallback(self, callback):
 		"""
 		Registers a new callback that will be called when the status of the client updates.

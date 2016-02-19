@@ -478,7 +478,7 @@ class MainForm(QWidget):
 		# validate if the ship is already in the list
 		found = False
 		for i in range(0, self.__shipsWgt.count()):
-			if self.__shipsWgt.item(i).text().startswith("#%s:" % (shipId)):
+			if self.__shipsWgt.item(i).text().startswith("#%s:" % shipId):
 				found = True
 				break
 		if not found:
@@ -508,6 +508,8 @@ class MainForm(QWidget):
 		elif status is ClientStatus.WAITINGFOROPPONENT:
 			self.__statusLbl.setText("Placement of ships successful. Waiting for opponent now.")
 			self.__placeShipBtn.setEnabled(False)
+			self.__connectBtn.setEnabled(False)
+			self.__lobbyBtn.setEnabled(False)
 		elif status is ClientStatus.OWNTURN:
 			self.__status.setText("It is your turn.")
 			self.__enableGamePlayButtons()
