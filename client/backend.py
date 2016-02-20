@@ -281,6 +281,12 @@ class Backend:
 			cb.onAction(success)
 		self.__createGameCallbacks = []
 
+	def onCapitulate(self):
+		for cb in self.__capitulateCallbacks:
+			cb.onAction()
+		self.__capitulateCallbacks = []
+		self.__updateClientStatus(ClientStatus.YOULOSE)
+
 	def leaveGame(self, callback):
 		"""
 		Leaves the current game and registers a callback to wait for an answer from the server.
@@ -297,10 +303,11 @@ class Backend:
 		Is called when the client received an answer to the leave game query.
 		"""
 
+		self.resetClient()
 		for cb in self.__leaveGameCallbacks:
 			cb.onAction()
 		self.__leaveGameCallbacks = []
-		self.clientStatus = ClientStatus.NOGAMERUNNING
+		self.__updateClientStatus(ClientStatus.NOGAMERUNNING)
 
 	def close(self):
 		"""
@@ -403,7 +410,8 @@ class Backend:
 		for cb in self.__gamePlayCallbacks:
 			cb.onAction(status)
 
-	def capitulate(self):
+	def capitulate(self, callback):
+		self.__capitulateCallbacks.append(callback)
 		self.__serverHandler.capitulate()
 
 	def registerGamePreparationsEndedCallback(self, callback):
@@ -552,7 +560,9 @@ class Backend:
 			cb.onAction()
 
 	def resetClient(self):
-		pass
+		logging.info("Resetting backend...")
+		self.__setup()
+		self.__updateClientStatus(ClientStatus.NOGAMERUNNING)
 
 	def disconnect(self):
 		self.__serverHandler.disconnect()
@@ -603,15 +613,19 @@ class Backend:
 		self.placeShip(Field(10, 3), Field(10, 4))
 		self.placeShip(Field(11, 3), Field(11, 4))
 
+	def __setup(self):
+		self.__ownPlayingField = PlayingField(self.__length)
+		self.__enemeysPlayingField = EnemyPlayingField(self.__length)
+		self.clientStatus = ClientStatus.NOTCONNECTED
+		self.__boardAlreadySent = False
+
 	def __init__(self, length, hostname, port, nickname, devmode=False):
 		from serverhandler import ServerHandler
 		from udpdiscoverer import UDPDiscoverer
 
+		self.__length = length
 		self.lobby = Lobby(nickname)
-		self.__ownPlayingField = PlayingField(length)
-		self.__enemeysPlayingField = EnemyPlayingField(length)
-		self.clientStatus = ClientStatus.NOTCONNECTED
-		self.__boardAlreadySent = False
+		self.__setup()
 
 		# callback stuff
 		self.__udpDiscoveryCallbacks = []
@@ -624,6 +638,7 @@ class Backend:
 		self.__joinGameCallbacks = []
 		self.__createGameCallbacks = []
 		self.__leaveGameCallbacks = []
+		self.__capitulateCallbacks = []
 		self.__connectCallbacks = []
 		self.__gamePreparationsEndedCallbacks = []
 		self.__gamePlayCallbacks = []

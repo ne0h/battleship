@@ -65,7 +65,7 @@ class ConnectDialog(QDialog):
 		self.__nicknameIpt = QLineEdit()
 		self.__nicknameIpt.setFixedWidth(100)
 		self.__nicknameIpt.setFixedHeight(20)
-		self.__nicknameIpt.setText("Max")
+		self.__nicknameIpt.setText(self.__backend.lobby.getOwnNickname())
 		self.__nicknameIpt.setPlaceholderText("Nickname")
 
 		self.__hostnameIpt = QLineEdit()
@@ -581,47 +581,46 @@ class MainForm(QWidget):
 		elif status is ClientStatus.YOULOSE:
 			self.__statusLbl.setText("You lose!")
 			self.__disableGamePlayButtons()
-			# TODO: show as messagebox and ...
 			# TODO: ... reset client
 
-	def __leaveGameCalled(self):
+	def __onLeaveGame(self):
 		logging.info("Game aborted. Preparing client for a new game.")
-		self.__showMessageBox("Game aborted", "Game aborted. You can now join or create another one.")
 		self.__resetClient()
+
+	def __onCapitulate(self):
+		logging.info("Capitulated. Preparing client for a new game.")
+		self.__leaveGameBtn.setText("New Game")
 
 	def __leaveGame(self):
 		from backend import Callback
 
 		if self.__leaveGameBtn.text() == "Capitulate":
-			self.__backend.capitulate()
-		else:
+			self.__showMessageBox("Capitulation", "You capitulated.")
 			cb = Callback()
-			cb.onAction = lambda: self.__leaveGameCalled()
+			cb.onAction = lambda: self.__onCapitulate()
+			self.__backend.capitulate(cb)
+		elif self.__leaveGameBtn.text() == "New Game":
+			self.__resetClient()
+		else:
+			self.__showMessageBox("Game aborted", "Game aborted. You can now join or create another one.")
+			cb = Callback()
+			cb.onAction = lambda: self.__onLeaveGame()
 			self.__backend.leaveGame(cb)
 
 	def __resetClient(self):
+		logging.info("Resetting gui...")
+		self.__backend.resetClient()
+		self.__setup()
 		self.__lobbyBtn.setEnabled(True)
-		self.__placeShipBtn.setEnabled(False)
-		self.__leaveGameBtn.setEnabled(False)
 
 	def __connectCalled(self):
 		pass
 
 	def __openConnectDialog(self):
-		import sys
-
 		if not self.__connectDialogAlreadyOpen:
 			self.__connectDialogAlreadyOpen = True
 			ConnectDialog(self.__backend).exec_()
 			self.__connectDialogAlreadyOpen = False
-
-		"""
-		from backend import Callback
-
-		cb = Callback()
-		cb.onAction = lambda success: self.__connectCalled(success)
-		#self.__backend.connect()
-		"""
 
 	def __attack(self):
 		self.__viewModel.waitForAttack = True
@@ -678,13 +677,14 @@ class MainForm(QWidget):
 	def __moveEast(self):
 		self.__viewModel.waitForEast = True
 
-	def __setupGui(self, nickname, devmode):
+	def __setupGui(self):
 
 		#
 		# own playing field stuff
 		#
 		ownPlayingFieldBox = QGroupBox("Your own playing field")
-		self.__ownPlayingFieldWgt = OwnPlayingFieldWidget(self.__backend, self.__viewModel, self.__fieldLength, devmode)
+		self.__ownPlayingFieldWgt = OwnPlayingFieldWidget(self.__backend, self.__viewModel, self.__fieldLength,
+														  self.__devmode)
 		ownPlayingFieldLayout = QVBoxLayout()
 		ownPlayingFieldLayout.addWidget(self.__ownPlayingFieldWgt)
 		ownPlayingFieldBox.setLayout(ownPlayingFieldLayout)
@@ -693,7 +693,8 @@ class MainForm(QWidget):
 		# enemies playing field stuff
 		#
 		enemeysPlayingFieldBox = QGroupBox("Your enemey's playing field")
-		self.__enemeysPlayingFieldWgt = EnemeysPlayingFieldWidget(self.__backend, self.__viewModel, self.__fieldLength, devmode)
+		self.__enemeysPlayingFieldWgt = EnemeysPlayingFieldWidget(self.__backend, self.__viewModel, self.__fieldLength,
+																  self.__devmode)
 		enemiesPlayingFieldLayout = QVBoxLayout()
 		enemiesPlayingFieldLayout.addWidget(self.__enemeysPlayingFieldWgt)
 		enemeysPlayingFieldBox.setLayout(enemiesPlayingFieldLayout)
@@ -738,15 +739,12 @@ class MainForm(QWidget):
 		# buttons
 		self.__placeShipBtn = QPushButton("Place Ships")
 		self.__placeShipBtn.clicked.connect(self.__startPlaceShip)
-		self.__placeShipBtn.setEnabled(False)
 
 		self.__lobbyBtn = QPushButton("Lobby")
 		self.__lobbyBtn.clicked.connect(self.__openLobby)
-		self.__lobbyBtn.setEnabled(False)
 
 		self.__leaveGameBtn = QPushButton("Leave Game")
 		self.__leaveGameBtn.clicked.connect(self.__leaveGame)
-		self.__leaveGameBtn.setEnabled(False)
 
 		self.__connectBtn = QPushButton("Connect")
 		self.__connectBtn.clicked.connect(self.__openConnectDialog)
@@ -759,10 +757,7 @@ class MainForm(QWidget):
 
 		self.__playersLbl = QLabel()
 		self.__playersLbl.setStyleSheet("color: #00b")
-		if nickname:
-			self.__playersLbl.setText("Nickname: %s" % nickname)
-		else:
-			self.__playersLbl.setText("Nickname: Unnamed Player")
+		self.__playersLbl.setText("Nickname: %s" % self.__backend.lobby.getOwnNickname())
 
 		topLayout = QHBoxLayout()
 		topLayout.addWidget(self.__statusLbl)
@@ -817,6 +812,15 @@ class MainForm(QWidget):
 		self.setWindowTitle("Battleship++")
 		self.show()
 
+	def __setup(self):
+		self.__placeShipBtn.setEnabled(False)
+		self.__lobbyBtn.setEnabled(False)
+		self.__leaveGameBtn.setEnabled(False)
+		self.__shipsWgt.clear()
+
+		self.__ownPlayingFieldWgt.update()
+		self.__enemeysPlayingFieldWgt.update()
+
 	def closeEvent(self, event):
 		self.__backend.close()
 
@@ -824,13 +828,17 @@ class MainForm(QWidget):
 		from backend import Callback
 
 		self.__backend = backend
+		self.__fieldLength = fieldLength
+		self.__devmode = devmode
+
 		self.__viewModel = ViewModel()
 		self.__fieldLength = fieldLength
 		self.__connectDialogAlreadyOpen = False
 		self.__lobbyAlreadyOpen = False
 
 		super(MainForm, self).__init__()
-		self.__setupGui(nickname, devmode)
+		self.__setupGui()
+		self.__setup()
 
 		clientStatusCb = Callback()
 		clientStatusCb.onAction = lambda: self.__onUpdateClientStatus()

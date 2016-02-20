@@ -14,7 +14,7 @@ def setupArgparse():
 	parser.add_argument("-c", "--connect", metavar=("<HOSTNAME>", "<PORT>"),
 						help="Connect directly without settings dialog.", nargs=2, type=str)
 	parser.add_argument('-d', '--devmode', help="Dev mode.", action='store_true')
-	parser.add_argument('-n', '--nick', help="Nickname.", default="Max")
+	parser.add_argument('-n', '--nick', help="Nickname.", default="Nickname")
 
 	return parser
 

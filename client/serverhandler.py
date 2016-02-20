@@ -245,6 +245,8 @@ class ServerHandler:
 					# game creation stuff
 					elif status is 19:														# Game_Aborted
 						self.__backend.onLeaveGame()
+					elif status is 23:
+						self.__backend.onCapitulate()										# Surrender_Accepted
 					elif status is 27 or status is 47:										# Successful_Game_Join
 						self.__backend.onJoinGame(status is 27)								# or Game_Join_Denied
 					elif status is 28:														# Successful_Game_Create
