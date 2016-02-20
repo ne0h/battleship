@@ -551,6 +551,13 @@ class Backend:
 		for cb in self.__repaintCallbacks:
 			cb.onAction()
 
+	def resetClient(self):
+		pass
+
+	def disconnect(self):
+		self.__serverHandler.disconnect()
+		self.resetClient()
+
 	def __onDevMode(self, result):
 		pass
 

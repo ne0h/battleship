@@ -225,7 +225,10 @@ class ServerHandler:
 			if not size:
 				continue
 			else:
-				msg = self.__sock.recv(size[0] * 256 + size[1]).decode()
+				try:
+					msg = self.__sock.recv(size[0] * 256 + size[1]).decode()
+				except:
+					break
 				messageType, params = self.__messageParser.decode(msg)
 
 				# validate that the status code exists
@@ -234,8 +237,7 @@ class ServerHandler:
 					logging.debug("%s received: %s" % (messageType, reportCodes[status]))
 
 					if status is 15:
-						self.__backend.onIncomingChatMessage(params["author_id"], params["timestamp"],
-															params["message_content"])
+						self.__backend.onIncomingChatMessage(params["author_id"], params["timestamp"], params["message_content"])
 
 					elif status is 16:
 						self.__onUpdateLobby(params)
@@ -308,13 +310,23 @@ class ServerHandler:
 	def isConnected(self):
 		return self.__connected
 
+	def disconnect(self):
+		self.__stopReceiveLoop = True
+		self.leaveGame()
+		try:
+			self.__connected = False
+			self.__sock.close()
+			logging.info("Disconnected")
+		except:
+			logging.error("Disconnecting failed!")
+
 	def connect(self, hostname, port):
 		"""
 		Connects to a server.
 
 		Args:
-			hostname - the hostname or IP address of the server
-			port - the port of the server
+			hostname: the hostname or IP address of the server
+			port: the port of the server
 		"""
 
 		try:
@@ -322,11 +334,13 @@ class ServerHandler:
 			self.__sock.connect((hostname, port))
 			self.__connected = True
 
+			self.__stopReceiveLoop = False
 			Thread(target=self.__receiveLoop).start()
+			logging.info("Connected to '%s:%s'" % (hostname, port))
 			
 			return True
 
-		except socket.error:
+		except:
 			logging.error("Failed to connect to server.")
 			return False
 
@@ -334,5 +348,4 @@ class ServerHandler:
 		self.__backend = backend
 		self.__messageParser = MessageParser()
 
-		self.__stopReceiveLoop = False
 		self.__connected = False
