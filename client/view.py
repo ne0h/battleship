@@ -547,7 +547,7 @@ class MainForm(QWidget):
 		elif status is ClientStatus.NOGAMERUNNING:
 			self.__statusLbl.setText("No game running, please use the lobby to connect to a game.")
 			self.__lobbyBtn.setEnabled(True)
-			self.__connectBtn.setEnabled(False)
+			self.__connectBtn.setText("Disconnect")
 		elif status is ClientStatus.WAITINGFOROPPONENT:
 			self.__statusLbl.setText("Waiting for opponent now.")
 			self.__placeShipBtn.setEnabled(False)
@@ -613,14 +613,16 @@ class MainForm(QWidget):
 		self.__setup()
 		self.__lobbyBtn.setEnabled(True)
 
-	def __connectCalled(self):
-		pass
-
 	def __openConnectDialog(self):
-		if not self.__connectDialogAlreadyOpen:
-			self.__connectDialogAlreadyOpen = True
-			ConnectDialog(self.__backend).exec_()
-			self.__connectDialogAlreadyOpen = False
+		if self.__connectBtn.text() == "Connect":
+			if not self.__connectDialogAlreadyOpen:
+				self.__connectDialogAlreadyOpen = True
+				ConnectDialog(self.__backend).exec_()
+				self.__connectDialogAlreadyOpen = False
+		else:
+			self.__backend.disconnect()
+			self.__lobbyBtn.setEnabled(False)
+			self.__connectBtn.setText("Connect")
 
 	def __attack(self):
 		self.__viewModel.waitForAttack = True
@@ -813,6 +815,7 @@ class MainForm(QWidget):
 		self.show()
 
 	def __setup(self):
+		self.__leaveGameBtn.setText("Leave Game")
 		self.__placeShipBtn.setEnabled(False)
 		self.__lobbyBtn.setEnabled(False)
 		self.__leaveGameBtn.setEnabled(False)
@@ -824,7 +827,7 @@ class MainForm(QWidget):
 	def closeEvent(self, event):
 		self.__backend.close()
 
-	def __init__(self, backend, fieldLength, devmode, nickname=None):
+	def __init__(self, backend, fieldLength, devmode):
 		from backend import Callback
 
 		self.__backend = backend

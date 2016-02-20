@@ -44,6 +44,6 @@ if __name__ == "__main__":
 	backend = Backend(fieldLength, hostname, port, nickname, devmode)
 
 	app = QApplication(sys.argv)
-	screen = MainForm(backend, fieldLength, devmode, nickname)
+	screen = MainForm(backend, fieldLength, devmode)
 	screen.show()
 	sys.exit(app.exec_())

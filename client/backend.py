@@ -567,6 +567,7 @@ class Backend:
 	def disconnect(self):
 		self.__serverHandler.disconnect()
 		self.resetClient()
+		self.__updateClientStatus(ClientStatus.NOTCONNECTED)
 
 	def __onDevMode(self, result):
 		pass
