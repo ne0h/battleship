@@ -395,7 +395,10 @@ class Backend:
 		if status is 11:
 			self.__updateClientStatus(ClientStatus.OWNTURN)
 		elif status is 21 or status is 22 or status is 24:
-			if status is 24:
+			if status is 21:
+				self.__onMove(self.__lastMove[0], self.__lastMove[1])
+				self.__onRepaint()
+			elif status is 24:
 				self.__onSpecialAttack()
 			self.__updateClientStatus(ClientStatus.OPPONENTSTURN)
 		elif status is 23:
@@ -484,13 +487,21 @@ class Backend:
 
 		self.__serverHandler.specialAttack(target)
 
+	def __onMove(self, shipId, direction):
+		self.__ownPlayingField.move(shipId, direction)
+
 	def move(self, shipId, direction):
 		# TODO: validate direction
 		if self.clientStatus is not ClientStatus.OWNTURN:
 			self.__onError("It is not your turn.")
 			return
 
-		self.__serverHandler.move(shipId, direction)
+		success = self.__ownPlayingField.movePossible(shipId, direction)
+		if success:
+			self.__serverHandler.move(shipId, direction)
+			self.__lastMove = (shipId, direction)
+
+		return success
 
 	def errorResponse(self, status):
 		pass
@@ -619,6 +630,7 @@ class Backend:
 		self.__enemeysPlayingField = EnemyPlayingField(self.__length)
 		self.clientStatus = ClientStatus.NOTCONNECTED
 		self.__boardAlreadySent = False
+		self.__lastMove = None
 
 	def __init__(self, length, hostname, port, nickname, devmode=False):
 		from serverhandler import ServerHandler

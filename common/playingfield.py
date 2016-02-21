@@ -144,6 +144,14 @@ class ShipList:
 						return FieldStatus.SHIP, ship
 		return FieldStatus.WATER, None
 
+	def getShipAtPosition(self, field):
+		ships = self.getShips()
+		for i in range(0, len(ships)):
+			for damage in ships[i].parts:
+				if damage.equals(field):
+					return i
+		return -1
+
 	def __checkForCollisionWithOtherShips(self, ship):
 		"""
 		Validates that there is no collision with an existing Ship.
@@ -222,6 +230,27 @@ class ShipList:
 			shipId = shipId - 6
 			return self.__destroyers[shipId]
 
+	def movePossible(self, shipId, direction):
+		ship = self.getShip(shipId)
+		fieldsToCheck = []
+
+		if ship.orientation is Orientation.NORTH:
+			if direction is Orientation.NORTH:
+				fieldsToCheck.append(Field(ship.bow.x, ship.bow.y + 1))
+			elif direction is Orientation.SOUTH:
+				fieldsToCheck.append(Field(ship.rear.x, ship.rear.y - 1))
+
+		elif ship.orientation is Orientation.SOUTH:
+			if direction is Orientation.NORTH:
+				fieldsToCheck.append(Field(ship.rear.x, ship.rear.y + 1))
+			elif direction is Orientation.SOUTH:
+				fieldsToCheck.append(Field(ship.bow.x, ship.bow.y - 1))
+
+		for f in fieldsToCheck:
+			status, _ = self.getFieldStatus(f)
+			if status is not FieldStatus.WATER:
+				return False
+		return True
 
 	def moreShipsLeftToPlace(self):
 		"""
@@ -237,7 +266,6 @@ class ShipList:
 			and self.__maxDestroyerCount is len(self.__destroyers))
 
 	def __testShipPlacement(self, bow, rear):
-		import math
 
 		# check if the length of the potential ship is valid
 		if bow.x is rear.x:
@@ -333,24 +361,20 @@ class ShipList:
 		bow = ship.bow
 		rear = ship.rear
 
-		if direction == "N":
-			bowNew  = Field(bow.x  + 1, bow.y)
-			rearNew = Field(rear.x + 1, rear.y)
-		elif direction == "W":
-			bowNew  = Field(bow.x,  bow.y  + 1)
-			rearNew = Field(rear.y, rear.y + 1)
-		elif direction == "S":
-			bowNew  = Field(bow.x  - 1, bow.y)
-			rearNew = Field(rear.x - 1, rear.y)
+		if direction is Orientation.NORTH:
+			bowNew  = Field(bow.x , bow.y  + 1)
+			rearNew = Field(rear.x, rear.y + 1)
+		elif direction is Orientation.WEST:
+			bowNew  = Field(bow.x  - 1,  bow.y)
+			rearNew = Field(rear.y - 1, rear.y)
+		elif direction is Orientation.SOUTH:
+			bowNew  = Field(bow.x, bow.y   - 1)
+			rearNew = Field(rear.x, rear.y - 1)
 		else:
-			bowNew  = Field(bow.x,  bow.y  - 1)
-			rearNew = Field(rear.y, rear.y - 1)
+			bowNew  = Field(bow.x  - 1,  bow.y)
+			rearNew = Field(rear.y - 1, rear.y)
 
-		success = self.__testShipPlacement(bowNew, rearNew)
-		if success:
-			ship.move(bowNew, rearNew)
-
-		return success
+		ship.move(bowNew, rearNew)
 
 	def __init__(self, fieldLength, maxCarrierCount=1, maxBattleshipCount=2, maxCruiserCount=3, maxDestroyerCount=4):
 		self.__fieldLength = fieldLength
@@ -438,6 +462,9 @@ class PlayingField:
 
 		return updates
 
+	def movePossible(self, shipId, direction):
+		return self.__ships.movePossible(shipId, direction)
+
 	def move(self, shipId, direction):
 		"""
 		Moves a ship.
@@ -477,8 +504,7 @@ class PlayingField:
 		return self.__ships.getShip(shipId)
 
 	def getShipAtPosition(self, field):
-		_, shipId = self.__getFieldStatus(field)
-		return -1 if shipId is None else shipId
+		return self.__ships.getShipAtPosition(field)
 
 	def placeShip(self, bow, rear):
 		"""

@@ -32,7 +32,7 @@ class ConnectDialog(QDialog):
 			hostname = self.__hostnameIpt.text()
 			port     = int(self.__portIpt.text())
 		except ValueError:
-			logging.error("Port is not a number.")
+			logging.error("Port input is not a number.")
 			self.__showSettingsErrorBox()
 
 		if not hostname:
@@ -168,6 +168,8 @@ class LobbyDialog(QDialog):
 		self.__joinGameBtn.clicked.connect(self.__joinGameOnClick)
 
 		self.__createGameIpt = QLineEdit()
+		self.__createGameIpt.setText("%s's game" % self.__backend.lobby.getOwnNickname())
+		self.__createGameIpt.setPlaceholderText("game name")
 		self.__createGameBtn = QPushButton("Create game")
 		self.__createGameBtn.clicked.connect(self.__createGameOnClick)
 
@@ -243,6 +245,9 @@ class PlayingFieldWidget(QWidget):
 	@abc.abstractmethod
 	def _getUnfogged(self):
 		pass
+
+	def _showMessageBox(self, title, text):
+		QMessageBox.about(self, title, text)
 
 	def paintEvent(self, event):
 		"""
@@ -329,7 +334,6 @@ class OwnPlayingFieldWidget(PlayingFieldWidget):
 			bow = ship.bow
 			if ship.isDamaged(bow):
 				img = dir + "/img/bow_" + ship.orientation.value + "_damaged.png"
-				logging.error("DAMAGE!")
 			else:
 				img = dir + "/img/bow_" + ship.orientation.value + ".png"
 			painter.drawPixmap((bow.x + 1) * self._fieldSize, (16 - bow.y) * self._fieldSize, self._fieldSize,
@@ -352,6 +356,10 @@ class OwnPlayingFieldWidget(PlayingFieldWidget):
 					img = dir + "/img/middle_" + ship.orientation.value + ".png"
 				painter.drawPixmap((middle.x + 1) * self._fieldSize, (16 - middle.y) * self._fieldSize,	self._fieldSize,
 								   self._fieldSize,	QPixmap(img))
+
+	def __move(self, shipId, direction):
+		if not self._backend.move(shipId, direction):
+			self._showMessageBox("Failed to move ship", "Failed to move ship.")
 
 	def mousePressEvent(self, mouseEvent):
 		"""
@@ -381,30 +389,38 @@ class OwnPlayingFieldWidget(PlayingFieldWidget):
 		if self._viewModel.waitForMoveNorth:
 			# get shipId
 			shipId = self._backend.getShipAtPosition(field)
-			if shipId > 0:
+			if shipId >= 0:
 				logging.info("Moving ship #%s to the north" % str(shipId))
-				self._backend.move(shipId, Orientation.NORTH)
+				self.__move(shipId, Orientation.NORTH)
+			else:
+				self._showMessageBox("No ship", "There is no ship.")
 
 		if self._viewModel.waitForMoveWest:
 			# get shipId
 			shipId = self._backend.getShipAtPosition(field)
-			if shipId > 0:
+			if shipId >= 0:
 				logging.info("Moving ship #%s to the west" % str(shipId))
-				self._backend.move(shipId, Orientation.WEST)
+				self.__move(shipId, Orientation.WEST)
+			else:
+				self._showMessageBox("No ship", "There is no ship.")
 
 		if self._viewModel.waitForMoveSouth:
 			# get shipId
 			shipId = self._backend.getShipAtPosition(field)
 			if shipId > 0:
 				logging.info("Moving ship #%s to the south" % str(shipId))
-				self._backend.move(shipId, Orientation.SOUTH)
+				self.__move(shipId, Orientation.SOUTH)
+			else:
+				self._showMessageBox("No ship", "There is no ship.")
 
 		if self._viewModel.waitForMoveEast:
 			# get shipId
 			shipId = self._backend.getShipAtPosition(field)
-			if shipId > 0:
+			if shipId >= 0:
 				logging.info("Moving ship #%s to the east" % str(shipId))
-				self._backend.move(shipId, Orientation.EAST)
+				self.__move(shipId, Orientation.EAST)
+			else:
+				self._showMessageBox("No ship", "There is no ship.")
 
 		if self._devmode:
 			self.repaint()
@@ -470,9 +486,11 @@ class EnemeysPlayingFieldWidget(PlayingFieldWidget):
 			self._viewModel.waitForAttack = False
 
 		if self._viewModel.waitForSpecialAttack:
-			logging.info("Special Attack at enemey's field: %s" % field.toString())
-			self._backend.specialAttack(field)
-			self._viewModel.waitForSpecialAttack = False
+			if 0 < field.x < 15 and 0 < field.y < 15:
+				field = Field(field.x - 1, field.y - 1)
+				logging.info("Special Attack at enemey's field: %s" % field.toString())
+				self._backend.specialAttack(field)
+				self._viewModel.waitForSpecialAttack = False
 
 		if self._devmode:
 			self.repaint()
@@ -677,7 +695,7 @@ class MainForm(QWidget):
 		self.__viewModel.waitForMoveSouth = True
 
 	def __moveEast(self):
-		self.__viewModel.waitForEast = True
+		self.__viewModel.waitForMoveEast = True
 
 	def __setupGui(self):
 
@@ -826,6 +844,7 @@ class MainForm(QWidget):
 
 	def closeEvent(self, event):
 		self.__backend.close()
+		self.close()
 
 	def __init__(self, backend, fieldLength, devmode):
 		from backend import Callback
