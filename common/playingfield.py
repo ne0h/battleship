@@ -104,8 +104,30 @@ class Ship:
 	def __initShip(self, bow, rear):
 		self.bow  = bow
 		self.rear = rear
-
 		self.parts = splitShip(bow, rear)
+
+		# calculate middle elements
+		self.middles = []
+		for i in range(1, len(self.parts) - 1):
+			self.middles.append(self.parts[i])
+
+	def move(self, bowNew, rearNew, direction):
+		self.__initShip(bowNew, rearNew)
+
+		# move damages
+		for damage in self.damages:
+			if direction is Orientation.NORTH:
+				damage.y += 1
+			elif direction is Orientation.WEST:
+				damage.x -= 1
+			elif direction is Orientation.SOUTH:
+				damage.y -= 1
+			elif direction is Orientation.EAST:
+				damage.x += 1
+
+	def __init__(self, bow, rear):
+		self.__initShip(bow, rear)
+		self.damages = []
 
 		# calculate orientation
 		if bow.y < rear.y:
@@ -116,18 +138,6 @@ class Ship:
 			self.orientation = Orientation.WEST
 		elif bow.x > rear.x:
 			self.orientation = Orientation.EAST
-
-		# calculate middle elements
-		self.middles = []
-		for i in range(1, len(self.parts) - 1):
-			self.middles.append(self.parts[i])
-
-	def move(self, bowNew, rearNew):
-		self.__initShip(bowNew, rearNew)
-
-	def __init__(self, bow, rear):
-		self.__initShip(bow, rear)
-		self.damages = []
 
 class ShipList:
 	"""
@@ -212,7 +222,7 @@ class ShipList:
 		Returns a specified ship from the own playing field.
 
 		Args:
-		    shipId: the id of the ship
+			shipId: the id of the ship
 
 		Returns:
 			Returns a specified ship from the own playing field.
@@ -234,21 +244,38 @@ class ShipList:
 		ship = self.getShip(shipId)
 		fieldsToCheck = []
 
-		if ship.orientation is Orientation.NORTH:
-			if direction is Orientation.NORTH:
-				fieldsToCheck.append(Field(ship.bow.x, ship.bow.y + 1))
-			elif direction is Orientation.SOUTH:
-				fieldsToCheck.append(Field(ship.rear.x, ship.rear.y - 1))
+		if ship.orientation is Orientation.NORTH or ship.orientation is Orientation.SOUTH:
+			if ship.orientation is Orientation.NORTH:
+				if direction is Orientation.NORTH:
+					fieldsToCheck.append(Field(ship.bow.x, ship.bow.y + 1))
+				elif direction is Orientation.SOUTH:
+					fieldsToCheck.append(Field(ship.rear.x, ship.rear.y - 1))
 
-		elif ship.orientation is Orientation.SOUTH:
-			if direction is Orientation.NORTH:
-				fieldsToCheck.append(Field(ship.rear.x, ship.rear.y + 1))
-			elif direction is Orientation.SOUTH:
-				fieldsToCheck.append(Field(ship.bow.x, ship.bow.y - 1))
+			elif ship.orientation is Orientation.SOUTH:
+				if direction is Orientation.NORTH:
+					fieldsToCheck.append(Field(ship.rear.x, ship.rear.y + 1))
+				elif direction is Orientation.SOUTH:
+					fieldsToCheck.append(Field(ship.bow.x, ship.bow.y - 1))
+
+			# check all fields left of the ship
+			if ship.orientation is Orientation.WEST:
+				for part in ship.parts:
+					field = Field(part.x - 1, part.y)
+					if field.x < 0:
+						return False
+					fieldsToCheck.append(field)
+
+			# check all fields right of the ship
+			if ship.orientation is Orientation.EAST:
+				for part in ship.parts:
+					field = Field(part.x + 1, part.y)
+					if field.x > 15:
+						return False
+					fieldsToCheck.append(field)
 
 		for f in fieldsToCheck:
 			status, _ = self.getFieldStatus(f)
-			if status is not FieldStatus.WATER:
+			if status is FieldStatus.SHIP or status is FieldStatus.DAMAGEDSHIP:
 				return False
 		return True
 
@@ -366,15 +393,15 @@ class ShipList:
 			rearNew = Field(rear.x, rear.y + 1)
 		elif direction is Orientation.WEST:
 			bowNew  = Field(bow.x  - 1,  bow.y)
-			rearNew = Field(rear.y - 1, rear.y)
+			rearNew = Field(rear.x - 1, rear.y)
 		elif direction is Orientation.SOUTH:
 			bowNew  = Field(bow.x, bow.y   - 1)
 			rearNew = Field(rear.x, rear.y - 1)
 		else:
-			bowNew  = Field(bow.x  - 1,  bow.y)
-			rearNew = Field(rear.y - 1, rear.y)
+			bowNew  = Field(bow.x  + 1,  bow.y)
+			rearNew = Field(rear.x + 1, rear.y)
 
-		ship.move(bowNew, rearNew)
+		ship.move(bowNew, rearNew, direction)
 
 	def __init__(self, fieldLength, maxCarrierCount=1, maxBattleshipCount=2, maxCruiserCount=3, maxDestroyerCount=4):
 		self.__fieldLength = fieldLength

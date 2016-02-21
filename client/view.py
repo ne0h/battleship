@@ -7,9 +7,7 @@ from playingfield import *
 
 class ViewModel:
 
-	def __init__(self):
-		self.specialAttacksLeft = 3
-
+	def unsetAll(self):
 		self.waitForShipPlacement = False
 		self.waitForAttack = False
 		self.waitForSpecialAttack = False
@@ -18,6 +16,10 @@ class ViewModel:
 		self.waitForMoveWest  = False
 		self.waitForMoveSouth = False
 		self.waitForMoveEast  = False
+
+	def __init__(self):
+		self.specialAttacksLeft = 3
+		self.unsetAll()
 
 		self.newShipBow = None
 
@@ -387,6 +389,8 @@ class OwnPlayingFieldWidget(PlayingFieldWidget):
 		# Moves
 		#
 		if self._viewModel.waitForMoveNorth:
+			self._viewModel.unsetAll()
+
 			# get shipId
 			shipId = self._backend.getShipAtPosition(field)
 			if shipId >= 0:
@@ -396,6 +400,8 @@ class OwnPlayingFieldWidget(PlayingFieldWidget):
 				self._showMessageBox("No ship", "There is no ship.")
 
 		if self._viewModel.waitForMoveWest:
+			self._viewModel.unsetAll()
+
 			# get shipId
 			shipId = self._backend.getShipAtPosition(field)
 			if shipId >= 0:
@@ -405,15 +411,19 @@ class OwnPlayingFieldWidget(PlayingFieldWidget):
 				self._showMessageBox("No ship", "There is no ship.")
 
 		if self._viewModel.waitForMoveSouth:
+			self._viewModel.unsetAll()
+
 			# get shipId
 			shipId = self._backend.getShipAtPosition(field)
-			if shipId > 0:
+			if shipId >= 0:
 				logging.info("Moving ship #%s to the south" % str(shipId))
 				self.__move(shipId, Orientation.SOUTH)
 			else:
 				self._showMessageBox("No ship", "There is no ship.")
 
 		if self._viewModel.waitForMoveEast:
+			self._viewModel.unsetAll()
+
 			# get shipId
 			shipId = self._backend.getShipAtPosition(field)
 			if shipId >= 0:
