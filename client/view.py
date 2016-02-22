@@ -124,11 +124,14 @@ class LobbyDialog(QDialog):
 	def __joinGameOnClick(self):
 		from backend import Callback
 
-		gameId = self.__gamesWidget.currentItem().text().split(":")[0]
-		cb = Callback()
-		cb.onAction = lambda success: self.__onJoinGame(success)
-		self.__backend.joinGame(gameId, cb)
-		self.__interfaceEnabled(False)
+		if self.__gamesWidget.count() > 0:
+			gameId = self.__gamesWidget.currentItem().text().split(":")[0]
+			cb = Callback()
+			cb.onAction = lambda success: self.__onJoinGame(success)
+			self.__backend.joinGame(gameId, cb)
+			self.__interfaceEnabled(False)
+		else:
+			self.__showMessageBox("No game available", "There is is game to join.")
 
 	def __onJoinGame(self, success):
 		logging.info("Game joined? " + str(success))
@@ -159,6 +162,9 @@ class LobbyDialog(QDialog):
 
 	def __error(self, message):
 		self.__errorBox.setText(message)
+
+	def __showMessageBox(self, title, text):
+		QMessageBox.about(self, title, text)
 
 	def __setupGui(self):
 		self.__statusLbl = QLabel()
@@ -577,6 +583,7 @@ class MainForm(QWidget):
 			self.__statusLbl.setText("No game running, please use the lobby to connect to a game.")
 			self.__lobbyBtn.setEnabled(True)
 			self.__connectBtn.setText("Disconnect")
+			self.__leaveGameBtn.setEnabled(True)
 		elif status is ClientStatus.WAITINGFOROPPONENT:
 			self.__statusLbl.setText("Waiting for opponent now.")
 			self.__placeShipBtn.setEnabled(False)
