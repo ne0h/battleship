@@ -29,6 +29,7 @@ class Lobby:
 		self.__tryToGameId = gameId
 
 	def joinSuccessful(self):
+		self.playerJoinedGame = True
 		for game in self.games:
 			if game.name == self.__tryToGameId:
 				self.game = game
@@ -36,6 +37,7 @@ class Lobby:
 				break
 
 	def createSuccessful(self):
+		self.playerCreatedGame = True
 		for game in self.games:
 			if game.name == self.__tryToGameId:
 				self.game = game
@@ -47,11 +49,20 @@ class Lobby:
 				return True
 		return False
 
+	def reset(self):
+		self.__setup()
+
+	def __setup(self):
+		self.game = None
+		self.opponent = None
+
+		self.playerCreatedGame = False
+		self.playerJoinedGame = False
+
 	def __init__(self, nickname=None):
 		self.nickname = nickname
 		self.games = []
 		self.players = []
 		self.__playerNicks = {}
 
-		self.game = None
-		self.opponent = None
+		self.__setup()

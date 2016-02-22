@@ -258,7 +258,7 @@ class ShipList:
 					fieldsToCheck.append(Field(ship.bow.x, ship.bow.y - 1))
 
 			# check all fields left of the ship
-			if ship.orientation is Orientation.WEST:
+			if direction is Orientation.WEST:
 				for part in ship.parts:
 					field = Field(part.x - 1, part.y)
 					if field.x < 0:
@@ -266,12 +266,28 @@ class ShipList:
 					fieldsToCheck.append(field)
 
 			# check all fields right of the ship
-			if ship.orientation is Orientation.EAST:
+			if direction is Orientation.EAST:
 				for part in ship.parts:
 					field = Field(part.x + 1, part.y)
 					if field.x > 15:
 						return False
 					fieldsToCheck.append(field)
+		"""
+		if ship.orientation is Orientation.WEST or ship.orientation is Orientation.EAST:
+			if ship.orientation is Orientation.WEST:
+				if direction is Orientation.WEST:
+					fieldsToCheck.append(Field(ship.bow.x - 1, ship.bow.y))
+				elif direction is Orientation.EAST:
+					fieldsToCheck.append(Field(ship.rear.x + 1, ship.rear.y))
+
+			elif ship.orientation is Orientation.EAST:
+				if direction is Orientation.WEST:
+					fieldsToCheck.append(Field(ship.bow.x - 1, ship.bow.y))
+				elif direction is Orientation.EAST:
+					fieldsToCheck.append(Field(ship.rear.x + 1, ship.rear.y))
+
+			# check all fields above the ship
+		"""
 
 		for f in fieldsToCheck:
 			status, _ = self.getFieldStatus(f)

@@ -573,6 +573,7 @@ class MainForm(QWidget):
 		if status is ClientStatus.NOTCONNECTED:
 			self.__statusLbl.setText("Please connect to a server.")
 		elif status is ClientStatus.NOGAMERUNNING:
+			self.__onRepaint()
 			self.__statusLbl.setText("No game running, please use the lobby to connect to a game.")
 			self.__lobbyBtn.setEnabled(True)
 			self.__connectBtn.setText("Disconnect")
@@ -605,11 +606,15 @@ class MainForm(QWidget):
 		elif status is ClientStatus.YOUWIN:
 			self.__statusLbl.setText("You win!")
 			self.__disableGamePlayButtons()
-			# TODO: reset client
+
+			self.__leaveGameBtn.setText("New Game")
+			self.__leaveGameBtn.setEnabled(True)
 		elif status is ClientStatus.YOULOSE:
 			self.__statusLbl.setText("You lose!")
 			self.__disableGamePlayButtons()
-			# TODO: ... reset client
+
+			self.__leaveGameBtn.setText("New Game")
+			self.__leaveGameBtn.setEnabled(True)
 
 	def __onLeaveGame(self):
 		logging.info("Game aborted. Preparing client for a new game.")

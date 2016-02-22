@@ -309,6 +309,20 @@ class Backend:
 		self.__leaveGameCallbacks = []
 		self.__updateClientStatus(ClientStatus.NOGAMERUNNING)
 
+	def onGameAborted(self):
+		self.resetClient()
+		self.__updateClientStatus(ClientStatus.NOGAMERUNNING)
+
+	def onGameEnded(self, params):
+
+		# believable mad report...
+		if (params["victor"] == "0" and self.lobby.playerCreatedGame) \
+				or (params["victor"] == "1" and self.lobby.playerJoinedGame):
+			self.__updateClientStatus(ClientStatus.YOUWIN)
+		elif (params["victor"] == "0" and self.lobby.playerJoinedGame) \
+				or (params["victor"] == "1" and self.lobby.playerCreatedGame):
+				self.__updateClientStatus(ClientStatus.YOULOSE)
+
 	def close(self):
 		"""
 		Closes the client.
@@ -573,6 +587,7 @@ class Backend:
 	def resetClient(self):
 		logging.info("Resetting backend...")
 		self.__setup()
+		self.lobby.reset()
 		self.__updateClientStatus(ClientStatus.NOGAMERUNNING)
 
 	def disconnect(self):

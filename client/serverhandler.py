@@ -239,12 +239,15 @@ class ServerHandler:
 					if status is 15:
 						self.__backend.onIncomingChatMessage(params["author_id"], params["timestamp"], params["message_content"])
 
-					elif status is 16:
+					elif status is 16:														# Update_Lobby
 						self.__onUpdateLobby(params)
+
+					elif status is 17:														# Game_Ended
+						self.__backend.onGameEnded(params)
 
 					# game creation stuff
 					elif status is 19:														# Game_Aborted
-						self.__backend.onLeaveGame()
+						self.__backend.onGameAborted()
 					elif status is 23:
 						self.__backend.onCapitulate()										# Surrender_Accepted
 					elif status is 27 or status is 47:										# Successful_Game_Join
