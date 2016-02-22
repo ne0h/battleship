@@ -139,6 +139,7 @@ class LobbyDialog(QDialog):
 			self.close()
 		else:
 			self.__error("Failed to join game. Please choose another one.")
+			self.__showMessageBox("Failed to join game", "Please join or create another one.")
 			self.__interfaceEnabled(True)
 
 	def __createGameOnClick(self):
@@ -158,6 +159,7 @@ class LobbyDialog(QDialog):
 			self.close()
 		else:
 			self.__error("Failed create join game.")
+			self.__showMessageBox("Failed to create game", "Please join or create another one.")
 			self.__interfaceEnabled(True)
 
 	def __error(self, message):

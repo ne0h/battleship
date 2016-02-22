@@ -227,6 +227,7 @@ class Backend:
 			callback: the callback
 		"""
 
+		self.__triedToJoinGame = True
 		self.__joinGameCallbacks.append(callback)
 		self.lobby.tryToGame(gameId)
 		self.__serverHandler.joinGame(gameId)
@@ -260,9 +261,18 @@ class Backend:
 			callback: the callback
 		"""
 
+		self.__triedToCreateGame = True
 		self.__createGameCallbacks.append(callback)
 		self.lobby.tryToGame(gameId)
 		self.__serverHandler.createGame(gameId)
+
+	def onIllegalGameDefinition(self):
+		if self.__triedToCreateGame:
+			self.onCreateGame(False)
+			self.__triedToJoinGame = False
+		elif self.__triedToJoinGame:
+			self.onJoinGame(False)
+			self.__triedToJoinGame = False
 
 	def onCreateGame(self, success):
 		"""
@@ -646,6 +656,8 @@ class Backend:
 		self.clientStatus = ClientStatus.NOTCONNECTED
 		self.__boardAlreadySent = False
 		self.__lastMove = None
+		self.__triedToJoinGame = False
+		self.__triedToCreateGame = False
 
 	def __init__(self, length, hostname, port, nickname, devmode=False):
 		from serverhandler import ServerHandler
