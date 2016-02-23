@@ -200,35 +200,39 @@ class TestMessageLogic(unittest.TestCase):
 		
 
 		#Case 1: Correct attack
+		self.clients[1].__gamePlayCallbacks[0].onAction = lambda status: self.__onAttack(status,1)
 		self.clients[1].attack(Field(4,4))
 
 		#Case 2: out of boundry
-		self.clients[0].attack(-1,1)
+		self.clients[0].__gamePlayCallbacks[0].onAction = lambda status: self.__onAttack(status,2)
+		self.clients[0].attack(Field(-1,1)
 		
-	def __onAttack(self, success,case):
+	def __onAttack(self, status,case):
 		
 		if case==1:
-			if success:
+			if status is 22:
 				print("In Attack case:"+str(case)+":success")
 				self.assertTrue(True)
 			else: 
 				print("In Attack case:"+str(case)+":fail")
 				self.assertTrue(False)
 		else:
-			if  success:
-				print("In Attack case:"+str(case)+":success")
-				self.assertTrue(False)
-			else: 
+			if  status is 39:
 				print("In Attack case:"+str(case)+":fail")
 				self.assertTrue(True)
+			else: 
+				print("In Attack case:"+str(case)+":success")
+				self.assertTrue(false)
 
 	def test_specialAttackLogic(self):
 		
 
 		#Case 1: Correct attack
+		sef.clients[0].__gamePlayCallbacks[0].onAction = lambda status: self.__onSpecialAttack(status,1)
 		self.clients[0].specialAttack(Field(3,3))
 
 		#Case 2: out of boundry
+		sef.clients[1].__gamePlayCallbacks[0].onAction = lambda status: self.__onSpecialAttack(status,2)
 		self.clients[1].attack(-1,1)
 
 		#Case 3: More than 3 Special Attacks
@@ -237,25 +241,25 @@ class TestMessageLogic(unittest.TestCase):
 		self.clients[1].attack(5,6)
 		self.clients[0].specialAttack(10,12)
 		self.clients[1].attack(8,6)
+		sef.clients[0].__gamePlayCallbacks[0].onAction = lambda status: self.__onSpecialAttack(status,3)
 		self.clients[0].specialAttack(12,12) 		
 		
-	def __onSpecialAttack(self, success,case):
+	def __onSpecialAttack(self, status,case):
 		
 		if case==1:
-			if success:
-				print("In SpecialAttack case:"+str(case)+":success")
+			if status is 24:
+				print("In Attack case:"+str(case)+":success")
 				self.assertTrue(True)
 			else: 
-				print("In SpecialAttack case:"+str(case)+":fail")
+				print("In Attack case:"+str(case)+":fail")
 				self.assertTrue(False)
 		else:
-			if  success:
-				print("In SpecialAttack case:"+str(case)+":success")
-				self.assertTrue(False)
-			else: 
-				print("In SpecialAttack case:"+str(case)+":fail")
+			if  status is 32:
+				print("In Attack case:"+str(case)+":fail")
 				self.assertTrue(True)
-
+			else: 
+				print("In Attack case:"+str(case)+":success")
+				self.assertTrue(false)
 
 if __name__ == "__main__":
 	unittest.main()
