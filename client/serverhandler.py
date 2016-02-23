@@ -78,11 +78,6 @@ class ServerHandler:
 	"""
 	def __onUpdateLobby(self, params):
 		from backend import GameInformation, PlayerInformation
-		# TODO lots of consistency tests...
-		# TODO remove already read values from map that the method runs in O(n)
-		# TODO Validate message length (should be already done in the receiveLoop)
-		# TODO Validate if empty nicknames work correctly (that there is not 'None' in wireshark)
-		# TODO: Validate players_count
 
 		games   = []
 		players = []
@@ -102,14 +97,13 @@ class ServerHandler:
 			if param.startswith("player_identifier_"):
 
 				# make sure that there are not more players than passed by players counter
-				# TODO error here
 				if playersCounter >= playersTotal:
 					continue
-				playersCounter = playersCounter + 1
+				playersCounter += 1
 
 				# extract counter and nickname if there is one...
-				# TODO: nickname-value may not exist... -> error
-				nickname = params["player_name_" + param[18:]]
+				if "player_name_" + param[18:] in params:
+					nickname = params["player_name_" + param[18:]]
 
 				players.append(PlayerInformation(value, nickname))
 
@@ -119,7 +113,6 @@ class ServerHandler:
 			if param.startswith("game_name_"):
 
 				# make sure that there are not more games than passed by games counter
-				# TODO error
 				if gamesCounter >= gamesTotal:
 					continue
 				gamesCounter += 1
@@ -127,8 +120,7 @@ class ServerHandler:
 				counter = int(param[10:])
 				numberOfPlayers = int(params["game_players_count_" + str(counter)])
 				if numberOfPlayers > 2:
-					# error
-					pass
+					logging.error("Update_Lobby error: To many players.")
 
 				# find the players of this game
 				# validate that the players exist
