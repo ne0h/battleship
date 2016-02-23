@@ -11,7 +11,7 @@ class Lobby:
 			self.__playerNicks[player.id] = player.nickname
 
 	def getOwnNickname(self):
-		return self.nickname if self.nickname else "Unnamed Player"
+		return self.nickname if self.nickname is not None and self.nickname is not "" else "Unnamed Player"
 
 	def getNickname(self, playerId):
 		return "Unnamed Player" if self.__playerNicks[playerId] is None or self.__playerNicks[playerId] is "" else self.__playerNicks[playerId]

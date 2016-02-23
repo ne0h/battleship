@@ -695,6 +695,8 @@ class MainForm(QWidget):
 				self.__playersLbl.setText("Current game: %s vs. %s" % (nickname, opponent))
 			else:
 				self.__playersLbl.setText("Current game: %s vs." % nickname)
+		else:
+			self.__playersLbl.setText("Nickname: %s" % nickname)
 
 	def __sendChatMessage(self):
 		# TODO: Check for empty strings
@@ -722,6 +724,13 @@ class MainForm(QWidget):
 
 	def __moveEast(self):
 		self.__viewModel.waitForMoveEast = True
+
+	def __setNickname(self):
+		nickname, result = QInputDialog.getText(self, "Set Nickname", "Please enter your new nickname:")
+		if result and 0 <= len(nickname) <= 64:
+			self.__backend.lobby.nickname = nickname
+			self.__backend.setNickname(nickname)
+			self.__updatePlayersLbl()
 
 	def __setupGui(self):
 
@@ -795,6 +804,9 @@ class MainForm(QWidget):
 		self.__connectBtn = QPushButton("Connect")
 		self.__connectBtn.clicked.connect(self.__openConnectDialog)
 
+		self.__setNicknameBtn = QPushButton("Set Nickname")
+		self.__setNicknameBtn.clicked.connect(self.__setNickname)
+
 		# status stuff
 		self.__statusLbl = QLabel()
 		self.__statusLbl.setStyleSheet("color: #b00")
@@ -843,6 +855,7 @@ class MainForm(QWidget):
 		btnsLayout.addWidget(self.__connectBtn)
 		btnsLayout.addWidget(self.__lobbyBtn)
 		btnsLayout.addWidget(self.__placeShipBtn)
+		btnsLayout.addWidget(self.__setNicknameBtn)
 		btnsLayout.addWidget(self.__leaveGameBtn)
 		btnsWgt = QWidget()
 		btnsWgt.setLayout(btnsLayout)

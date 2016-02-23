@@ -359,6 +359,16 @@ class Backend:
 
 		return result
 
+	def setNickname(self, nickname):
+		"""
+		Resets the nickname of the player.
+
+		Args:
+		    nickname: the new nickname
+		"""
+
+		self.__serverHandler.setNickname(nickname)
+
 	def registerUdpDiscoveryCallback(self, callback):
 		"""
 		Registers a callback that informs about newly discovered servers.

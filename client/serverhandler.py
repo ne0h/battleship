@@ -43,7 +43,7 @@ class ServerHandler:
 
 	def setNickname(self, nickname):
 		"""
-		Sets the nickname.
+		Resets the nickname.
 
 		Args:
 			nickname: the new nickname
