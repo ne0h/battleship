@@ -600,6 +600,13 @@ class Backend:
 		self.lobby.reset()
 		self.__updateClientStatus(ClientStatus.NOGAMERUNNING)
 
+	def onLostConnection(self):
+		logging.info("Resetting backend...")
+		self.__serverHandler.disconnect()
+		self.__setup()
+		self.lobby.reset()
+		self.__updateClientStatus(ClientStatus.NOTCONNECTED)
+
 	def disconnect(self):
 		self.__serverHandler.disconnect()
 		self.resetClient()

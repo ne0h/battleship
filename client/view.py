@@ -580,6 +580,8 @@ class MainForm(QWidget):
 		status = self.__backend.clientStatus
 		if status is ClientStatus.NOTCONNECTED:
 			self.__statusLbl.setText("Please connect to a server.")
+			self.__setup()
+			self.__onRepaint()
 		elif status is ClientStatus.NOGAMERUNNING:
 			self.__onRepaint()
 			self.__statusLbl.setText("No game running, please use the lobby to connect to a game.")

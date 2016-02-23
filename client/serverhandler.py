@@ -220,81 +220,86 @@ class ServerHandler:
 	def __receiveLoop(self):
 		while not self.__stopReceiveLoop:
 
-			# read the first to byte to receive the byte size of the message
-			size = self.__sock.recv(2)
-			if not size:
-				continue
-			else:
-				try:
-					msg = self.__sock.recv(size[0] * 256 + size[1]).decode()
-				except:
-					break
-				messageType, params = self.__messageParser.decode(msg)
+			try:
 
-				# validate that the status code exists
-				status = int(params["status"])
-				if status in reportCodes:
-					logging.debug("%s received: %s" % (messageType, reportCodes[status]))
-
-					if status is 15:
-						self.__backend.onIncomingChatMessage(params["author_id"], params["timestamp"], params["message_content"])
-
-					elif status is 16:														# Update_Lobby
-						self.__onUpdateLobby(params)
-
-					elif status is 17:														# Game_Ended
-						self.__backend.onGameEnded(params)
-
-					# game creation stuff
-					elif status is 19:														# Game_Aborted
-						self.__backend.onGameAborted()
-					elif status is 23:
-						self.__backend.onCapitulate()										# Surrender_Accepted
-					elif status is 27 or status is 47:										# Successful_Game_Join
-						self.__backend.onJoinGame(status is 27)								# or Game_Join_Denied
-					elif status is 28:														# Successful_Game_Create
-						self.__backend.onCreateGame(True)
-					elif status is 29 or status is 38:										# Successful_Ship_Placement
-						self.__backend.onPlaceShips(status is 29)							# or Illegal_Ship_Placement
-					elif status is 37:														# Illegal_Game_Definition
-						self.__backend.onIllegalGameDefinition()
-					elif status is 48:														# Game_Preparation_Ended
-						self.__backend.gamePreparationsEndedResponse()
-
-					# game play stuff
-					#  _ Begin_Turn
-					#  - Successful_Move
-					#  - Successful_Attack
-					#  - Surrender_Accepted
-					#  - Successful_Special_Attack
-					#  - Illegal_Move
-					#  - Illegal_Special_Attack
-					#  - Illegal_Field
-					#  - Illegal_Ship_Index
-					#  - Illegal_Attack
-					#  - Not_Your_Turn
-					elif status is 11 or status is 21 or status is 22 or status is 23 or status is 24 or status is 31 \
-							or status is 32 or status is 33 or status is 34 or status is 39 or status is 41:
-						self.__backend.onGamePlayUpdate(status)
-
-					# Begin_Ship_Placing
-					elif status is 18:
-						self.__backend.onBeginShipPlacing()
-
-					# field updates
-					elif status is 13:
-						self.__backend.onUpdateOwnFields(params)
-					elif status is 14:
-						self.__backend.onUpdateEnemyFields(params)
-
-					# bad error stuff
-					#  - Message_Not_Recognized
-					#  - Not_In_Any_Game (what? wtf? :D)
-					elif status is 40 or status is 43:
-						self.__backend.errorResponse(status)
-
+				# read the first to byte to receive the byte size of the message
+				size = self.__sock.recv(2)
+				if not size:
+					continue
 				else:
-					logging.debug("%s received with unknown status code." % (messageType))
+					try:
+						msg = self.__sock.recv(size[0] * 256 + size[1]).decode()
+					except:
+						break
+					messageType, params = self.__messageParser.decode(msg)
+
+					# validate that the status code exists
+					status = int(params["status"])
+					if status in reportCodes:
+						logging.debug("%s received: %s" % (messageType, reportCodes[status]))
+
+						if status is 15:
+							self.__backend.onIncomingChatMessage(params["author_id"], params["timestamp"], params["message_content"])
+
+						elif status is 16:														# Update_Lobby
+							self.__onUpdateLobby(params)
+
+						elif status is 17:														# Game_Ended
+							self.__backend.onGameEnded(params)
+
+						# game creation stuff
+						elif status is 19:														# Game_Aborted
+							self.__backend.onGameAborted()
+						elif status is 23:
+							self.__backend.onCapitulate()										# Surrender_Accepted
+						elif status is 27 or status is 47:										# Successful_Game_Join
+							self.__backend.onJoinGame(status is 27)								# or Game_Join_Denied
+						elif status is 28:														# Successful_Game_Create
+							self.__backend.onCreateGame(True)
+						elif status is 29 or status is 38:										# Successful_Ship_Placement
+							self.__backend.onPlaceShips(status is 29)							# or Illegal_Ship_Placement
+						elif status is 37:														# Illegal_Game_Definition
+							self.__backend.onIllegalGameDefinition()
+						elif status is 48:														# Game_Preparation_Ended
+							self.__backend.gamePreparationsEndedResponse()
+
+						# game play stuff
+						#  _ Begin_Turn
+						#  - Successful_Move
+						#  - Successful_Attack
+						#  - Surrender_Accepted
+						#  - Successful_Special_Attack
+						#  - Illegal_Move
+						#  - Illegal_Special_Attack
+						#  - Illegal_Field
+						#  - Illegal_Ship_Index
+						#  - Illegal_Attack
+						#  - Not_Your_Turn
+						elif status is 11 or status is 21 or status is 22 or status is 23 or status is 24 or status is 31 \
+								or status is 32 or status is 33 or status is 34 or status is 39 or status is 41:
+							self.__backend.onGamePlayUpdate(status)
+
+						# Begin_Ship_Placing
+						elif status is 18:
+							self.__backend.onBeginShipPlacing()
+
+						# field updates
+						elif status is 13:
+							self.__backend.onUpdateOwnFields(params)
+						elif status is 14:
+							self.__backend.onUpdateEnemyFields(params)
+
+						# bad error stuff
+						#  - Message_Not_Recognized
+						#  - Not_In_Any_Game (what? wtf? :D)
+						elif status is 40 or status is 43:
+							self.__backend.errorResponse(status)
+
+					else:
+						logging.debug("%s received with unknown status code." % (messageType))
+			except:
+				logging.error("Lost connection to server! Cleaning up...")
+				self.__backend.onLostConnection()
 
 	def __sendMessage(self, type, params):
 		if not self.__connected:
@@ -303,7 +308,11 @@ class ServerHandler:
 
 		msg = self.__messageParser.encode(type, params)
 		logging.debug("Sending message: %s"  % (msg))
-		self.__sock.send(msg)
+		try:
+			self.__sock.send(msg)
+		except:
+			logging.error("Lost connection to server! Cleaning up...")
+			self.__backend.onLostConnection()
 
 	def close(self):
 		"""
@@ -319,11 +328,11 @@ class ServerHandler:
 		self.__stopReceiveLoop = True
 		self.leaveGame()
 		try:
-			self.__connected = False
 			self.__sock.close()
 			logging.info("Disconnected")
 		except:
 			logging.error("Disconnecting failed!")
+		self.__connected = False
 
 	def connect(self, hostname, port):
 		"""
