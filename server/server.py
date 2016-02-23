@@ -175,6 +175,7 @@ class ClientHandler:
         # check if client is already in a game
         if self.__game:
             logging.debug("Client already in some game.")
+            # 31 is the new 42
             self.__send(self.__message_parser.encode('report', {'status': '31'}))
             return
 
@@ -186,7 +187,7 @@ class ClientHandler:
 
         # create the game
         game = self.__lobby_model.add_lobby(params['name'], self.__id)
-        
+
         if not game:
             self.__send(self.__message_parser.encode('report', {'status': '37'}))
             return
@@ -242,8 +243,7 @@ class ClientHandler:
 
         if len(params['name']) > 64:
             logging.debug("Nickname too long.")
-            # 31 is the new 42
-            self.__send(self.__message_parser.encode('report', {'status': '31'}))
+            self.__send(self.__message_parser.encode('report', {'status': '36'}))
             return
 
         # tell lobby to set nickname and hope for the best
