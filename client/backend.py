@@ -350,8 +350,6 @@ class Backend:
 			port: the port of the server
 		"""
 		# TODO: Validate input (if it is None)
-
-		self.nickname = nickname
 		result = self.__serverHandler.connect(hostname, port)
 		if result:
 			self.__updateClientStatus(ClientStatus.NOGAMERUNNING)
