@@ -89,6 +89,8 @@ class ClientHandler:
                 self.__move()
             elif msgtype == messages.SURRENDER:
                 self.__surrender()
+            elif msgtype == CHAT_SEND:
+                self.__chat()
             else:
                 self.__unknown_msg()
 
@@ -327,6 +329,10 @@ class ClientHandler:
 
     def __surrender(self):
         pass
+
+    def __chat(self):
+        # TODO implement chat
+        self.__send(self.__message_parser.encode('report', {'status': '15'}))
 
     def __unknown_msg(self):
         self.__send(self.__message_parser.encode('report', {'status': '40'}))

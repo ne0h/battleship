@@ -7,3 +7,5 @@ FIRE = 'attack'
 NUKE = 'special_attack'
 MOVE = 'move'
 SURRENDER = 'surrender'
+
+CHAT_SEND = 'chat_send'
