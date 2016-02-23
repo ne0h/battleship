@@ -258,7 +258,11 @@ class ClientHandler:
 
     def __init_board(self, params):
         logging.debug('__init_board()')
-        #logging.debug('X'*2**8)
+
+        # not in any game
+        if self.__game is None:
+            self.__send(self.__message_parser.encode('report', {'status': '43'}))
+            return
 
         shipx = 'ship_{}_x'
         shipy = 'ship_{}_y'
@@ -297,9 +301,9 @@ class ClientHandler:
         self.__send(self.__message_parser.encode('report', {'status': '29'}))
 
     def __leave_game(self):
+        # not in any game
         if self.__game is None:
-            # illegal move
-            self.__send(self.__message_parser.encode('report', {'status': '31'}))
+            self.__send(self.__message_parser.encode('report', {'status': '43'}))
             return
 
         # if player who created game leaves then destroy the game else just leave
@@ -315,11 +319,18 @@ class ClientHandler:
         if not self.__expect_parameter(['coordinate_x', 'coordinate_y']):
             return
 
+        # not in any game
+        if self.__game is None:
+            self.__send(self.__message_parser.encode('report', {'status': '43'}))
+            return
+
         # check if it's actually your turn
         if self.__lobby_model.get_game(self.__game).get_turn() != self.__player:
             self.__send(self.__message_parser.encode('report', {'status': '41'}))
 
         self.__lobby_model.get_game(self.__game).fire(params['coordinate_x'], params['coordinate_y'])
+
+
 
     def __nuke(self):
         pass
