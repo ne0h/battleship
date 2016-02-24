@@ -154,8 +154,39 @@ class ClientHandler:
         logging.debug('on_game_start()')
         self.__send(self.__message_parser.encode('report', {'status': '48'}))
 
-    def on_update_field(self):
-        logging.debug('on_update_field()')
+    def on_host_begins(self):
+        logging.debug('on_host_begins()')
+        self.__begin_turn()
+
+    def on_guest_begins(self):
+        logging.debug('on_guest_begins()')
+        self.__begin_turn()
+
+    def on_attack(self, x, y, condition):
+        logging.debug('on_attack()')
+        msg = None
+        # if player is enemy
+        if self.__lobby_model.get_game(self.__game).get_turn() == self.__player:
+            # update own field
+            msg = {
+                'status': 13,
+                'was_special_attack': 'false',
+                'coordinate_x': x,
+                'coordinate_y': y
+            }
+            self.__send(self.__message_parser.encode('report', msg))
+            # trigger next turn wtf
+            self.__begin_turn()
+        else:
+            # update enemy field
+            msg = {
+                'status': 14,
+                'number_of_updated_fields': '1',
+                'field_0_x': x,
+                'field_0_y': y,
+                'field_0_condition': condition
+            }
+            self.__send(self.__message_parser.encode('report', msg))
 
     def get_socket(self):
         return self.__socket
@@ -201,7 +232,8 @@ class ClientHandler:
         # register game callbacks
         self.__lobby_model.get_game(self.__game).register_callback(GameEvent.on_ship_edit, self.on_ship_edit)
         self.__lobby_model.get_game(self.__game).register_callback(GameEvent.on_game_start, self.on_game_start)
-        self.__lobby_model.get_game(self.__game).register_callback(GameEvent.on_update_field, self.on_update_field)
+        self.__lobby_model.get_game(self.__game).register_callback(GameEvent.on_attack, self.on_attack)
+        self.__lobby_model.get_game(self.__game).register_callback(GameEvent.on_host_begins, self.on_host_begins)
 
     def __join_game(self, params):
         # make sure parameter list is complete
@@ -235,7 +267,8 @@ class ClientHandler:
         # register game callbacks
         self.__lobby_model.get_game(self.__game).register_callback(GameEvent.on_ship_edit, self.on_ship_edit)
         self.__lobby_model.get_game(self.__game).register_callback(GameEvent.on_game_start, self.on_game_start)
-        self.__lobby_model.get_game(self.__game).register_callback(GameEvent.on_update_field, self.on_update_field)
+        self.__lobby_model.get_game(self.__game).register_callback(GameEvent.on_attack, self.on_attack)
+        self.__lobby_model.get_game(self.__game).register_callback(GameEvent.on_guest_begins, self.on_guest_begins)
 
         self.__lobby_model.get_game(self.__game).just_begin_ship_placement_already()
 
@@ -300,6 +333,9 @@ class ClientHandler:
         # ack init board
         self.__send(self.__message_parser.encode('report', {'status': '29'}))
 
+        # trigger random begin return message
+        self.__lobby_model.get_game(self.__game).start()
+
     def __leave_game(self):
         # not in any game
         if self.__game is None:
@@ -316,7 +352,7 @@ class ClientHandler:
         self.__lobby_model.delete_game(self.__game)
 
     def __fire(self, params):
-        if not self.__expect_parameter(['coordinate_x', 'coordinate_y']):
+        if not self.__expect_parameter(['coordinate_x', 'coordinate_y'], params):
             return
 
         # not in any game
@@ -327,10 +363,16 @@ class ClientHandler:
         # check if it's actually your turn
         if self.__lobby_model.get_game(self.__game).get_turn() != self.__player:
             self.__send(self.__message_parser.encode('report', {'status': '41'}))
+            return
 
-        self.__lobby_model.get_game(self.__game).fire(params['coordinate_x'], params['coordinate_y'])
+        # save move
+        _, updated = self.__lobby_model.get_game(self.__game).fire(self.__player, params['coordinate_x'], params['coordinate_y'])
+        if not updated:
+            self.__send(self.__message_parser.encode('report', {'status': '39'}))
+            return
 
-
+        # successful attack
+        self.__send(self.__message_parser.encode('report', {'status': '22'}))
 
     def __nuke(self):
         pass
@@ -340,6 +382,9 @@ class ClientHandler:
 
     def __surrender(self):
         pass
+
+    def __begin_turn(self):
+        self.__send(self.__message_parser.encode('report', {'status': '11'}))
 
     def __chat(self):
         # TODO implement chat

@@ -7,18 +7,23 @@ import threading
 class GameEvent(Enum):
     on_ship_edit = 1,
     on_game_start = 2,
-    on_update_field = 3
+    on_attack = 3,
+    on_host_begins = 4,
+    on_guest_begins = 5
 
 callbacks = {}
 callbacks[GameEvent.on_ship_edit] = []
 callbacks[GameEvent.on_game_start] = []
-callbacks[GameEvent.on_update_field] = []
+callbacks[GameEvent.on_host_begins] = []
+callbacks[GameEvent.on_guest_begins] = []
+callbacks[GameEvent.on_attack] = []
 
 callbacks_lock = threading.Lock()
 
 class GameStatus(Enum):
     waiting = 1,
-    ready = 2
+    ready = 2,
+    ongoing = 3
 
 
 class Game:
@@ -34,7 +39,8 @@ class Game:
         self.__second_player = None
         self.__status = GameStatus.waiting
         # turn is either 1 or 2
-        self.__turn = 1
+        from random import randint
+        self.__turn = randint(1,2)
 
     def set_second_player(self, id):
         self.__second_player = id
@@ -47,10 +53,6 @@ class Game:
     def get_turn(self):
         return self.__turn
 
-    def next_turn(self):
-        # toggle between 1 and 2
-        self.__turn = 3 - self.__turn
-
     def get_name(self):
         return self.__name
 
@@ -59,6 +61,15 @@ class Game:
 
     def is_waiting(self):
         return self.__status == GameStatus.waiting
+
+    def start(self):
+        if self.__status is not GameStatus.ongoing:
+            return
+
+        if self.__turn == 1:
+            self.__notify_all(GameEvent.on_host_begins)
+        else:
+            self.__notify_all(GameEvent.on_guest_begins)
 
     def get_player(self, player):
         if player == 1:
@@ -76,7 +87,8 @@ class Game:
 
         # trigger on_game_start if ship placement is done
         if self.__is_game_preparation_done():
-            self.__notify_all(GameEvent.on_ship_edit)
+            self.__status = GameStatus.ongoing
+            self.__notify_all(GameEvent.on_game_start)
 
         return suc, left
 
@@ -85,9 +97,25 @@ class Game:
         logging.debug('move_ship()')
 
     def fire(self, player, x, y):
-        field = self.__get_field_by_player(player)
         logging.debug('fire()')
-        field.attack(playingfield.Field(x, y))
+        result, updated = self.__get_field_by_player(player).attack(playingfield.Field(x, y))
+        if result == playingfield.FieldStatus.WATER:
+            condition = 'free'
+        elif result == playingfield.FieldStatus.DAMAGEDSHIP:
+            condition = 'damaged'
+        else:
+            logging.debug("attack() returns invalid condition: {}".format(repr(result)))
+            condition = None
+        # trigger on_attack event
+        if updated:
+            self.__next_turn()
+            params = {
+                'x': x,
+                'y': y,
+                'condition': condition
+            }
+            self.__notify_all(GameEvent.on_attack, params)
+        return condition, updated
 
     def nuke(self, player, x, y):
         field = self.__get_field_by_player(player)
@@ -96,42 +124,6 @@ class Game:
     def just_begin_ship_placement_already(self):
         # this is bullshit
         self.__notify_all(GameEvent.on_ship_edit)
-
-    def __get_field_by_player(self, player):
-        if player == 1:
-            return self.__first_field
-        elif player == 2:
-            return self.__second_field
-        return None
-
-    def __is_game_preparation_done(self):
-        return not (self.__first_field.moreShipsLeftToPlace() and self.__second_field.moreShipsLeftToPlace())
-
-    def __x_y_direction_id_to_bow_rear(self, x, y, direction, id):
-        if id == 0:
-            length = 5
-        elif 1 <= id <= 2:
-            length = 4
-        elif 3 <= id <= 5:
-            length = 3
-        elif 6 <= id <= 9:
-            length = 2
-
-        bow = playingfield.Field(x, y)
-        rear = None
-
-        if direction == "N":
-            rear = playingfield.Field(x, y + (length - 1))
-        elif direction == "S":
-            rear = playingfield.Field(x, y - (length - 1))
-        elif direction == "E":
-            rear = playingfield.Field(x + (length - 1), y)
-        elif direction == "W":
-            rear = playingfield.Field(x - (length - 1), y)
-        else:
-            logging.debug("Weird board init direction received: {}".format(direction))
-
-        return bow, rear
 
     def register_callback(self, event, callback):
         """
@@ -159,12 +151,52 @@ class Game:
         callbacks[event].remove(callback)
         callbacks_lock.release()
 
-    def __notify_all(self, event):
+    def __next_turn(self):
+        # toggle between 1 and 2
+        self.__turn = 3 - self.__turn
+
+    def __get_field_by_player(self, player):
+        if player == 1:
+            return self.__first_field
+        elif player == 2:
+            return self.__second_field
+        return None
+
+    def __is_game_preparation_done(self):
+        return not (self.__first_field.moreShipsLeftToPlace() or self.__second_field.moreShipsLeftToPlace())
+
+    def __x_y_direction_id_to_bow_rear(self, x, y, direction, id):
+        if id == 0:
+            length = 5
+        elif 1 <= id <= 2:
+            length = 4
+        elif 3 <= id <= 5:
+            length = 3
+        elif 6 <= id <= 9:
+            length = 2
+
+        bow = playingfield.Field(x, y)
+        rear = None
+
+        if direction == "N":
+            rear = playingfield.Field(x, y + (length - 1))
+        elif direction == "S":
+            rear = playingfield.Field(x, y - (length - 1))
+        elif direction == "E":
+            rear = playingfield.Field(x + (length - 1), y)
+        elif direction == "W":
+            rear = playingfield.Field(x - (length - 1), y)
+        else:
+            logging.debug("Weird board init direction received: {}".format(direction))
+
+        return bow, rear
+
+    def __notify_all(self, event, params = {}):
         logging.debug("Game __notify_all({})".format(event))
         global callbacks
         callbacks_lock.acquire()
         for cb in callbacks[event]:
-            cb()
+            cb(**params)
         callbacks_lock.release()
 
 
