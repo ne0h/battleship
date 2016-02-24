@@ -98,7 +98,7 @@ class Game:
 
     def fire(self, player, x, y):
         logging.debug('fire()')
-        result, updated = self.__get_field_by_player(player).attack(playingfield.Field(x, y))
+        result, updated = self.__get_field_by_player(3 - player).attack(playingfield.Field(x, y))
         if result == playingfield.FieldStatus.WATER:
             condition = 'free'
         elif result == playingfield.FieldStatus.DAMAGEDSHIP:
