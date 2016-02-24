@@ -495,11 +495,11 @@ class PlayingField:
 		Returns:
 			Returns the status of the field after the attack together with True if it changed or False if not.
 		"""
+
 		status, ship = self.__getFieldStatus(field)
-		result = status
 		updated = False
 		if status is FieldStatus.SHIP:
-			result = FieldStatus.DAMAGEDSHIP
+			status = FieldStatus.DAMAGEDSHIP
 			ship.addDamage(field)
 			updated = True
 
@@ -508,7 +508,7 @@ class PlayingField:
 			updated = True
 			self.__unfogged.append(field)
 
-		return result, updated
+		return status, updated
 
 	def specialAttack(self, field):
 		"""
@@ -522,8 +522,8 @@ class PlayingField:
 		"""
 
 		# calculate all the fields
-		fields = [field, Field(field.x+1, field.y), Field(field.x+2, field.y),
-				  Field(field.x+1, field.y), Field(field.x+1, field.y+1), Field(field.x+1, field.y+2),
+		fields = [field, Field(field.x, field.y + 1), Field(field.x, field.y + 2),
+				  Field(field.x + 1, field.y), Field(field.x + 1, field.y + 1), Field(field.x + 1, field.y + 2),
 				  Field(field.x+2, field.y), Field(field.x+2, field.y+1), Field(field.x+2, field.y+2)]
 
 		updates = []
@@ -604,7 +604,6 @@ class PlayingField:
 
 		# add other fields if special attack
 		if wasSpecialAttack:
-			print(params)
 			fields += [Field(field.x, field.y + 1), Field(field.x, field.y + 2),
 				  Field(field.x + 1, field.y), Field(field.x + 1, field.y + 1), Field(field.x + 1, field.y + 2),
 				  Field(field.x+2, field.y), Field(field.x+2, field.y+1), Field(field.x+2, field.y+2)]
@@ -621,8 +620,8 @@ class PlayingField:
 			if f not in self.__unfogged:
 				self.__unfogged.append(f)
 
-	def unfog(self, fields):
-		self.__unfogged + fields
+	def unfog(self, field):
+		self.__unfogged.append(field)
 
 	def isUnfogged(self, field):
 		return field in self.__unfogged
