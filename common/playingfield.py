@@ -245,7 +245,7 @@ class ShipList:
 		ship = self.getShip(shipId)
 		fieldsToCheck = []
 
-		if ship.length is len(ship.damages):
+		if ship.getLength() is len(ship.damages):
 			return False
 
 		if ship.orientation is Orientation.NORTH or ship.orientation is Orientation.SOUTH:
