@@ -84,9 +84,9 @@ class ClientHandler:
             elif msgtype == messages.FIRE:
                 self.__fire(msgparams)
             elif msgtype == messages.NUKE:
-                self.__nuke()
+                self.__nuke(msgparams)
             elif msgtype == messages.MOVE:
-                self.__move()
+                self.__move(msgparams)
             elif msgtype == messages.SURRENDER:
                 self.__surrender()
             elif msgtype == CHAT_SEND:
@@ -188,6 +188,34 @@ class ClientHandler:
             }
             self.__send(self.__message_parser.encode('report', msg))
 
+    def on_special_attack(self, x, y, updates):
+        logging.debug('on_special_attack()')
+        msg = None
+        if self.__lobby_model.get_game(self.__game).get_turn() == self.__player:
+            # update own field
+            msg = {
+                'status': 13,
+                'was_special_attack': 'true',
+                'coordinate_x': x,
+                'coordinate_y': y
+            }
+            self.__send(self.__message_parser.encode('report', msg))
+            # trigger next turn wtf
+            self.__begin_turn()
+        else:
+            # update enemy field
+            msg = {
+                'status': 14,
+                'number_of_updated_fields': len(updates)
+            }
+            i = 0
+            for j in updates:
+                msg['field_{}_x'.format(i)] = j['field'].x
+                msg['field_{}_y'.format(i)] =j['field'].y
+                msg['field_{}_condition'.format(i)] = j['status']
+                i += 1
+            self.__send(self.__message_parser.encode('report', msg))
+
     def get_socket(self):
         return self.__socket
 
@@ -233,6 +261,7 @@ class ClientHandler:
         self.__lobby_model.get_game(self.__game).register_callback(GameEvent.on_ship_edit, self.on_ship_edit)
         self.__lobby_model.get_game(self.__game).register_callback(GameEvent.on_game_start, self.on_game_start)
         self.__lobby_model.get_game(self.__game).register_callback(GameEvent.on_attack, self.on_attack)
+        self.__lobby_model.get_game(self.__game).register_callback(GameEvent.on_special_attack, self.on_special_attack)
         self.__lobby_model.get_game(self.__game).register_callback(GameEvent.on_host_begins, self.on_host_begins)
 
     def __join_game(self, params):
@@ -268,6 +297,7 @@ class ClientHandler:
         self.__lobby_model.get_game(self.__game).register_callback(GameEvent.on_ship_edit, self.on_ship_edit)
         self.__lobby_model.get_game(self.__game).register_callback(GameEvent.on_game_start, self.on_game_start)
         self.__lobby_model.get_game(self.__game).register_callback(GameEvent.on_attack, self.on_attack)
+        self.__lobby_model.get_game(self.__game).register_callback(GameEvent.on_special_attack, self.on_special_attack)
         self.__lobby_model.get_game(self.__game).register_callback(GameEvent.on_guest_begins, self.on_guest_begins)
 
         self.__lobby_model.get_game(self.__game).just_begin_ship_placement_already()
@@ -374,10 +404,30 @@ class ClientHandler:
         # successful attack
         self.__send(self.__message_parser.encode('report', {'status': '22'}))
 
-    def __nuke(self):
-        pass
+    def __nuke(self, params):
+        if not self.__expect_parameter(['coordinate_x', 'coordinate_y'], params):
+            return
 
-    def __move(self):
+        # not in any game
+        if self.__game is None:
+            self.__send(self.__message_parser.encode('report', {'status': '43'}))
+            return
+
+        # check if it's actually your turn
+        if self.__lobby_model.get_game(self.__game).get_turn() != self.__player:
+            self.__send(self.__message_parser.encode('report', {'status': '41'}))
+            return
+
+        # save move
+        updated = self.__lobby_model.get_game(self.__game).nuke(self.__player, params['coordinate_x'], params['coordinate_y'])
+        if len(updated) == 0:
+            self.__send(self.__message_parser.encode('report', {'status': '32'}))
+            return
+
+        # successful attack
+        self.__send(self.__message_parser.encode('report', {'status': '24'}))
+
+    def __move(self, params):
         pass
 
     def __surrender(self):

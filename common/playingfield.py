@@ -518,7 +518,7 @@ class PlayingField:
 		    field: the most significant field
 
 		Returns:
-			A list of fields whose statuses has been updated.
+			A dictionary of fields and statuses that have been updated. Keys are 'field' and 'status'.
 		"""
 
 		# calculate all the fields
@@ -530,7 +530,10 @@ class PlayingField:
 		for f in fields:
 			status, updated = self.attack(f)
 			if updated:
-				updates.append(f)
+				updates.append({
+					'field': f,
+					'status': status
+				})
 
 		return updates
 

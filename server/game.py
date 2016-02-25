@@ -8,8 +8,9 @@ class GameEvent(Enum):
     on_ship_edit = 1,
     on_game_start = 2,
     on_attack = 3,
-    on_host_begins = 4,
-    on_guest_begins = 5
+    on_special_attack = 4,
+    on_guest_begins = 5,
+    on_host_begins = 6
 
 callbacks = {}
 callbacks[GameEvent.on_ship_edit] = []
@@ -17,6 +18,7 @@ callbacks[GameEvent.on_game_start] = []
 callbacks[GameEvent.on_host_begins] = []
 callbacks[GameEvent.on_guest_begins] = []
 callbacks[GameEvent.on_attack] = []
+callbacks[GameEvent.on_special_attack] = []
 
 callbacks_lock = threading.Lock()
 
@@ -118,8 +120,27 @@ class Game:
         return condition, updated
 
     def nuke(self, player, x, y):
-        field = self.__get_field_by_player(player)
         logging.debug('nuke()')
+        updates = self.__get_field_by_player(3 - player).specialAttack(playingfield.Field(x, y))
+
+        for j in updates:
+            if j['status'] == playingfield.FieldStatus.WATER:
+                j['status'] = 'free'
+            elif j['status'] == playingfield.FieldStatus.DAMAGEDSHIP:
+                j['status'] = 'damaged'
+            else:
+                logging.debug("specialAttack() returns invalid condition: {}".format(repr(j['status'])))
+                j['status'] = None
+
+        if len(updates) > 0:
+            self.__next_turn()
+            params = {
+                'x': x,
+                'y': y,
+                'updates': updates
+            }
+            self.__notify_all(GameEvent.on_special_attack, params)
+        return updates
 
     def just_begin_ship_placement_already(self):
         # this is bullshit
