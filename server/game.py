@@ -10,7 +10,8 @@ class GameEvent(Enum):
     on_attack = 3,
     on_special_attack = 4,
     on_guest_begins = 5,
-    on_host_begins = 6
+    on_host_begins = 6,
+    on_move = 7
 
 callbacks = {}
 callbacks[GameEvent.on_ship_edit] = []
@@ -19,6 +20,7 @@ callbacks[GameEvent.on_host_begins] = []
 callbacks[GameEvent.on_guest_begins] = []
 callbacks[GameEvent.on_attack] = []
 callbacks[GameEvent.on_special_attack] = []
+callbacks[GameEvent.on_move] = []
 
 callbacks_lock = threading.Lock()
 
@@ -95,8 +97,44 @@ class Game:
         return suc, left
 
     def move_ship(self, player, id, direction):
-        field = self.__get_field_by_player(player)
         logging.debug('move_ship()')
+        if direction == 'N':
+            direction = playingfield.Orientation.NORTH
+        elif direction == 'W':
+            direction = playingfield.Orientation.WEST
+        elif direction == 'S':
+            direction = playingfield.Orientation.SOUTH
+        elif direction == 'E':
+            direction = playingfield.Orientation.EAST
+        else:
+            logging.debug("Weird direction: {}".format(repr(direction)))
+            direction = None
+
+        # check if move is allowed
+        if not self.__get_field_by_player(player).movePossible(id, direction):
+            logging.debug("Move is impossible.")
+            return False
+
+        updates = self.__get_field_by_player(player).move(id, direction)
+
+        for j in updates:
+            if j['status'] == playingfield.FieldStatus.WATER:
+                j['status'] = 'free'
+            elif j['status'] == playingfield.FieldStatus.SHIP:
+                j['status'] = 'undamaged'
+            elif j['status'] == playingfield.FieldStatus.DAMAGEDSHIP:
+                j['status'] = 'damaged'
+            else:
+                logging.debug("move() returns invalid condition: {}".format(repr(j['status'])))
+                j['status'] = None
+
+        self.__next_turn()
+
+        # trigger on_move event
+        params = { 'updates': updates }
+        self.__notify_all(GameEvent.on_move, params)
+
+        return True
 
     def fire(self, player, x, y):
         logging.debug('fire()')

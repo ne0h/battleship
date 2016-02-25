@@ -90,7 +90,8 @@ class Ship:
 	"""
 
 	def addDamage(self, part):
-		self.damages.append(part)
+		# we do need a copy here
+		self.damages.append(Field(part.x, part.y))
 
 	def isDamaged(self, part):
 		for damage in self.damages:
@@ -504,9 +505,9 @@ class PlayingField:
 			updated = True
 
 		# unfog field
-		if field not in self.__unfogged:
+		if not self.isUnfogged(field):
 			updated = True
-			self.__unfogged.append(field)
+			self.unfog(field)
 
 		return status, updated
 
@@ -549,11 +550,44 @@ class PlayingField:
 		    direction: the direction of the ship
 
 		Returns:
-		    Returns True if the move has been successful or False if not.
-
+		    A dictionary of fields and statuses that have been updated and are unfogged. Keys are 'field' and 'status'.
 		"""
 
-		return self.__ships.move(shipId, direction)
+		oldfields = splitShip(self.getShip(shipId).bow, self.getShip(shipId).rear)
+
+		logging.debug("OLD FIELDS::::")
+		for k in oldfields: logging.debug("++++ {}".format(k.toString()))
+
+		self.__ships.move(shipId, direction)
+
+		newfields = splitShip(self.getShip(shipId).bow, self.getShip(shipId).rear)
+
+		logging.debug("NEW FIELDS::::")
+		for k in newfields: logging.debug("---- {}".format(k.toString()))
+
+		# merge old and new fields
+		for f in oldfields:
+			found = False
+			for g in newfields:
+				if f.equals(g):
+					found = True
+					break
+			if not found:
+				newfields.append(f)
+
+		logging.debug("FINAL FIELDS::::")
+		for k in newfields: logging.debug("@@@@ {}".format(k.toString()))
+
+		updates = []
+		for f in newfields:
+			logging.debug("Field {} is unfogged = {}".format(f.toString(), self.isUnfogged(f)))
+			if self.isUnfogged(f):
+				status, _ = self.__getFieldStatus(f)
+				updates.append({
+					'field': f,
+					'status': status
+				})
+		return updates
 
 	def getShips(self):
 		"""
@@ -624,10 +658,15 @@ class PlayingField:
 				self.__unfogged.append(f)
 
 	def unfog(self, field):
+		logging.debug("Unfog {}...".format(field.toString()))
 		self.__unfogged.append(field)
 
 	def isUnfogged(self, field):
-		return field in self.__unfogged
+		#return field in self.__unfogged
+		for j in self.__unfogged:
+			if field.equals(j):
+				return True
+		return False
 
 	def getUnfogged(self):
 		return self.__unfogged

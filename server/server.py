@@ -216,16 +216,37 @@ class ClientHandler:
                 i += 1
             self.__send(self.__message_parser.encode('report', msg))
 
+    def on_move(self, updates):
+        logging.debug('on_move()')
+        msg = None
+        if self.__lobby_model.get_game(self.__game).get_turn() == self.__player:
+            # update enemy field
+            if len(updates) > 0:
+                msg = {
+                    'status': 14,
+                    'number_of_updated_fields': len(updates)
+                }
+                i = 0
+                for j in updates:
+                    msg['field_{}_x'.format(i)] = j['field'].x
+                    msg['field_{}_y'.format(i)] =j['field'].y
+                    msg['field_{}_condition'.format(i)] = j['status']
+                    i += 1
+                self.__send(self.__message_parser.encode('report', msg))
+            # trigger next turn wtf
+            self.__begin_turn()
+
     def get_socket(self):
         return self.__socket
 
     def finish(self):
-        logging.info("Client {} disconnected.".format(self.__socket.getpeername()))
+        logging.info("Client disconnected.")
 
         # remove any left callbacks
         self.__lobby_model.remove_callback(LobbyEvent.on_update, self.on_update_lobby)
         self.__lobby_model.remove_callback(LobbyEvent.on_game_deleted, self.on_game_deleted)
 
+        # remove player from lobby
         self.__lobby_model.delete_player(self.__id)
 
     def __create_game(self, params):
@@ -262,6 +283,7 @@ class ClientHandler:
         self.__lobby_model.get_game(self.__game).register_callback(GameEvent.on_game_start, self.on_game_start)
         self.__lobby_model.get_game(self.__game).register_callback(GameEvent.on_attack, self.on_attack)
         self.__lobby_model.get_game(self.__game).register_callback(GameEvent.on_special_attack, self.on_special_attack)
+        self.__lobby_model.get_game(self.__game).register_callback(GameEvent.on_move, self.on_move)
         self.__lobby_model.get_game(self.__game).register_callback(GameEvent.on_host_begins, self.on_host_begins)
 
     def __join_game(self, params):
@@ -298,6 +320,7 @@ class ClientHandler:
         self.__lobby_model.get_game(self.__game).register_callback(GameEvent.on_game_start, self.on_game_start)
         self.__lobby_model.get_game(self.__game).register_callback(GameEvent.on_attack, self.on_attack)
         self.__lobby_model.get_game(self.__game).register_callback(GameEvent.on_special_attack, self.on_special_attack)
+        self.__lobby_model.get_game(self.__game).register_callback(GameEvent.on_move, self.on_move)
         self.__lobby_model.get_game(self.__game).register_callback(GameEvent.on_guest_begins, self.on_guest_begins)
 
         self.__lobby_model.get_game(self.__game).just_begin_ship_placement_already()
@@ -424,11 +447,31 @@ class ClientHandler:
             self.__send(self.__message_parser.encode('report', {'status': '32'}))
             return
 
-        # successful attack
+        # successful special attack
         self.__send(self.__message_parser.encode('report', {'status': '24'}))
 
     def __move(self, params):
-        pass
+        if not self.__expect_parameter(['ship_id', 'direction'], params):
+            return
+
+        # not in any game
+        if self.__game is None:
+            self.__send(self.__message_parser.encode('report', {'status': '43'}))
+            return
+
+        # check if it's actually your turn
+        if self.__lobby_model.get_game(self.__game).get_turn() != self.__player:
+            self.__send(self.__message_parser.encode('report', {'status': '41'}))
+            return
+
+        # save move
+        result = self.__lobby_model.get_game(self.__game).move_ship(self.__player, int(params['ship_id']), params['direction'])
+        if result is False:
+            self.__send(self.__message_parser.encode('report', {'status': '31'}))
+            return
+
+        # successful move
+        self.__send(self.__message_parser.encode('report', {'status': '21'}))
 
     def __surrender(self):
         pass
