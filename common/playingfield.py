@@ -669,7 +669,7 @@ class PlayingField:
 			total += len(s.damages)
 		return total == 30
 
-	def __init__(self, fieldLength, devmode):
+	def __init__(self, fieldLength, devmode=False):
 		self.__ships = ShipList(fieldLength)
 		self.__fieldLength = fieldLength
 		self.__devmode = devmode
