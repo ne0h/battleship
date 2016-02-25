@@ -554,16 +554,8 @@ class PlayingField:
 		"""
 
 		oldfields = splitShip(self.getShip(shipId).bow, self.getShip(shipId).rear)
-
-		logging.debug("OLD FIELDS::::")
-		for k in oldfields: logging.debug("++++ {}".format(k.toString()))
-
 		self.__ships.move(shipId, direction)
-
 		newfields = splitShip(self.getShip(shipId).bow, self.getShip(shipId).rear)
-
-		logging.debug("NEW FIELDS::::")
-		for k in newfields: logging.debug("---- {}".format(k.toString()))
 
 		# merge old and new fields
 		for f in oldfields:
@@ -574,9 +566,6 @@ class PlayingField:
 					break
 			if not found:
 				newfields.append(f)
-
-		logging.debug("FINAL FIELDS::::")
-		for k in newfields: logging.debug("@@@@ {}".format(k.toString()))
 
 		updates = []
 		for f in newfields:

@@ -89,7 +89,7 @@ class ClientHandler:
                 self.__move(msgparams)
             elif msgtype == messages.SURRENDER:
                 self.__surrender()
-            elif msgtype == CHAT_SEND:
+            elif msgtype == messages.CHAT_SEND:
                 self.__chat()
             else:
                 self.__unknown_msg()
@@ -145,6 +145,18 @@ class ClientHandler:
     def on_game_deleted(self):
         self.__game = None
         self.__send(self.__message_parser.encode('report', {'status': '19'}))
+
+    def on_game_ended(self, winner, id0, id1):
+        self.__game = None
+        msg = {
+            'status': '17',
+            'winner': winner - 1,
+            'name_of_game': self.__game,
+            'identifier_0': id0,
+            'identifier_1': id1,
+            'reason_for_game_end': 'Because of reasons.'
+        }
+        self.__send(self.__message_parser.encode('report', msg))
 
     def on_ship_edit(self):
         logging.debug('on_ship_edit()')
@@ -285,6 +297,7 @@ class ClientHandler:
         self.__lobby_model.get_game(self.__game).register_callback(GameEvent.on_special_attack, self.on_special_attack)
         self.__lobby_model.get_game(self.__game).register_callback(GameEvent.on_move, self.on_move)
         self.__lobby_model.get_game(self.__game).register_callback(GameEvent.on_host_begins, self.on_host_begins)
+        self.__lobby_model.get_game(self.__game).register_callback(GameEvent.on_game_ended, self.on_game_ended)
 
     def __join_game(self, params):
         # make sure parameter list is complete
@@ -322,6 +335,7 @@ class ClientHandler:
         self.__lobby_model.get_game(self.__game).register_callback(GameEvent.on_special_attack, self.on_special_attack)
         self.__lobby_model.get_game(self.__game).register_callback(GameEvent.on_move, self.on_move)
         self.__lobby_model.get_game(self.__game).register_callback(GameEvent.on_guest_begins, self.on_guest_begins)
+        self.__lobby_model.get_game(self.__game).register_callback(GameEvent.on_game_ended, self.on_game_ended)
 
         self.__lobby_model.get_game(self.__game).just_begin_ship_placement_already()
 
@@ -401,6 +415,9 @@ class ClientHandler:
         #else:
         #    self.__lobby_model.leave_game(self.__game)
 
+        # make sure the game has started
+
+
         # nevermind lulz
         self.__lobby_model.delete_game(self.__game)
 
@@ -479,9 +496,11 @@ class ClientHandler:
             self.__send(self.__message_parser.encode('report', {'status': '43'}))
             return
 
-        # TODO game ended
+        # surrender
+        self.self.__lobby_model.get_game(self.__game).surrender(self.__player)
 
-        self.__lobby_model.delete_game(self.__game)
+        # delete without triggering game aborted
+        self.__lobby_model.delete_game(self.__game, aborted=False)
 
         # surrender accepted lol
         self.__send(self.__message_parser.encode('report', {'status': '23'}))

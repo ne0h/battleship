@@ -11,7 +11,8 @@ class GameEvent(Enum):
     on_special_attack = 4,
     on_guest_begins = 5,
     on_host_begins = 6,
-    on_move = 7
+    on_move = 7,
+    on_game_ended = 8
 
 callbacks = {}
 callbacks[GameEvent.on_ship_edit] = []
@@ -21,6 +22,7 @@ callbacks[GameEvent.on_guest_begins] = []
 callbacks[GameEvent.on_attack] = []
 callbacks[GameEvent.on_special_attack] = []
 callbacks[GameEvent.on_move] = []
+callbacks[GameEvent.on_game_ended] = []
 
 callbacks_lock = threading.Lock()
 
@@ -69,6 +71,10 @@ class Game:
     def start(self):
         if self.__status is not GameStatus.ongoing:
             return
+
+        # save timestamp for no reason at all
+        import time
+        self.__timestamp = str(int(time.time() * 1000))
 
         if self.__turn == 1:
             self.__notify_all(GameEvent.on_host_begins)
@@ -183,6 +189,16 @@ class Game:
     def just_begin_ship_placement_already(self):
         # this is bullshit
         self.__notify_all(GameEvent.on_ship_edit)
+
+    def surrender(self, player):
+        params = {
+            'winner': 3 - player,
+            'timestamp': self.__timestamp,
+            # whatever man
+            'id0': self.__first_player.get_id(),
+            'id1': self.__second_player.get_id()
+        }
+        self.__notify_all(GameEvent.on_game_ended, params)
 
     def register_callback(self, event, callback):
         """
