@@ -660,6 +660,12 @@ class PlayingField:
 	def getUnfogged(self):
 		return self.__unfogged
 
+	def isGameOver(self):
+		total = 0
+		for s in self.__ships.getShips():
+			total += len(s.damages)
+		return total == 30
+
 	def __init__(self, fieldLength):
 		self.__ships = ShipList(fieldLength)
 		self.__fieldLength = fieldLength

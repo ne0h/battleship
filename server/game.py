@@ -102,6 +102,19 @@ class Game:
 
         return suc, left
 
+    def check_if_game_over(self, player):
+        logging.debug("check_if_game_over()")
+        if self.__get_field_by_player(3 - player).isGameOver():
+            logging.debug("We have a winner!")
+            params = {
+                'winner': player,
+                'timestamp': self.__timestamp,
+                # whatever man
+                'id0': self.__first_player.get_id(),
+                'id1': self.__second_player.get_id()
+            }
+            self.__notify_all(GameEvent.on_game_ended, params)
+
     def move_ship(self, player, id, direction):
         logging.debug('move_ship()')
         if direction == 'N':
@@ -195,8 +208,8 @@ class Game:
             'winner': 3 - player,
             'timestamp': self.__timestamp,
             # whatever man
-            'id0': self.__first_player.get_id(),
-            'id1': self.__second_player.get_id()
+            'id0': self.__first_player,
+            'id1': self.__second_player
         }
         self.__notify_all(GameEvent.on_game_ended, params)
 

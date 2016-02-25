@@ -444,6 +444,9 @@ class ClientHandler:
         # successful attack
         self.__send(self.__message_parser.encode('report', {'status': '22'}))
 
+        # check if game over
+        self.__lobby_model.get_game(self.__game).check_if_game_over(self.__player)
+
     def __nuke(self, params):
         if not self.__expect_parameter(['coordinate_x', 'coordinate_y'], params):
             return
@@ -466,6 +469,9 @@ class ClientHandler:
 
         # successful special attack
         self.__send(self.__message_parser.encode('report', {'status': '24'}))
+
+        # check if game over
+        self.__lobby_model.get_game(self.__game).check_if_game_over(self.__player)
 
     def __move(self, params):
         if not self.__expect_parameter(['ship_id', 'direction'], params):
