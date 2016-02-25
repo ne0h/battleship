@@ -242,6 +242,10 @@ class ShipList:
 			return self.__destroyers[shipId]
 
 	def movePossible(self, shipId, direction):
+		
+		if(shipId<0 or shipId>9):
+			return False
+
 		ship = self.getShip(shipId)
 		fieldsToCheck = []
 
