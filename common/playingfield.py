@@ -43,8 +43,8 @@ class Field:
 		return (otherField.x is self.x and otherField.y is self.y)
 
 	def __init__(self, x, y):
-		self.x = x
-		self.y = y
+		self.x = int(x)
+		self.y = int(y)
 
 def splitShip(bow, rear):
 	"""
