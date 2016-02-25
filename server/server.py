@@ -146,12 +146,13 @@ class ClientHandler:
         self.__game = None
         self.__send(self.__message_parser.encode('report', {'status': '19'}))
 
-    def on_game_ended(self, winner, id0, id1):
+    def on_game_ended(self, winner, id0, id1, timestamp):
         self.__game = None
         msg = {
             'status': '17',
             'winner': winner - 1,
             'name_of_game': self.__game,
+            'timestamp': timestamp,
             'identifier_0': id0,
             'identifier_1': id1,
             'reason_for_game_end': 'Because of reasons.'
