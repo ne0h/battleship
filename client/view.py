@@ -661,6 +661,7 @@ class MainForm(QWidget):
 		self.__setup()
 		self.__lobbyBtn.setEnabled(True)
 		self.__viewModel.reset()
+		self.__specialAttackBtn.setText("Special Attack (%s left)" % self.__viewModel.specialAttacksLeft)
 
 	def __openConnectDialog(self):
 		if self.__connectBtn.text() == "Connect":
