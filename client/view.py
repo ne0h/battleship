@@ -17,6 +17,9 @@ class ViewModel:
 		self.waitForMoveSouth = False
 		self.waitForMoveEast  = False
 
+	def reset(self):
+		self.specialAttacksLeft = 3
+
 	def __init__(self):
 		self.specialAttacksLeft = 3
 		self.unsetAll()
@@ -657,6 +660,7 @@ class MainForm(QWidget):
 		self.__backend.resetClient()
 		self.__setup()
 		self.__lobbyBtn.setEnabled(True)
+		self.__viewModel.reset()
 
 	def __openConnectDialog(self):
 		if self.__connectBtn.text() == "Connect":
