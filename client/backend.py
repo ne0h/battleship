@@ -354,6 +354,7 @@ class Backend:
 		if result:
 			self.__updateClientStatus(ClientStatus.NOGAMERUNNING)
 			self.__serverHandler.setNickname(nickname)
+			self.lobby.nickname = nickname
 
 		return result
 

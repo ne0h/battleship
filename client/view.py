@@ -663,6 +663,7 @@ class MainForm(QWidget):
 				self.__connectDialogAlreadyOpen = True
 				ConnectDialog(self.__backend).exec_()
 				self.__connectDialogAlreadyOpen = False
+				self.__updatePlayersLbl()
 		else:
 			self.__backend.disconnect()
 			self.__lobbyBtn.setEnabled(False)
