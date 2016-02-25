@@ -305,7 +305,7 @@ class PlayingFieldWidget(QWidget):
 		self._backend = backend
 		self._fieldSize = fieldSize
 		self._fieldLength = fieldLength
-		self._devmode = devmode
+		self.devmode = devmode
 
 		super(PlayingFieldWidget, self).__init__()
 		self.setMinimumWidth(450)
@@ -440,8 +440,6 @@ class OwnPlayingFieldWidget(PlayingFieldWidget):
 			else:
 				self._showMessageBox("No ship", "There is no ship.")
 
-		if self._devmode:
-			self.repaint()
 
 	def __init__(self, backend, viewModel, fieldLength, devmode):
 		PlayingFieldWidget.__init__(self, backend, viewModel, fieldLength, devmode)
@@ -499,19 +497,22 @@ class EnemeysPlayingFieldWidget(PlayingFieldWidget):
 		# Attacks
 		#
 		if self._viewModel.waitForAttack:
-			logging.info("Attack at enemey's field: %s" % field.toString())
-			self._backend.attack(field)
-			self._viewModel.waitForAttack = False
+			if self.devmode or (0 < field.x < 15 and 0 < field.y < 15):
+				logging.info("Attack at enemey's field: %s" % field.toString())
+				self._backend.attack(field)
+				self._viewModel.waitForAttack = False
+			else:
+				self._showMessageBox("Attack not possible", "Choose another field!")
 
 		if self._viewModel.waitForSpecialAttack:
-			if 0 < field.x < 15 and 0 < field.y < 15:
+			if self.devmode or (0 < field.x < 14 and 0 < field.y < 14):
 				field = Field(field.x - 1, field.y - 1)
 				logging.info("Special Attack at enemey's field: %s" % field.toString())
 				self._backend.specialAttack(field)
 				self._viewModel.waitForSpecialAttack = False
+			else:
+				self._showMessageBox("Attack not possible", "Choose another field!")
 
-		if self._devmode:
-			self.repaint()
 
 	def __init__(self, backend, viewModel, fieldLength, devmode):
 		PlayingFieldWidget.__init__(self, backend, viewModel, fieldLength, devmode)
@@ -672,6 +673,18 @@ class MainForm(QWidget):
 	def __attack(self):
 		self.__viewModel.waitForAttack = True
 
+	def __attackDevMode(self):
+		fieldAddress, result = QInputDialog.getText(self, "DevMode Attack", "Please enter to comma-separated integers as address:")
+		points = fieldAddress.split(",")
+		if result:
+			self.__backend.attack(Field(float(points[0]), float(points[1])))
+
+	def __specialAttackDevMode(self):
+		fieldAddress, result = QInputDialog.getText(self, "DevMode Special Attack", "Please enter to comma-separated integers as address:")
+		points = fieldAddress.split(",")
+		if result:
+			self.__backend.specialAttack(Field(int(points[0]), int(points[1])))
+
 	def __specialAttack(self):
 		self.__viewModel.waitForSpecialAttack = True
 
@@ -740,7 +753,7 @@ class MainForm(QWidget):
 		#
 		ownPlayingFieldBox = QGroupBox("Your own playing field")
 		self.__ownPlayingFieldWgt = OwnPlayingFieldWidget(self.__backend, self.__viewModel, self.__fieldLength,
-														  self.__devmode)
+														  self.devmode)
 		ownPlayingFieldLayout = QVBoxLayout()
 		ownPlayingFieldLayout.addWidget(self.__ownPlayingFieldWgt)
 		ownPlayingFieldBox.setLayout(ownPlayingFieldLayout)
@@ -750,7 +763,7 @@ class MainForm(QWidget):
 		#
 		enemeysPlayingFieldBox = QGroupBox("Your enemey's playing field")
 		self.__enemeysPlayingFieldWgt = EnemeysPlayingFieldWidget(self.__backend, self.__viewModel, self.__fieldLength,
-																  self.__devmode)
+																  self.devmode)
 		enemiesPlayingFieldLayout = QVBoxLayout()
 		enemiesPlayingFieldLayout.addWidget(self.__enemeysPlayingFieldWgt)
 		enemeysPlayingFieldBox.setLayout(enemiesPlayingFieldLayout)
@@ -808,6 +821,12 @@ class MainForm(QWidget):
 		self.__setNicknameBtn = QPushButton("Set Nickname")
 		self.__setNicknameBtn.clicked.connect(self.__setNickname)
 
+		if self.devmode:
+			attackDevModeBtn = QPushButton("DevMode Attack")
+			attackDevModeBtn.clicked.connect(self.__attackDevMode)
+			specialAttackDevModeBtn = QPushButton("DevMode Special Attack")
+			specialAttackDevModeBtn.clicked.connect(self.__specialAttackDevMode)
+
 		# status stuff
 		self.__statusLbl = QLabel()
 		self.__statusLbl.setStyleSheet("color: #b00")
@@ -857,6 +876,9 @@ class MainForm(QWidget):
 		btnsLayout.addWidget(self.__lobbyBtn)
 		btnsLayout.addWidget(self.__placeShipBtn)
 		btnsLayout.addWidget(self.__setNicknameBtn)
+		if self.devmode:
+			btnsLayout.addWidget(attackDevModeBtn)
+			btnsLayout.addWidget(specialAttackDevModeBtn)
 		btnsLayout.addWidget(self.__leaveGameBtn)
 		btnsWgt = QWidget()
 		btnsWgt.setLayout(btnsLayout)
@@ -891,7 +913,7 @@ class MainForm(QWidget):
 
 		self.__backend = backend
 		self.__fieldLength = fieldLength
-		self.__devmode = devmode
+		self.devmode = devmode
 
 		self.__viewModel = ViewModel()
 		self.__fieldLength = fieldLength
