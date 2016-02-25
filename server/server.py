@@ -46,6 +46,7 @@ class ClientHandler:
         # TODO consistently rename on_update into on_update_lobby
         self.__lobby_model.register_callback(LobbyEvent.on_update, self.on_update_lobby)
         self.__lobby_model.register_callback(LobbyEvent.on_game_deleted, self.on_game_deleted)
+        self.__lobby_model.register_callback(LobbyEvent.on_chat, self.on_chat)
 
     def handle(self):
         logging.info("Client {} connected.".format(self.__socket.getpeername()))
@@ -90,7 +91,7 @@ class ClientHandler:
             elif msgtype == messages.SURRENDER:
                 self.__surrender()
             elif msgtype == messages.CHAT_SEND:
-                self.__chat()
+                self.__chat(msgparams)
             else:
                 self.__unknown_msg()
 
@@ -249,6 +250,16 @@ class ClientHandler:
             # trigger next turn wtf
             self.__begin_turn()
 
+    def on_chat(self, timestamp, player, msg):
+        logging.debug('on_chat()')
+        msg = {
+            'status': '15',
+            'author_id': player,
+            'timestamp': timestamp,
+            'message_content': msg
+        }
+        self.__send(self.__message_parser.encode('report', msg))
+
     def get_socket(self):
         return self.__socket
 
@@ -258,6 +269,7 @@ class ClientHandler:
         # remove any left callbacks
         self.__lobby_model.remove_callback(LobbyEvent.on_update, self.on_update_lobby)
         self.__lobby_model.remove_callback(LobbyEvent.on_game_deleted, self.on_game_deleted)
+        self.__lobby_model.remove_callback(LobbyEvent.on_chat, self.on_chat)
 
         # remove player from lobby
         self.__lobby_model.delete_player(self.__id)
@@ -527,9 +539,10 @@ class ClientHandler:
     def __begin_turn(self):
         self.__send(self.__message_parser.encode('report', {'status': '11'}))
 
-    def __chat(self):
-        # TODO implement chat
-        self.__send(self.__message_parser.encode('report', {'status': '15'}))
+    def __chat(self, params):
+        if not self.__expect_parameter(['text'], params):
+            return
+        self.__lobby_model.chat(self.__id, params['text'])
 
     def __unknown_msg(self):
         self.__send(self.__message_parser.encode('report', {'status': '40'}))
