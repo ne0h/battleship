@@ -436,11 +436,17 @@ class ClientHandler:
             self.__send(self.__message_parser.encode('report', {'status': '41'}))
             return
 
-        # save move
-        _, updated = self.__lobby_model.get_game(self.__game).fire(self.__player, params['coordinate_x'], params['coordinate_y'])
-        if not updated:
+        # check if coordinates are valid
+        if not ((0 <= int(params['coordinate_x']) <= 15) and (0 <= int(params['coordinate_y']) <= 15)):
             self.__send(self.__message_parser.encode('report', {'status': '39'}))
             return
+
+        # save move
+        _, updated = self.__lobby_model.get_game(self.__game).fire(self.__player, params['coordinate_x'], params['coordinate_y'])
+        logging.debug("Fire: updated is {}.".format(updated))
+        #if not updated:
+        #    self.__send(self.__message_parser.encode('report', {'status': '39'}))
+        #    return
 
         # successful attack
         self.__send(self.__message_parser.encode('report', {'status': '22'}))
@@ -450,6 +456,11 @@ class ClientHandler:
 
     def __nuke(self, params):
         if not self.__expect_parameter(['coordinate_x', 'coordinate_y'], params):
+            return
+
+        # check if coordinates are valid
+        if not ((0 <= int(params['coordinate_x']) <= 13) and (0 <= int(params['coordinate_y']) <= 13)):
+            self.__send(self.__message_parser.encode('report', {'status': '32'}))
             return
 
         # not in any game
@@ -464,9 +475,10 @@ class ClientHandler:
 
         # save move
         updated = self.__lobby_model.get_game(self.__game).nuke(self.__player, params['coordinate_x'], params['coordinate_y'])
-        if len(updated) == 0:
-            self.__send(self.__message_parser.encode('report', {'status': '32'}))
-            return
+        logging.debug("Nuke: updated {} fields.".format(len(updated)))
+        #if len(updated) == 0:
+        #    self.__send(self.__message_parser.encode('report', {'status': '32'}))
+        #    return
 
         # successful special attack
         self.__send(self.__message_parser.encode('report', {'status': '24'}))
