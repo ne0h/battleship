@@ -621,53 +621,8 @@ class Backend:
 		self.resetClient()
 		self.__updateClientStatus(ClientStatus.NOTCONNECTED)
 
-	def __onDevMode(self, result):
-		pass
-
-	def __devMode(self):
-		import random, string, time
-
-		gameId = "magickgame"
-		time.sleep(1)
-
-		# Validates that the client is connected to a server
-		if not self.__serverHandler.isConnected():
-			logging.error("Not connected to a server - exciting devmode.")
-			return
-
-		#
-		# Check if there is already a magick game
-		#
-		if self.lobby.existsGame(gameId):
-			# join game
-			logging.debug("Joining game: '%s'" % gameId)
-			cb = Callback()
-			cb.onAction = lambda success: self.__onDevMode(True)
-			self.joinGame(gameId, cb)
-		else:
-			# create game
-			logging.debug("Creating game: '%s'" % gameId)
-			cb = Callback()
-			cb.onAction = lambda success: self.__onDevMode(True)
-			self.createGame(gameId, cb)
-
-		#
-		# Build ship list and send to server. Shipslist will be send automatically to the server afterwards
-		#
-		time.sleep(1)
-		self.placeShip(Field(2,  3), Field(2,  7))
-		self.placeShip(Field(3,  3), Field(3,  6))
-		self.placeShip(Field(4,  3), Field(4,  6))
-		self.placeShip(Field(5,  3), Field(5,  5))
-		self.placeShip(Field(6,  3), Field(6,  5))
-		self.placeShip(Field(7,  3), Field(7,  5))
-		self.placeShip(Field(8,  3), Field(8,  4))
-		self.placeShip(Field(9,  3), Field(9,  4))
-		self.placeShip(Field(10, 3), Field(10, 4))
-		self.placeShip(Field(11, 3), Field(11, 4))
-
 	def __setup(self):
-		self.__ownPlayingField = PlayingField(self.__length)
+		self.__ownPlayingField = PlayingField(self.__length, self.devmode)
 		self.__enemeysPlayingField = EnemyPlayingField(self.__length)
 		self.clientStatus = ClientStatus.NOTCONNECTED
 		self.__boardAlreadySent = False
@@ -675,12 +630,13 @@ class Backend:
 		self.__triedToJoinGame = False
 		self.__triedToCreateGame = False
 
-	def __init__(self, length, hostname, port, nickname, devmode=False):
+	def __init__(self, length, hostname, port, nickname, devmode):
 		from serverhandler import ServerHandler
 		from udpdiscoverer import UDPDiscoverer
 
 		self.__length = length
 		self.lobby = Lobby(nickname)
+		self.devmode = devmode
 		self.__setup()
 
 		# callback stuff
@@ -712,7 +668,3 @@ class Backend:
 				self.clientStatus = ClientStatus.NOGAMERUNNING
 
 		self.__udpDiscoverer = UDPDiscoverer(self)
-
-		if devmode:
-			from threading import Thread
-			Thread(target=self.__devMode).start()

@@ -78,7 +78,7 @@ class ServerHandler:
 	"""
 	def __onUpdateLobby(self, params):
 		from backend import GameInformation, PlayerInformation
-
+		print(params)
 		games   = []
 		players = []
 
