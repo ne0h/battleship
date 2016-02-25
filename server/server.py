@@ -43,7 +43,6 @@ class ClientHandler:
         self.__lobby_model.add_player(self.__id)
 
         # register callbacks
-        # TODO consistently rename on_update into on_update_lobby
         self.__lobby_model.register_callback(LobbyEvent.on_update, self.on_update_lobby)
         self.__lobby_model.register_callback(LobbyEvent.on_game_deleted, self.on_game_deleted)
         self.__lobby_model.register_callback(LobbyEvent.on_chat, self.on_chat)
