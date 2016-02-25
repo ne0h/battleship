@@ -474,7 +474,17 @@ class ClientHandler:
         self.__send(self.__message_parser.encode('report', {'status': '21'}))
 
     def __surrender(self):
-        pass
+        # not in any game
+        if self.__game is None:
+            self.__send(self.__message_parser.encode('report', {'status': '43'}))
+            return
+
+        # TODO game ended
+
+        self.__lobby_model.delete_game(self.__game)
+
+        # surrender accepted lol
+        self.__send(self.__message_parser.encode('report', {'status': '23'}))
 
     def __begin_turn(self):
         self.__send(self.__message_parser.encode('report', {'status': '11'}))
