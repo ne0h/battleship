@@ -110,8 +110,8 @@ class Game:
                 'winner': player,
                 'timestamp': self.__timestamp,
                 # whatever man
-                'id0': self.__first_player.get_id(),
-                'id1': self.__second_player.get_id()
+                'id0': self.__first_player,
+                'id1': self.__second_player
             }
             self.__notify_all(GameEvent.on_game_ended, params)
 
