@@ -612,7 +612,7 @@ class MainForm(QWidget):
 			self.__statusLbl.setText("It is your turn.")
 			self.__enableGamePlayButtons()
 
-			if self.__leaveGameBtn.text() == "Leave Game":
+			if self.__leaveGameBtn.text().find("Leave Game"):
 				self.__leaveGameBtn.setText("Capitulate")
 
 		elif status is ClientStatus.OPPONENTSTURN:
@@ -642,12 +642,12 @@ class MainForm(QWidget):
 	def __leaveGame(self):
 		from backend import Callback
 
-		if self.__leaveGameBtn.text() == "Capitulate":
+		if self.__leaveGameBtn.text().find("Capitulate"):
 			self.__showMessageBox("Capitulation", "You capitulated.")
 			cb = Callback()
 			cb.onAction = lambda: self.__onCapitulate()
 			self.__backend.capitulate(cb)
-		elif self.__leaveGameBtn.text() == "New Game":
+		elif self.__leaveGameBtn.text().find("New Game"):
 			self.__resetClient()
 		else:
 			self.__showMessageBox("Game aborted", "Game aborted. You can now join or create another one.")
@@ -663,7 +663,7 @@ class MainForm(QWidget):
 		self.__viewModel.reset()
 
 	def __openConnectDialog(self):
-		if self.__connectBtn.text() == "Connect":
+		if self.__connectBtn.text().find("Connect"):
 			if not self.__connectDialogAlreadyOpen:
 				self.__connectDialogAlreadyOpen = True
 				ConnectDialog(self.__backend).exec_()
