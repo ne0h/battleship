@@ -497,7 +497,7 @@ class EnemeysPlayingFieldWidget(PlayingFieldWidget):
 		# Attacks
 		#
 		if self._viewModel.waitForAttack:
-			if self.devmode or (0 < field.x < 15 and 0 < field.y < 15):
+			if self.devmode or (0 <= field.x <= 15 and 0 <= field.y <= 15):
 				logging.info("Attack at enemey's field: %s" % field.toString())
 				self._backend.attack(field)
 				self._viewModel.waitForAttack = False
