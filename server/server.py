@@ -497,7 +497,7 @@ class ClientHandler:
             return
 
         # surrender
-        self.self.__lobby_model.get_game(self.__game).surrender(self.__player)
+        self.__lobby_model.get_game(self.__game).surrender(self.__player)
 
         # delete without triggering game aborted
         self.__lobby_model.delete_game(self.__game, aborted=False)
