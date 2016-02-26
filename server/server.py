@@ -143,6 +143,7 @@ class ClientHandler:
         self.__send(msg)
 
     def on_game_deleted(self):
+        # TODO this should be a game event
         self.__game = None
         self.__send(self.__message_parser.encode('report', {'status': '19'}))
 
