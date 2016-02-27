@@ -44,7 +44,6 @@ class ClientHandler:
 
         # register callbacks
         self.__lobby_model.register_callback(LobbyEvent.on_update, self.on_update_lobby)
-        self.__lobby_model.register_callback(LobbyEvent.on_game_deleted, self.on_game_deleted)
         self.__lobby_model.register_callback(LobbyEvent.on_chat, self.on_chat)
 
     def handle(self):
@@ -142,13 +141,10 @@ class ClientHandler:
         msg = self.__message_parser.encode('report', data)
         self.__send(msg)
 
-    def on_game_deleted(self):
-        # TODO this should be a game event
-        self.__game = None
+    def on_game_abort(self):
         self.__send(self.__message_parser.encode('report', {'status': '19'}))
 
     def on_game_ended(self, winner, id0, id1, timestamp):
-        self.__game = None
         msg = {
             'status': '17',
             'winner': winner - 1,
@@ -268,7 +264,6 @@ class ClientHandler:
 
         # remove any left callbacks
         self.__lobby_model.remove_callback(LobbyEvent.on_update, self.on_update_lobby)
-        self.__lobby_model.remove_callback(LobbyEvent.on_game_deleted, self.on_game_deleted)
         self.__lobby_model.remove_callback(LobbyEvent.on_chat, self.on_chat)
 
         # remove player from lobby
@@ -311,6 +306,7 @@ class ClientHandler:
         self.__lobby_model.get_game(self.__game).register_callback(GameEvent.on_move, self.on_move)
         self.__lobby_model.get_game(self.__game).register_callback(GameEvent.on_host_begins, self.on_host_begins)
         self.__lobby_model.get_game(self.__game).register_callback(GameEvent.on_game_ended, self.on_game_ended)
+        self.__lobby_model.get_game(self.__game).register_callback(GameEvent.on_game_abort, self.on_game_abort)
 
     def __join_game(self, params):
         # make sure parameter list is complete
@@ -349,6 +345,7 @@ class ClientHandler:
         self.__lobby_model.get_game(self.__game).register_callback(GameEvent.on_move, self.on_move)
         self.__lobby_model.get_game(self.__game).register_callback(GameEvent.on_guest_begins, self.on_guest_begins)
         self.__lobby_model.get_game(self.__game).register_callback(GameEvent.on_game_ended, self.on_game_ended)
+        self.__lobby_model.get_game(self.__game).register_callback(GameEvent.on_game_abort, self.on_game_abort)
 
         self.__lobby_model.get_game(self.__game).just_begin_ship_placement_already()
 
@@ -422,17 +419,19 @@ class ClientHandler:
             self.__send(self.__message_parser.encode('report', {'status': '43'}))
             return
 
-        # if player who created game leaves then destroy the game else just leave
-        #if self.__player == 1:
-        #    self.__lobby_model.delete_game(self.__game)
-        #else:
-        #    self.__lobby_model.leave_game(self.__game)
+        # make sure the game has not started yet
+        if self.__lobby_model.get_game(self.__game).is_ongoing():
+            self.__send(self.__message_parser.encode('report', {'status': '43'}))
+            logging.debug("Too late to leave the game.")
+            return
 
-        # make sure the game has started
+        # abort
+        self.__lobby_model.get_game(self.__game).abort(self.__player)
 
-
-        # nevermind lulz
+        # delete
         self.__lobby_model.delete_game(self.__game)
+
+        self.__game = None
 
     def __fire(self, params):
         if not self.__expect_parameter(['coordinate_x', 'coordinate_y'], params):
@@ -527,14 +526,21 @@ class ClientHandler:
             self.__send(self.__message_parser.encode('report', {'status': '43'}))
             return
 
+        # make sure the game is ongoing
+        if not self.__lobby_model.get_game(self.__game).is_ongoing():
+            self.__send(self.__message_parser.encode('report', {'status': '43'}))
+            return
+
         # surrender
         self.__lobby_model.get_game(self.__game).surrender(self.__player)
 
-        # delete without triggering game aborted
-        self.__lobby_model.delete_game(self.__game, aborted=False)
+        # delete
+        self.__lobby_model.delete_game(self.__game)
 
         # surrender accepted lol
         self.__send(self.__message_parser.encode('report', {'status': '23'}))
+
+        self.__game = None
 
     def __begin_turn(self):
         self.__send(self.__message_parser.encode('report', {'status': '11'}))

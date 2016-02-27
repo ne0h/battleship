@@ -10,8 +10,7 @@ class LobbyError(Enum):
 class LobbyEvent(Enum):
     # do not forget to init the event callback list as well
     on_update = 1,
-    on_game_deleted = 2,
-    on_chat = 3
+    on_chat = 2
 
 # Map of games by name
 games = {}
@@ -26,7 +25,6 @@ players = {}
 callbacks = {}
 # Initialize an empty list for each event
 callbacks[LobbyEvent.on_update] = []
-callbacks[LobbyEvent.on_game_deleted] = []
 callbacks[LobbyEvent.on_chat] = []
 
 # Locks
@@ -190,7 +188,7 @@ class LobbyModel:
         }
         self.__notify_all(LobbyEvent.on_chat, params)
 
-    def delete_game(self, game, aborted = True):
+    def delete_game(self, game):
         """
         Destroy the whole game.
         """
@@ -199,14 +197,13 @@ class LobbyModel:
         global games_lock
 
         games_lock.acquire()
+        # delete game
         games.pop(game, None)
         if game in waiting_games:
             waiting_games.remove(game)
         games_lock.release()
 
-        # trigger on_game_deleted and on_update
-        if aborted:
-            self.__notify_all(LobbyEvent.on_game_deleted)
+        # trigger on_update
         self.__notify_all(LobbyEvent.on_update)
 
     def set_nickname(self, player, nick):
