@@ -1,12 +1,20 @@
 import sys
 import os
 import logging
+import time
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '../../client')) # 2 times up 
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), '..')) # 1 time up
 from backend import *
 from lobby import *
 
 import unittest
+
+orientationCodes = {
+	Orientation.NORTH: "N",
+	Orientation.WEST:  "W",
+	Orientation.SOUTH: "S",
+	Orientation.EAST:  "E"
+}
 
 class TestMessageLogic(unittest.TestCase):
 	
@@ -17,8 +25,9 @@ class TestMessageLogic(unittest.TestCase):
 	clients =[]
 	callbacks=[]
 	controll=0
+	turn=0
 	
- 	"""
+	"""
 	@classmethod
 	def tearDownClass(self): #End of TestCase
 		print("lenght:"+str(len(self.clients)))
@@ -29,10 +38,10 @@ class TestMessageLogic(unittest.TestCase):
 			self.clients[i].leaveGame(self.callbacks[i])
 	"""
 
-	def test_gameCreateLogic(self):
+	def test_01_gameCreateLogic(self):
 		
-		client1 = Backend(self.FIELDLENGTH,self.ServerIP,self.ServerPort,"Max");
-		client2 = Backend(self.FIELDLENGTH,self.ServerIP,self.ServerPort,"Dari");
+		client1 = Backend(self.FIELDLENGTH,self.ServerIP,self.ServerPort,"Max",False);
+		client2 = Backend(self.FIELDLENGTH,self.ServerIP,self.ServerPort,"Dari",False);
 		
 		self.clients.append(client1)
 		self.clients.append(client2)
@@ -86,9 +95,9 @@ class TestMessageLogic(unittest.TestCase):
 				self.assertTrue(True)
 	
 
-	def test_gameJoinLogic(self):
+	def test_02_gameJoinLogic(self):
 		
-		client3 = Backend(self.FIELDLENGTH,self.ServerIP,self.ServerPort,"Yonis");
+		client3 = Backend(self.FIELDLENGTH,self.ServerIP,self.ServerPort,"Yonis",False);
 		self.clients.append(client3)
 		self.controll=0
 
@@ -146,7 +155,7 @@ class TestMessageLogic(unittest.TestCase):
 				print("In JoinGame case:"+str(case)+":fail")
 				self.assertTrue(True)
 
-	def test_moveLogic(self):
+	def test_03_moveLogic(self):
 		
 		for i in range(0,10):
 			if(i<4): 
@@ -159,107 +168,184 @@ class TestMessageLogic(unittest.TestCase):
 				len=5
 			self.clients[0].placeShip(Field(i,6),Field(i,6-len+1))
 			self.clients[1].placeShip(Field(i,6),Field(i,6-len+1))
-
+		"""
+		print("Clients 0 ships")
 		ships=self.clients[0].getOwnShips()
 		for ship in ships:
 			print("ship_bow: (" + str(ship.bow.x)+"," +str(ship.bow.y)+ ") ship_rear:(" +str(ship.rear.x)+","+str(ship.rear.y)+")") 
-		
-		#Case 1: Correct move
-		# 0:N 1:W 2:S 3:E		
-		success=self.clients[0].move(6,0)
-		self.__onMove(success,1)
-		
 
-		#Case 2: wrong index
-		success=self.clients[1].move(10,0)
-		self.__onMove(success,2)
-		
+		print("Clients 1 ships")
+		ships=self.clients[1].getOwnShips()
+		for ship in ships:
+			print("ship_bow: (" + str(ship.bow.x)+"," +str(ship.bow.y)+ ") ship_rear:(" +str(ship.rear.x)+","+str(ship.rear.y)+")")
+		"""
+		self.controll=0
+		while(self.controll==0):
+			if (self.clients[0].clientStatus==ClientStatus.OWNTURN):
+				 self.controll=1
+				 self.turn =0
+			elif (self.clients[1].clientStatus==ClientStatus.OWNTURN):
+				self.controll=1
+				self.turn=1
 
-		#Case 3: out of boundry
-		success=self.clients[1].move(6,1)
-		self.__onMove(success,3)
+		if(self.turn==0):
+			print("First Turn is for client 0")
+		elif(self.turn==1):
+			print("First Turn is for client 1")
+
+		#Orientation.NORTH: "N",
+		#Orientation.WEST:  "W",
+		#Orientation.SOUTH: "S",
+		#Orientation.EAST:  "E"
+		
+		if (self.turn==0):
+			#Case 1: Correct move
+			success=self.clients[0].move(6,Orientation.NORTH)
+			self.__onMove(success,1)
+			
+			while(self.clients[1].clientStatus!=ClientStatus.OWNTURN):
+				continue
+
+			#Case 2: wrong index
+			success=self.clients[1].move(10,Orientation.NORTH)
+			self.__onMove(success,2)
+
+			#Case 3: out of boundry
+			success=self.clients[1].move(6,Orientation.WEST)
+			self.__onMove(success,3)
+
+			while(self.clients[0].clientStatus==ClientStatus.OWNTURN):
+				continue
+		
+		elif (self.turn==1):
+			#Case 1: Correct move
+			success=self.clients[1].move(6,Orientation.NORTH)
+			self.__onMove(success,1)
+			
+			while(self.clients[0].clientStatus!=ClientStatus.OWNTURN):
+				continue
+
+			#Case 2: wrong index
+			success=self.clients[0].move(10,Orientation.NORTH)
+			self.__onMove(success,2)
+
+			#Case 3: out of boundry
+			success=self.clients[0].move(6,Orientation.WEST)
+			self.__onMove(success,3)
+
+			while(self.clients[1].clientStatus==ClientStatus.OWNTURN):
+				continue
+			
 		
 	def __onMove(self, success,case):
-		
+
 		if case==1:
 			if success:
 				print("In Move case:"+str(case)+":success")
+				print("ClientStatus 0:"+str(self.clients[0].clientStatus))	
+				print("ClientStatus 1:"+str(self.clients[1].clientStatus))
 				self.assertTrue(True)
 			else: 
 				print("In Move case:"+str(case)+":fail")
+				print("ClientStatus 0:"+str(self.clients[0].clientStatus))	
+				print("ClientStatus 1:"+str(self.clients[1].clientStatus))
 				self.assertTrue(False)
 		else:
-			if  success:
+			if success:
 				print("In Move case:"+str(case)+":success")
+				print("ClientStatus 0:"+str(self.clients[0].clientStatus))	
+				print("ClientStatus 1:"+str(self.clients[1].clientStatus))
 				self.assertTrue(False)
 			else: 
 				print("In Move case:"+str(case)+":fail")
+				print("ClientStatus 0:"+str(self.clients[0].clientStatus))	
+				print("ClientStatus 1:"+str(self.clients[1].clientStatus))
 				self.assertTrue(True)
 
-	def test_attackLogic(self):
+	def test_04_attackLogic(self):
 		
-
-		#Case 1: Correct attack
-		self.clients[1].__gamePlayCallbacks[0].onAction = lambda status: self.__onAttack(status,1)
-		self.clients[1].attack(Field(4,4))
-
-		#Case 2: out of boundry
-		self.clients[0].__gamePlayCallbacks[0].onAction = lambda status: self.__onAttack(status,2)
-		self.clients[0].attack(Field(-1,1)
+		print("-----------------------------------------")
+		print("In AttackLogic ClientStatus 0:"+str(self.clients[0].clientStatus))	
+		print("In AttackLogic ClientStatus 1:"+str(self.clients[1].clientStatus))
 		
+		if (self.clients[0].clientStatus==ClientStatus.OWNTURN):
+			self.turn =0
+		elif (self.clients[1].clientStatus==ClientStatus.OWNTURN):
+			self.turn=1
+
+		print("Turn in AttackLogic:"+str(self.turn))
+
+		cb1 = Callback()
+		self.callbacks.pop(0)
+		self.callbacks.insert(0,cb1)
+
+		cb2 = Callback()
+		self.callbacks.pop(1)
+		self.callbacks.insert(1,cb2)
+
+		if (self.turn==0):
+			#Case 1: Correct attack
+			self.clients[0].registerGamePlayCallback(self.callbacks[0])
+			self.callbacks[0].onAction = lambda status: self.__onAttack(status,1)
+			self.clients[0].attack(Field(4,4))
+
+			while(self.clients[1].clientStatus!=ClientStatus.OWNTURN):
+				continue
+
+			#Case 2: out of boundry
+			self.clients[1].registerGamePlayCallback(self.callbacks[1])
+			self.callbacks[1].onAction = lambda status: self.__onAttack(status,2)
+			self.clients[1].attack(Field(-1,1))
+
+			while(self.clients[0].clientStatus==ClientStatus.OWNTURN):
+				continue
+
+		
+		elif (self.turn==1):	
+			#Case 1: Correct attack
+			self.clients[1].registerGamePlayCallback(self.callbacks[1])
+			self.callbacks[1].onAction = lambda status: self.__onAttack(status,1)
+			self.clients[1].attack(Field(4,4))
+
+			while(self.clients[0].clientStatus!=ClientStatus.OWNTURN):
+				continue
+
+			#Case 2: out of boundry
+			self.clients[0].registerGamePlayCallback(self.callbacks[0])
+			self.callbacks[0].onAction = lambda status: self.__onAttack(status,2)
+			self.clients[0].attack(Field(-1,1))
+
+			while(self.clients[1].clientStatus==ClientStatus.OWNTURN):
+				continue
+	
+
 	def __onAttack(self, status,case):
 		
 		if case==1:
 			if status is 22:
 				print("In Attack case:"+str(case)+":success")
+				print("ClientStatus 0:"+str(self.clients[0].clientStatus))	
+				print("ClientStatus 1:"+str(self.clients[1].clientStatus))
 				self.assertTrue(True)
 			else: 
 				print("In Attack case:"+str(case)+":fail")
+				print("ClientStatus 0:"+str(self.clients[0].clientStatus))	
+				print("ClientStatus 1:"+str(self.clients[1].clientStatus))
 				self.assertTrue(False)
 		else:
 			if  status is 39:
 				print("In Attack case:"+str(case)+":fail")
+				print("ClientStatus 0:"+str(self.clients[0].clientStatus))	
+				print("ClientStatus 1:"+str(self.clients[1].clientStatus))
 				self.assertTrue(True)
+			
 			else: 
 				print("In Attack case:"+str(case)+":success")
+				print("ClientStatus 0:"+str(self.clients[0].clientStatus))	
+				print("ClientStatus 1:"+str(self.clients[1].clientStatus))
 				self.assertTrue(false)
-
-	def test_specialAttackLogic(self):
-		
-
-		#Case 1: Correct attack
-		sef.clients[0].__gamePlayCallbacks[0].onAction = lambda status: self.__onSpecialAttack(status,1)
-		self.clients[0].specialAttack(Field(3,3))
-
-		#Case 2: out of boundry
-		sef.clients[1].__gamePlayCallbacks[0].onAction = lambda status: self.__onSpecialAttack(status,2)
-		self.clients[1].attack(-1,1)
-
-		#Case 3: More than 3 Special Attacks
-		self.clients[1].specialAttack(5,6)
-		self.clients[0].specialAttack(9,6)
-		self.clients[1].attack(5,6)
-		self.clients[0].specialAttack(10,12)
-		self.clients[1].attack(8,6)
-		sef.clients[0].__gamePlayCallbacks[0].onAction = lambda status: self.__onSpecialAttack(status,3)
-		self.clients[0].specialAttack(12,12) 		
-		
-	def __onSpecialAttack(self, status,case):
-		
-		if case==1:
-			if status is 24:
-				print("In Attack case:"+str(case)+":success")
-				self.assertTrue(True)
-			else: 
-				print("In Attack case:"+str(case)+":fail")
-				self.assertTrue(False)
-		else:
-			if  status is 32:
-				print("In Attack case:"+str(case)+":fail")
-				self.assertTrue(True)
-			else: 
-				print("In Attack case:"+str(case)+":success")
-				self.assertTrue(false)
-
+	
+	
+    	
 if __name__ == "__main__":
 	unittest.main()
