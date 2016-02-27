@@ -242,8 +242,8 @@ class ShipList:
 			return self.__destroyers[shipId]
 
 	def movePossible(self, shipId, direction):
-		
-		if(shipId<0 or shipId>9):
+
+		if not (0 <= shipId <= 9):
 			return False
 
 		ship = self.getShip(shipId)
@@ -252,6 +252,7 @@ class ShipList:
 		if ship.getLength() is len(ship.damages):
 			return False
 
+		# if ship is vertical
 		if ship.orientation is Orientation.NORTH or ship.orientation is Orientation.SOUTH:
 			if ship.orientation is Orientation.NORTH:
 				if direction is Orientation.NORTH:
@@ -282,13 +283,14 @@ class ShipList:
 					fieldsToCheck.append(field)
 
 			# check all fields right of the ship
-			if direction is Orientation.EAST:
+			elif direction is Orientation.EAST:
 				for part in ship.parts:
 					field = Field(part.x + 1, part.y)
 					if field.x > 15:
 						return False
 					fieldsToCheck.append(field)
 
+		# if ship is horizontal
 		if ship.orientation is Orientation.WEST or ship.orientation is Orientation.EAST:
 			if ship.orientation is Orientation.WEST:
 				if direction is Orientation.WEST:
@@ -302,13 +304,13 @@ class ShipList:
 
 			elif ship.orientation is Orientation.EAST:
 				if direction is Orientation.WEST:
-					if ship.bow.x < 1:
+					if ship.rear.x < 1:
 						return False
-					fieldsToCheck.append(Field(ship.bow.x - 1, ship.bow.y))
+					fieldsToCheck.append(Field(ship.rear.x - 1, ship.rear.y))
 				elif direction is Orientation.EAST:
 					if ship.bow.x > 14:
 						return False
-					fieldsToCheck.append(Field(ship.rear.x + 1, ship.rear.y))
+					fieldsToCheck.append(Field(ship.bow.x + 1, ship.bow.y))
 
 			# check all fields above the ship
 			if direction is Orientation.NORTH:
@@ -319,7 +321,7 @@ class ShipList:
 					fieldsToCheck.append(field)
 
 			# check all fields below the ship
-			if direction is Orientation.SOUTH:
+			elif direction is Orientation.SOUTH:
 				for part in ship.parts:
 					field = Field(part.x, part.y - 1)
 					if field.y < 0:
