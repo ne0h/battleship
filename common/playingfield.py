@@ -531,6 +531,11 @@ class PlayingField:
 			A dictionary of fields and statuses that have been updated. Keys are 'field' and 'status'.
 		"""
 
+		# special attacks left
+		if self.__allowed_attacks == 0:
+			return False
+		self.__allowed_attacks -= 1
+
 		# calculate all the fields
 		fields = [field, Field(field.x, field.y + 1), Field(field.x, field.y + 2),
 				  Field(field.x + 1, field.y), Field(field.x + 1, field.y + 1), Field(field.x + 1, field.y + 2),
@@ -680,6 +685,7 @@ class PlayingField:
 		self.__fieldLength = fieldLength
 		self.__devmode = devmode
 		self.__unfogged = []
+		self.__allowed_attacks = 3
 
 class EnemyPlayingField:
 

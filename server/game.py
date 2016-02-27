@@ -190,6 +190,10 @@ class Game:
         logging.debug('nuke()')
         updates = self.__get_field_by_player(3 - player).specialAttack(playingfield.Field(x, y))
 
+        # special attack failed
+        if updates is False:
+            return False
+
         for j in updates:
             if j['status'] == playingfield.FieldStatus.WATER:
                 j['status'] = 'free'

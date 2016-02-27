@@ -486,6 +486,12 @@ class ClientHandler:
 
         # save move
         updated = self.__lobby_model.get_game(self.__game).nuke(self.__player, params['coordinate_x'], params['coordinate_y'])
+
+        # special attack failed
+        if updated is False:
+            self.__send(self.__message_parser.encode('report', {'status': '32'}))
+            return
+
         logging.debug("Nuke: updated {} fields.".format(len(updated)))
         #if len(updated) == 0:
         #    self.__send(self.__message_parser.encode('report', {'status': '32'}))
