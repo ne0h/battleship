@@ -175,7 +175,6 @@ class LobbyModel:
         games_lock.release()
 
         # trigger on_game_deleted and on_update
-        self.__notify_all(LobbyEvent.on_game_deleted)
         self.__notify_all(LobbyEvent.on_update)
 
     def chat(self, player, msg):

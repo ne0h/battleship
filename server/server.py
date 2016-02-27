@@ -426,7 +426,7 @@ class ClientHandler:
             return
 
         # abort
-        self.__lobby_model.get_game(self.__game).abort(self.__player)
+        self.__lobby_model.get_game(self.__game).abort()
 
         # delete
         self.__lobby_model.delete_game(self.__game)
