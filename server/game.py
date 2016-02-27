@@ -176,14 +176,14 @@ class Game:
             logging.debug("attack() returns invalid condition: {}".format(repr(result)))
             condition = None
         # trigger on_attack event
-        if updated:
-            self.__next_turn()
-            params = {
-                'x': x,
-                'y': y,
-                'condition': condition
-            }
-            self.__notify_all(GameEvent.on_attack, params)
+        #if updated:
+        self.__next_turn()
+        params = {
+            'x': x,
+            'y': y,
+            'condition': condition
+        }
+        self.__notify_all(GameEvent.on_attack, params)
         return condition, updated
 
     def nuke(self, player, x, y):
@@ -199,14 +199,14 @@ class Game:
                 logging.debug("specialAttack() returns invalid condition: {}".format(repr(j['status'])))
                 j['status'] = None
 
-        if len(updates) > 0:
-            self.__next_turn()
-            params = {
-                'x': x,
-                'y': y,
-                'updates': updates
-            }
-            self.__notify_all(GameEvent.on_special_attack, params)
+        #if len(updates) > 0:
+        self.__next_turn()
+        params = {
+            'x': x,
+            'y': y,
+            'updates': updates
+        }
+        self.__notify_all(GameEvent.on_special_attack, params)
         return updates
 
     def just_begin_ship_placement_already(self):
