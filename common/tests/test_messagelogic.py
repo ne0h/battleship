@@ -26,20 +26,13 @@ class TestMessageLogic(unittest.TestCase):
 	callbacks=[]
 	controll=0
 	turn=0
-	
-	"""
-	@classmethod
-	def tearDownClass(self): #End of TestCase
-		print("lenght:"+str(len(self.clients)))
-		for i in range(0,len(self.clients)):
-			print(i)
-			print(self.clients[i])
-			print(self.callbacks[i])
-			self.clients[i].leaveGame(self.callbacks[i])
-	"""
 
 	def test_01_gameCreateLogic(self):
-		
+		"""Test the Logic of create_game message 
+			Case 1: Successful create, received report message 28
+			Case 2: Too long gamename, must be fail, received message 37
+			Case 3: Create a game with same name, must be fail, received message 37
+		"""	
 		client1 = Backend(self.FIELDLENGTH,self.ServerIP,self.ServerPort,"Max",False);
 		client2 = Backend(self.FIELDLENGTH,self.ServerIP,self.ServerPort,"Dari",False);
 		
@@ -77,8 +70,6 @@ class TestMessageLogic(unittest.TestCase):
 		"""
 
 	def __onCreateGame(self, success, case):
-		
-
 		if case==1:
 			if success:
 				print("In CreateGame case:"+str(case)+":success")
@@ -96,7 +87,12 @@ class TestMessageLogic(unittest.TestCase):
 	
 
 	def test_02_gameJoinLogic(self):
-		
+		"""Test the Logic of join_game message 
+			Case 1: Successful join, received report 27
+			Case 2: The Room is full, must be fail, received report 47
+			Case 3: The gameName doesn't exist, must be fail, received report 37
+		"""	
+
 		client3 = Backend(self.FIELDLENGTH,self.ServerIP,self.ServerPort,"Yonis",False);
 		self.clients.append(client3)
 		self.controll=0
@@ -136,9 +132,8 @@ class TestMessageLogic(unittest.TestCase):
 		"""
 
 	def __onJoinGame(self, success,case):
-		#case 1 and 2 have a race condition
 		
-
+		#case 1 and 2 have a race condition
 		if case==1:
 			if success:
 				print("In JoinGame case:"+str(case)+":success")
@@ -156,7 +151,12 @@ class TestMessageLogic(unittest.TestCase):
 				self.assertTrue(True)
 
 	def test_03_moveLogic(self):
-		
+		"""Test the Logic of move message 
+			Case 1: Successful move, received report 21 
+			Case 2: Wrong ShipIndex, must be fail, received report 34
+			Case 3: Move exceed the game_boundry, must be fail, received report 34
+		"""	
+
 		for i in range(0,10):
 			if(i<4): 
 				len=2
@@ -168,17 +168,7 @@ class TestMessageLogic(unittest.TestCase):
 				len=5
 			self.clients[0].placeShip(Field(i,6),Field(i,6-len+1))
 			self.clients[1].placeShip(Field(i,6),Field(i,6-len+1))
-		"""
-		print("Clients 0 ships")
-		ships=self.clients[0].getOwnShips()
-		for ship in ships:
-			print("ship_bow: (" + str(ship.bow.x)+"," +str(ship.bow.y)+ ") ship_rear:(" +str(ship.rear.x)+","+str(ship.rear.y)+")") 
-
-		print("Clients 1 ships")
-		ships=self.clients[1].getOwnShips()
-		for ship in ships:
-			print("ship_bow: (" + str(ship.bow.x)+"," +str(ship.bow.y)+ ") ship_rear:(" +str(ship.rear.x)+","+str(ship.rear.y)+")")
-		"""
+		
 		self.controll=0
 		while(self.controll==0):
 			if (self.clients[0].clientStatus==ClientStatus.OWNTURN):
@@ -187,7 +177,7 @@ class TestMessageLogic(unittest.TestCase):
 			elif (self.clients[1].clientStatus==ClientStatus.OWNTURN):
 				self.controll=1
 				self.turn=1
-
+		print("-------------------------------")
 		if(self.turn==0):
 			print("First Turn is for client 0")
 		elif(self.turn==1):
@@ -263,7 +253,10 @@ class TestMessageLogic(unittest.TestCase):
 				self.assertTrue(True)
 
 	def test_04_attackLogic(self):
-		
+		"""Test the Logic of attack message 
+			Case 1: Successful attack, received report 22 
+			Case 2: Attack is out of bound, must be fail, received report 39
+		"""	
 		print("-----------------------------------------")
 		print("In AttackLogic ClientStatus 0:"+str(self.clients[0].clientStatus))	
 		print("In AttackLogic ClientStatus 1:"+str(self.clients[1].clientStatus))
@@ -272,8 +265,6 @@ class TestMessageLogic(unittest.TestCase):
 			self.turn =0
 		elif (self.clients[1].clientStatus==ClientStatus.OWNTURN):
 			self.turn=1
-
-		print("Turn in AttackLogic:"+str(self.turn))
 
 		cb1 = Callback()
 		self.callbacks.pop(0)
