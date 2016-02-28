@@ -142,6 +142,10 @@ class ClientHandler:
         self.__send(msg)
 
     def on_game_abort(self):
+        # delete game
+        self.__lobby_model.delete_game(self.__game)
+        self.__game = None
+
         self.__send(self.__message_parser.encode('report', {'status': '19'}))
 
     def on_game_ended(self, winner, id0, id1, timestamp):
@@ -154,6 +158,11 @@ class ClientHandler:
             'identifier_1': id1,
             'reason_for_game_end': 'Because of reasons.'
         }
+
+        # delete game
+        self.__lobby_model.delete_game(self.__game)
+        self.__game = None
+
         self.__send(self.__message_parser.encode('report', msg))
 
     def on_ship_edit(self):
@@ -428,11 +437,6 @@ class ClientHandler:
         # abort
         self.__lobby_model.get_game(self.__game).abort()
 
-        # delete
-        self.__lobby_model.delete_game(self.__game)
-
-        self.__game = None
-
     def __fire(self, params):
         if not self.__expect_parameter(['coordinate_x', 'coordinate_y'], params):
             return
@@ -540,13 +544,8 @@ class ClientHandler:
         # surrender
         self.__lobby_model.get_game(self.__game).surrender(self.__player)
 
-        # delete
-        self.__lobby_model.delete_game(self.__game)
-
         # surrender accepted lol
         self.__send(self.__message_parser.encode('report', {'status': '23'}))
-
-        self.__game = None
 
     def __begin_turn(self):
         self.__send(self.__message_parser.encode('report', {'status': '11'}))
