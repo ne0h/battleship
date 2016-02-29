@@ -140,6 +140,13 @@ class Backend:
 		return moreShips
 
 	def onPlaceShips(self, success):
+		"""
+		Is called when the server returns a ship placement report.
+
+		Args:
+		    success: True if the placement has been successful or False if not
+		"""
+
 		if not success:
 			self.__onError("Failed to place ships")
 
@@ -267,6 +274,10 @@ class Backend:
 		self.__serverHandler.createGame(gameId)
 
 	def onIllegalGameDefinition(self):
+		"""
+		Is called when there is a problem with the game.
+		"""
+
 		if self.__triedToCreateGame:
 			self.onCreateGame(False)
 			self.__triedToJoinGame = False
@@ -292,6 +303,10 @@ class Backend:
 		self.__createGameCallbacks = []
 
 	def onCapitulate(self):
+		"""
+		Is called when the client receives a capitulate report.
+		"""
+
 		for cb in self.__capitulateCallbacks:
 			cb.onAction()
 		self.__capitulateCallbacks = []
@@ -320,12 +335,22 @@ class Backend:
 		self.__updateClientStatus(ClientStatus.NOGAMERUNNING)
 
 	def onGameAborted(self):
+		"""
+		Is called when the game has been aborted.
+		"""
+
 		for cb in self.__leaveGameCallbacks:
 			cb.onAction()
 		self.__leaveGameCallbacks = []
 		self.__updateClientStatus(ClientStatus.NOGAMERUNNING)
 
 	def onGameEnded(self, params):
+		"""
+		Is called when the game ended.
+
+		Args:
+		    params: some fancy argument concerning this issue
+		"""
 
 		# believable mad report...
 		if (params["winner"] == "0" and self.lobby.playerCreatedGame) \
@@ -449,6 +474,13 @@ class Backend:
 			cb.onAction(status)
 
 	def capitulate(self, callback):
+		"""
+		The player capitulate.
+
+		Args:
+		    callback: is called after the server answers
+		"""
+
 		self.__capitulateCallbacks.append(callback)
 		self.__serverHandler.capitulate()
 
@@ -539,6 +571,13 @@ class Backend:
 		return success
 
 	def errorResponse(self, status):
+		"""
+		Error response.
+
+		Args:
+		    status: the status
+		"""
+
 		pass
 
 	def sendChatMessage(self, msg):
@@ -614,12 +653,37 @@ class Backend:
 			cb.onAction()
 
 	def getShipAtPosition(self, field):
+		"""
+		Returns the id of a ship at a given position if there is one.
+
+		Args:
+		    field: the field to check
+
+		Returns: The id of the ship if there is one or False if there is no ship.
+		"""
+
 		return self.__ownPlayingField.getShipAtPosition(field)
 
 	def isUnfogged(self, field):
+		"""
+		Validates if a given field is unfogged.
+
+		Args:
+		    field: the field to validate
+
+		Returns: True if the field is unfogged or False if not.
+		"""
+
 		return self.__ownPlayingField.isUnfogged(field)
 
 	def onUpdateOwnFields(self, params):
+		"""
+		Is called when there are updates for the own playing field.
+
+		Args:
+		    params: the updates
+		"""
+
 		if self.__ownPlayingField.onAttack(params):
 			self.__playSound("")
 		self.__onRepaint()
@@ -629,25 +693,71 @@ class Backend:
 			cb.onAction(type)
 
 	def onUpdateEnemyFields(self, params):
+		"""
+		Is called when there are updates for the enemy's playing field.
+
+		Args:
+		    params: the updates
+		"""
+
 		self.__enemeysPlayingField.onAttack(params)
 		self.__onRepaint()
 
 	def getOwnUnfogged(self):
+		"""
+		Returns the unfogged fields on the own playing field.
+
+		Returns: the unfogged fields on the own playing field.
+		"""
+
 		return self.__ownPlayingField.getUnfogged()
 
 	def getEnemyUnfogged(self):
+		"""
+		Returns the unfogged fields on the enemy's playing field.
+
+		Returns: the unfogged fields on the enemy's playing field.
+		"""
+
 		return self.__enemeysPlayingField.getUnfogged()
 
 	def onBeginShipPlacing(self):
+		"""
+		Is called when the client receives a place ships report from the server.
+		"""
+
 		self.__updateClientStatus(ClientStatus.PREPARATIONS)
 
 	def registerRepaintCallback(self, callback):
+		"""
+		Registers arepaint callback.
+
+		Args:
+		    callback: the callback
+		"""
+
 		self.__repaintCallbacks.append(callback)
 
 	def registerPlaySoundCallback(self, callback):
+		"""
+		Registers a sound callback.
+
+		Args:
+		    callback:
+
+		Returns:
+
+		"""
 		self.__playSoundCallback.append(callback)
 
 	def registerSpecialAttackCallback(self, callback):
+		"""
+		Registers a spcial attack callback.
+
+		Args:
+		    callback: the callback
+		"""
+
 		self.__specialAttackCallbacks.append(callback)
 
 	def __onSpecialAttack(self):
@@ -659,12 +769,20 @@ class Backend:
 			cb.onAction()
 
 	def resetClient(self):
+		"""
+		Resets the client and prepares for a new game.
+		"""
+
 		logging.info("Resetting backend...")
 		self.__setup()
 		self.lobby.reset()
 		self.__updateClientStatus(ClientStatus.NOGAMERUNNING)
 
 	def onLostConnection(self):
+		"""
+		Is called when the client losts the connection to the server.
+		"""
+
 		logging.info("Resetting backend...")
 		self.__serverHandler.disconnect()
 		self.__setup()
