@@ -125,7 +125,7 @@ class Backend:
 			rear: address of the rear
 
 		Returns:
-			Returns the id of the newley placed ship. In addition returns True if the user has to place more ships and
+			Returns the id of the newly placed ship. In addition returns True if the user has to place more ships and
 			False of the user successfully placed all his ships.
 		"""
 
@@ -297,7 +297,10 @@ class Backend:
 		self.__capitulateCallbacks = []
 		self.__updateClientStatus(ClientStatus.YOULOSE)
 
-	def leaveGame(self, callback):
+	def registerLeaveGameCallback(self, callback):
+		self.__leaveGameCallbacks.append(callback)
+
+	def leaveGame(self):
 		"""
 		Leaves the current game and registers a callback to wait for an answer from the server.
 
@@ -305,7 +308,6 @@ class Backend:
 			callback: the callback
 		"""
 
-		self.__leaveGameCallbacks.append(callback)
 		self.__serverHandler.leaveGame()
 
 	def onLeaveGame(self):
@@ -313,14 +315,14 @@ class Backend:
 		Is called when the client received an answer to the leave game query.
 		"""
 
-		self.resetClient()
 		for cb in self.__leaveGameCallbacks:
 			cb.onAction()
-		self.__leaveGameCallbacks = []
 		self.__updateClientStatus(ClientStatus.NOGAMERUNNING)
 
 	def onGameAborted(self):
-		self.resetClient()
+		for cb in self.__leaveGameCallbacks:
+			cb.onAction()
+		self.__leaveGameCallbacks = []
 		self.__updateClientStatus(ClientStatus.NOGAMERUNNING)
 
 	def onGameEnded(self, params):

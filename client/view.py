@@ -589,9 +589,11 @@ class MainForm(QWidget):
 		elif status is ClientStatus.NOGAMERUNNING:
 			self.__onRepaint()
 			self.__statusLbl.setText("No game running, please use the lobby to connect to a game.")
+			self.__playersLbl.setText("Nickname: %s" % self.__backend.lobby.nickname)
 			self.__lobbyBtn.setEnabled(True)
 			self.__connectBtn.setText("Disconnect")
-			self.__leaveGameBtn.setEnabled(True)
+			self.__connectBtn.setEnabled(True)
+			self.__leaveGameBtn.setEnabled(False)
 		elif status is ClientStatus.WAITINGFOROPPONENT:
 			self.__statusLbl.setText("Waiting for opponent now.")
 			self.__placeShipBtn.setEnabled(False)
@@ -608,6 +610,7 @@ class MainForm(QWidget):
 			cb = Callback()
 			cb.onAction = lambda shipId: self.__onUpdateShipList(shipId)
 			self.__backend.registerShipUpdateCallback(cb)
+			self.__leaveGameBtn.setEnabled(True)
 		elif status is ClientStatus.OWNTURN:
 			self.__statusLbl.setText("It is your turn.")
 			self.__enableGamePlayButtons()
@@ -652,9 +655,7 @@ class MainForm(QWidget):
 			self.__resetClient()
 		else:
 			self.__showMessageBox("Game aborted", "Game aborted. You can now join or create another one.")
-			cb = Callback()
-			cb.onAction = lambda: self.__onLeaveGame()
-			self.__backend.leaveGame(cb)
+			self.__backend.leaveGame()
 
 	def __resetClient(self):
 		logging.info("Resetting gui...")
@@ -752,6 +753,23 @@ class MainForm(QWidget):
 			self.__backend.setNickname(nickname)
 			self.__updatePlayersLbl()
 
+	def __placeShipsQuickly(self):
+		self.__backend.placeShip(Field( 8,  9), Field( 9,  9))
+		self.__backend.placeShip(Field( 8,  6), Field( 8,  7))
+		self.__backend.placeShip(Field( 7,  7), Field( 7,  6))
+		self.__backend.placeShip(Field( 6,  6), Field( 6,  7))
+
+		self.__backend.placeShip(Field( 5,  9), Field( 7,  9))
+		self.__backend.placeShip(Field( 8,  5), Field( 6,  5))
+		self.__backend.placeShip(Field( 6,  8), Field( 8,  8))
+
+		self.__backend.placeShip(Field( 8,  4), Field( 5,  4))
+		self.__backend.placeShip(Field( 5,  5), Field( 5,  8))
+
+		self.__backend.placeShip(Field( 9,  8), Field( 9,  4))
+
+		self.__onRepaint()
+
 	def __setupGui(self):
 
 		#
@@ -832,6 +850,8 @@ class MainForm(QWidget):
 			attackDevModeBtn.clicked.connect(self.__attackDevMode)
 			specialAttackDevModeBtn = QPushButton("DevMode Special Attack")
 			specialAttackDevModeBtn.clicked.connect(self.__specialAttackDevMode)
+			quickPlaceShipsBtn = QPushButton("Place ships quickly")
+			quickPlaceShipsBtn.clicked.connect(self.__placeShipsQuickly)
 
 		# status stuff
 		self.__statusLbl = QLabel()
@@ -885,6 +905,7 @@ class MainForm(QWidget):
 		if self.devmode:
 			btnsLayout.addWidget(attackDevModeBtn)
 			btnsLayout.addWidget(specialAttackDevModeBtn)
+			btnsLayout.addWidget(quickPlaceShipsBtn)
 		btnsLayout.addWidget(self.__leaveGameBtn)
 		btnsWgt = QWidget()
 		btnsWgt.setLayout(btnsLayout)
@@ -955,3 +976,7 @@ class MainForm(QWidget):
 		specialAttackCb = Callback()
 		specialAttackCb.onAction = lambda: self.__onSpecialAttack()
 		self.__backend.registerSpecialAttackCallback(specialAttackCb)
+
+		leaveGameCb = Callback()
+		leaveGameCb.onAction = lambda: self.__onLeaveGame()
+		self.__backend.registerLeaveGameCallback(leaveGameCb)

@@ -1,10 +1,12 @@
 Testing Protocol
 ================
 
+Server Tests
+------------
+
 Each test uses the server of one team and a client of both teams.
 
-Basic game management
----------------------
+###  Basic game management
 
 | Test                                                                  |  PE2 Server   |  PE4 Server   |
 |-----------------------------------------------------------------------|---------------|---------------|
@@ -17,9 +19,9 @@ Basic game management
 |Wait for opponent                                                      | ✔             | ✔             |
 |Place ships successful                                                 | ✔             | ✔             |
 |Wait for own turn                                                      | ✔             | ✔             |
+|Run multiple games at the same server at the same time                 | ✔             | ✔             |
 
-Different attacks and movements
--------------------------------
+###  Different attacks and movements
 
 | Test                                                                  |  PE2 Server   |  PE4 Server   |
 |-----------------------------------------------------------------------|---------------|---------------|
@@ -40,8 +42,7 @@ Different attacks and movements
 |Move completely damaged ship -> should fail                            | ✔             | ✔             |
 |Move onto completely damaged (sunken) -> should fail                   | ✔             | ✔             |
 
-Different game endings
-----------------------
+###  Different game endings
 
 | Test                                                                  |  PE2 Server   |  PE4 Server   |
 |-----------------------------------------------------------------------|---------------|---------------|
@@ -49,15 +50,13 @@ Different game endings
 |Leave game                                                             | ✔             | ✔             |
 |Capitulate                                                             | ✔             | ✔             |
 
-Optional: UDP Discovery
------------------------
+###  Optional: UDP Discovery
 
 | Test                                                                  |  PE2 Server   |  PE4 Server   |
 |-----------------------------------------------------------------------|---------------|---------------|
 |Server found by UDP-Discovery                                          | ✔             | ✔             |
 
-Optional: Chat
---------------
+###  Optional: Chat
 
 | Test                                                                  |  PE2 Server   |  PE4 Server   |
 |-----------------------------------------------------------------------|---------------|---------------|
