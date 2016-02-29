@@ -17,6 +17,7 @@ Basic game management
 |Wait for opponent                                                      | ✔             | ✔             |
 |Place ships successful                                                 | ✔             | ✔             |
 |Wait for own turn                                                      | ✔             | ✔             |
+|Run multiple games at the same server at the same time                 | ✔             | ✔             |
 
 Different attacks and movements
 -------------------------------
