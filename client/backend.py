@@ -313,14 +313,15 @@ class Backend:
 		Is called when the client received an answer to the leave game query.
 		"""
 
-		self.resetClient()
 		for cb in self.__leaveGameCallbacks:
 			cb.onAction()
 		self.__leaveGameCallbacks = []
 		self.__updateClientStatus(ClientStatus.NOGAMERUNNING)
 
 	def onGameAborted(self):
-		self.resetClient()
+		for cb in self.__leaveGameCallbacks:
+			cb.onAction()
+		self.__leaveGameCallbacks = []
 		self.__updateClientStatus(ClientStatus.NOGAMERUNNING)
 
 	def onGameEnded(self, params):
