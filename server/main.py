@@ -21,7 +21,7 @@ def main():
     logging.basicConfig(format="%(asctime)s - SERVER - %(levelname)s - %(message)s", level=logging.DEBUG)
 
     # parse host and port args
-    parser = argparse.ArgumentParser(description="battleshit++ server")
+    parser = argparse.ArgumentParser(description="battleship++ dedicated server")
     parser.add_argument('host')
     parser.add_argument('port', type=int)
     args = parser.parse_args()
@@ -41,12 +41,14 @@ def main():
     server_thread.start()
     logging.debug("Server loop running in thread: " + server_thread.name)
 
+    # block until keyboard interrupt or system exit
     try:
-        while True:
-            pass
-    except (KeyboardInterrupt, SystemExit):
-        pass
+        server_thread.join()
+        udpdiscovery_server_thread.join()
+    except (KeyboardInterrupt, SystemExit) as e:
+        logging.debug(repr(e))
 
+    # gracefully kill the server
     logging.info("Server shutting down...")
     server.shutdown()
     server.server_close()
