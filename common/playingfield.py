@@ -648,17 +648,21 @@ class PlayingField:
 				  Field(field.x + 1, field.y), Field(field.x + 1, field.y + 1), Field(field.x + 1, field.y + 2),
 				  Field(field.x+2, field.y), Field(field.x+2, field.y+1), Field(field.x+2, field.y+2)]
 
+		playSound = False
 		for f in fields:
 			status, ship = self.__getFieldStatus(f)
 			logging.debug("Updating field '%s' with status '%s'" % (f.toString(), status))
 
 			if status is FieldStatus.SHIP:
+				playSound = True
 				ship.addDamage(f)
 				logging.error("Added damage at '%s'" % f.toString())
 
 			# unfog field
 			if f not in self.__unfogged:
 				self.__unfogged.append(f)
+
+		return playSound
 
 	def unfog(self, field):
 		logging.debug("Unfog {}...".format(field.toString()))

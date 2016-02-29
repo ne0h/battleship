@@ -542,19 +542,55 @@ class Backend:
 		pass
 
 	def sendChatMessage(self, msg):
+		"""
+		Sends a chat message.
+
+		Args:
+		    msg: the message
+		"""
+
 		self.__serverHandler.sendChatMessage(msg)
 
 	def registerChatCallback(self, callback):
+		"""
+		Registers a chat callback.
+
+		Args:
+		    callback: the callback
+		"""
+
 		self.__chatCallbacks.append(callback)
 
 	def onIncomingChatMessage(self, authorId, timestamp, message):
+		"""
+		Called when a chat message comes in and calls the correspong callbacks.
+
+		Args:
+		    authorId: the id of the author who sent the message
+		    timestamp: unix timestamp in millis indicating the time when the message was sent
+		    message: the content of the message
+		"""
+
 		for cb in self.__chatCallbacks:
 			cb.onAction(authorId, timestamp, message)
 
 	def registerJoinGameCallback(self, callback):
+		"""
+		Registers a game join callback.
+
+		Args:
+		    callback: the callback
+		"""
+
 		self.__joinGameCallbacks.append(callback)
 
 	def registerErrorCallback(self, callback):
+		"""
+		Registers an error callback.
+
+		Args:
+		    callback: the callback
+		"""
 		self.__errorCallbacks.append(callback)
 
 	def __onError(self, error):
@@ -562,6 +598,15 @@ class Backend:
 			cb.onAction(error)
 
 	def registerOpponentJoinedGameCallback(self, callback):
+		"""
+		Registers an opponent joined callback
+		Args:
+		    callback:
+
+		Returns:
+
+		"""
+
 		self.__opponentJoinedGameCallbacks.append(callback)
 
 	def __onOpponentJoinedGame(self):
@@ -575,8 +620,13 @@ class Backend:
 		return self.__ownPlayingField.isUnfogged(field)
 
 	def onUpdateOwnFields(self, params):
-		self.__ownPlayingField.onAttack(params)
+		if self.__ownPlayingField.onAttack(params):
+			self.__playSound("")
 		self.__onRepaint()
+
+	def __playSound(self, type):
+		for cb in self.__playSoundCallback:
+			cb.onAction(type)
 
 	def onUpdateEnemyFields(self, params):
 		self.__enemeysPlayingField.onAttack(params)
@@ -593,6 +643,9 @@ class Backend:
 
 	def registerRepaintCallback(self, callback):
 		self.__repaintCallbacks.append(callback)
+
+	def registerPlaySoundCallback(self, callback):
+		self.__playSoundCallback.append(callback)
 
 	def registerSpecialAttackCallback(self, callback):
 		self.__specialAttackCallbacks.append(callback)
@@ -663,6 +716,7 @@ class Backend:
 		self.__opponentJoinedGameCallbacks = []
 		self.__repaintCallbacks = []
 		self.__specialAttackCallbacks = []
+		self.__playSoundCallback = []
 
 		self.__serverHandler = ServerHandler(self)		
 		if hostname and port and nickname:

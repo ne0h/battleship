@@ -2,6 +2,7 @@ import abc, logging
 from PyQt5.QtCore import *
 from PyQt5.QtGui import *
 from PyQt5.QtWidgets import *
+from PyQt5.QtMultimedia import QSound
 
 from playingfield import *
 
@@ -17,10 +18,12 @@ class ViewModel:
 		self.waitForMoveSouth = False
 		self.waitForMoveEast  = False
 
+		self.playAttackSound = False
+
 	def reset(self):
 		self.specialAttacksLeft = 3
 
-	def __init__(self):
+	def __init__(self, app):
 		self.specialAttacksLeft = 3
 		self.unsetAll()
 
@@ -270,6 +273,10 @@ class PlayingFieldWidget(QWidget):
 			event: information about the event that occured
 		"""
 
+		if self._viewModel.playAttackSound:
+			self.attackSnd.play()
+			self._viewModel.playAttackSound = False
+
 		painter = QPainter()
 		painter.begin(self)
 
@@ -304,6 +311,8 @@ class PlayingFieldWidget(QWidget):
 		return Field(x - 1, 16 - y)
 
 	def __init__(self, backend, viewModel, fieldLength, devmode, fieldSize=25):
+		import os
+
 		self._viewModel = viewModel
 		self._backend = backend
 		self._fieldSize = fieldSize
@@ -313,6 +322,9 @@ class PlayingFieldWidget(QWidget):
 		super(PlayingFieldWidget, self).__init__()
 		self.setMinimumWidth(450)
 		self._setupGui()
+
+		self.attackSnd = QSound("%s/sounds/attack.wav" % os.path.join(os.path.dirname(os.path.realpath(__file__))),
+								self)
 
 class OwnPlayingFieldWidget(PlayingFieldWidget):
 	"""
@@ -770,6 +782,9 @@ class MainForm(QWidget):
 
 		self.__onRepaint()
 
+	def __onPlaySound(self, type):
+		self.__viewModel.playAttackSound = True
+
 	def __setupGui(self):
 
 		#
@@ -936,13 +951,14 @@ class MainForm(QWidget):
 		self.close()
 
 	def __init__(self, backend, fieldLength, devmode):
+		import os
 		from backend import Callback
 
 		self.__backend = backend
 		self.__fieldLength = fieldLength
 		self.devmode = devmode
 
-		self.__viewModel = ViewModel()
+		self.__viewModel = ViewModel(self)
 		self.__fieldLength = fieldLength
 		self.__connectDialogAlreadyOpen = False
 		self.__lobbyAlreadyOpen = False
@@ -980,3 +996,7 @@ class MainForm(QWidget):
 		leaveGameCb = Callback()
 		leaveGameCb.onAction = lambda: self.__onLeaveGame()
 		self.__backend.registerLeaveGameCallback(leaveGameCb)
+
+		soundCb = Callback()
+		soundCb.onAction = lambda type: self.__onPlaySound(type)
+		self.__backend.registerPlaySoundCallback(soundCb)

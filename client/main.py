@@ -1,4 +1,4 @@
-import argparse, sys, os
+import argparse, sys, os, wave
 
 sys.path.append(os.path.join(os.path.dirname(os.path.realpath(__file__)), "../common"))
 
@@ -22,6 +22,11 @@ if __name__ == "__main__":
 	"""
 	Starts the game client.
 	"""
+
+	import os
+	path = "%s/sounds/attack.wav" % os.path.join(os.path.dirname(os.path.realpath(__file__)))
+
+
 	fieldLength = 16
 
 	logging.basicConfig(format="%(asctime)s - CLIENT - %(levelname)s - %(message)s", level=logging.DEBUG)
@@ -29,11 +34,12 @@ if __name__ == "__main__":
 
 	args = setupArgparse().parse_args()
 
-	nickname = None
-
 	devmode = args.devmode
 	hostname = None
 	port = None
+	nickname = args.devmode
+	if nickname is None:
+		nickname = "BOFH"
 	if args.connect:
 		if not args.connect[1].isdigit():
 			logging.error("Wrong connection settings. Not connected so far.")
