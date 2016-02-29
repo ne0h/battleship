@@ -125,7 +125,7 @@ class Backend:
 			rear: address of the rear
 
 		Returns:
-			Returns the id of the newley placed ship. In addition returns True if the user has to place more ships and
+			Returns the id of the newly placed ship. In addition returns True if the user has to place more ships and
 			False of the user successfully placed all his ships.
 		"""
 

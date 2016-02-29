@@ -752,6 +752,23 @@ class MainForm(QWidget):
 			self.__backend.setNickname(nickname)
 			self.__updatePlayersLbl()
 
+	def __placeShipsQuickly(self):
+		self.__backend.placeShip(Field( 8,  9), Field( 9,  9))
+		self.__backend.placeShip(Field( 8,  6), Field( 8,  7))
+		self.__backend.placeShip(Field( 7,  7), Field( 7,  6))
+		self.__backend.placeShip(Field( 6,  6), Field( 6,  7))
+
+		self.__backend.placeShip(Field( 5,  9), Field( 7,  9))
+		self.__backend.placeShip(Field( 8,  5), Field( 6,  5))
+		self.__backend.placeShip(Field( 6,  8), Field( 8,  8))
+
+		self.__backend.placeShip(Field( 8,  4), Field( 5,  4))
+		self.__backend.placeShip(Field( 5,  5), Field( 5,  8))
+
+		self.__backend.placeShip(Field( 9,  8), Field( 9,  4))
+
+		self.__onRepaint()
+
 	def __setupGui(self):
 
 		#
@@ -832,6 +849,8 @@ class MainForm(QWidget):
 			attackDevModeBtn.clicked.connect(self.__attackDevMode)
 			specialAttackDevModeBtn = QPushButton("DevMode Special Attack")
 			specialAttackDevModeBtn.clicked.connect(self.__specialAttackDevMode)
+			quickPlaceShipsBtn = QPushButton("Place ships quickly")
+			quickPlaceShipsBtn.clicked.connect(self.__placeShipsQuickly)
 
 		# status stuff
 		self.__statusLbl = QLabel()
@@ -885,6 +904,7 @@ class MainForm(QWidget):
 		if self.devmode:
 			btnsLayout.addWidget(attackDevModeBtn)
 			btnsLayout.addWidget(specialAttackDevModeBtn)
+			btnsLayout.addWidget(quickPlaceShipsBtn)
 		btnsLayout.addWidget(self.__leaveGameBtn)
 		btnsWgt = QWidget()
 		btnsWgt.setLayout(btnsLayout)
