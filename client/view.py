@@ -589,6 +589,7 @@ class MainForm(QWidget):
 		elif status is ClientStatus.NOGAMERUNNING:
 			self.__onRepaint()
 			self.__statusLbl.setText("No game running, please use the lobby to connect to a game.")
+			self.__playersLbl.setText("Nickname: %s" % self.__backend.lobby.nickname)
 			self.__lobbyBtn.setEnabled(True)
 			self.__connectBtn.setText("Disconnect")
 			self.__leaveGameBtn.setEnabled(True)
