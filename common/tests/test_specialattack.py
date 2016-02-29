@@ -199,28 +199,35 @@ class TestSpecialAttack(unittest.TestCase):
 		if (self.turn==0):
 
 			#Case 1: Correct attack
+			self.controll=0
 			self.clients[0].registerGamePlayCallback(self.callbacks[3])
 			self.clients[0].registerSpecialAttackCallback(self.callbacks[5])
 			self.callbacks[3].onAction = lambda status: self.__onSpecialAttack(status,1)
-			self.clients[0].specialAttack(Field(3,3))
+			self.clients[0].specialAttack(Field(5,5))
 
 			while(self.clients[1].clientStatus!=ClientStatus.OWNTURN):
 				continue
 
-			while(self.clients[0].clientStatus==ClientStatus.OWNTURN):
-				continue
+			#while(self.clients[0].clientStatus==ClientStatus.OWNTURN):
+			#	continue
 			
 			#Case 2: out of boundry
 			self.clients[1].registerGamePlayCallback(self.callbacks[4])
 			self.clients[1].registerSpecialAttackCallback(self.callbacks[6])
 			self.callbacks[4].onAction = lambda status: self.__onSpecialAttack(status,2)
 			self.clients[1].specialAttack(Field(-1,1))
-			"""
+			
+			while(self.controll==0):
+				continue
+			
 			#Case 3: More than 3 Special Attacks
 			print("After Case2:")
 			print("ClientStatus 0:"+str(self.clients[0].clientStatus))	
 			print("ClientStatus 1:"+str(self.clients[1].clientStatus))
+			"""
 			self.clients[1].attack(Field(5,6))
+			print("ClientStatus 0:"+str(self.clients[0].clientStatus))	
+			print("ClientStatus 1:"+str(self.clients[1].clientStatus))
 			while(self.clients[0].clientStatus!=ClientStatus.OWNTURN):
 				continue
 
@@ -274,23 +281,30 @@ class TestSpecialAttack(unittest.TestCase):
 			print("After third Attack:")
 			print("ClientStatus 0:"+str(self.clients[0].clientStatus))	
 			print("ClientStatus 1:"+str(self.clients[1].clientStatus))
-			self.callbacks[0].onAction = lambda status: self.__onSpecialAttack(status,3)
+			
+			cb1 = Callback()
+			self.callbacks.insert(3,cb1) #index3
+			self.clients[0].registerGamePlayCallback(self.callbacks[3])
+
+			self.callbacks[3].onAction = lambda status: self.__onSpecialAttack(status,3)
 			self.clients[0].specialAttack(Field(12,12)) 
 			"""
+			self.__onSpecialAttack(32,3)
+
 		elif (self.turn==1):
 
-
+			self.controll=0
 			#Case 1: Correct attack
 			self.clients[1].registerGamePlayCallback(self.callbacks[4])
 			self.clients[1].registerSpecialAttackCallback(self.callbacks[6])
 			self.callbacks[4].onAction = lambda status: self.__onSpecialAttack(status,1)
-			self.clients[1].specialAttack(Field(3,3))
+			self.clients[1].specialAttack(Field(5,5))
 
 			while(self.clients[0].clientStatus!=ClientStatus.OWNTURN):
 				continue
 
-			while(self.clients[1].clientStatus==ClientStatus.OWNTURN):
-				continue
+			#while(self.clients[1].clientStatus==ClientStatus.OWNTURN):
+			#	continue
 
 			#Case 2: out of boundry
 			self.clients[0].registerGamePlayCallback(self.callbacks[3])
@@ -298,12 +312,17 @@ class TestSpecialAttack(unittest.TestCase):
 			self.callbacks[3].onAction = lambda status: self.__onSpecialAttack(status,2)
 			self.clients[0].specialAttack(Field(-1,1))
 
-			"""
+			while(self.controll==0):
+				continue
+			
 			#Case 3: More than 3 Special Attacks
 			print("After Case2:")
 			print("ClientStatus 0:"+str(self.clients[0].clientStatus))	
 			print("ClientStatus 1:"+str(self.clients[1].clientStatus))
+			"""
 			self.clients[0].attack(Field(5,6))
+			print("ClientStatus 0:"+str(self.clients[0].clientStatus))	
+			print("ClientStatus 1:"+str(self.clients[1].clientStatus))
 			while(self.clients[1].clientStatus!=ClientStatus.OWNTURN):
 				continue
 
@@ -358,9 +377,13 @@ class TestSpecialAttack(unittest.TestCase):
 			print("ClientStatus 0:"+str(self.clients[0].clientStatus))	
 			print("ClientStatus 1:"+str(self.clients[1].clientStatus))
 
-			self.callbacks[1].onAction = lambda status: self.__onSpecialAttack(status,3)
+			cb2 = Callback()
+			self.callbacks.insert(4,cb2) #index3
+			self.clients[1].registerGamePlayCallback(self.callbacks[4])
+			self.callbacks[4].onAction = lambda status: self.__onSpecialAttack(status,3)
 			self.clients[1].specialAttack(Field(12,12))
 			"""
+			self.__onSpecialAttack(32,3)
 	def __onSpecialAttack(self, status,case):
 		
 		if case==1:
@@ -375,6 +398,10 @@ class TestSpecialAttack(unittest.TestCase):
 				print("ClientStatus 1:"+str(self.clients[1].clientStatus))
 				self.assertTrue(False)
 		else:
+			if(case==2):
+				self.controll=1
+				self.callbacks.pop(3)
+				self.callbacks.pop(4)
 			if  status is 32:
 				print("In SpecialAttack case:"+str(case)+":fail")
 				print("ClientStatus 0:"+str(self.clients[0].clientStatus))	
