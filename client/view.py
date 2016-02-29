@@ -612,7 +612,8 @@ class MainForm(QWidget):
 			self.__statusLbl.setText("It is your turn.")
 			self.__enableGamePlayButtons()
 
-			if self.__leaveGameBtn.text().find("Leave Game") != -1:
+			logging.debug("WTFFFF " + self.__leaveGameBtn.text())
+			if self.__leaveGameBtn.text().replace('&', '') == "Leave Game":
 				self.__leaveGameBtn.setText("Capitulate")
 
 		elif status is ClientStatus.OPPONENTSTURN:
@@ -642,12 +643,12 @@ class MainForm(QWidget):
 	def __leaveGame(self):
 		from backend import Callback
 
-		if self.__leaveGameBtn.text().find("Capitulate") != -1:
+		if self.__leaveGameBtn.text().replace('&', '') == "Capitulate":
 			self.__showMessageBox("Capitulation", "You capitulated.")
 			cb = Callback()
 			cb.onAction = lambda: self.__onCapitulate()
 			self.__backend.capitulate(cb)
-		elif self.__leaveGameBtn.text().find("New Game") != -1:
+		elif self.__leaveGameBtn.text().replace('&', '') == "New Game":
 			self.__resetClient()
 		else:
 			self.__showMessageBox("Game aborted", "Game aborted. You can now join or create another one.")
@@ -664,7 +665,7 @@ class MainForm(QWidget):
 		self.__specialAttackBtn.setText("Special Attack (%s left)" % self.__viewModel.specialAttacksLeft)
 
 	def __openConnectDialog(self):
-		if self.__connectBtn.text().find("Connect") != -1:
+		if self.__connectBtn.text().replace('&', '') == "Connect":
 			if not self.__connectDialogAlreadyOpen:
 				self.__connectDialogAlreadyOpen = True
 				ConnectDialog(self.__backend).exec_()
