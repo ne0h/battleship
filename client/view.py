@@ -592,7 +592,8 @@ class MainForm(QWidget):
 			self.__playersLbl.setText("Nickname: %s" % self.__backend.lobby.nickname)
 			self.__lobbyBtn.setEnabled(True)
 			self.__connectBtn.setText("Disconnect")
-			self.__leaveGameBtn.setEnabled(True)
+			self.__connectBtn.setEnabled(True)
+			self.__leaveGameBtn.setEnabled(False)
 		elif status is ClientStatus.WAITINGFOROPPONENT:
 			self.__statusLbl.setText("Waiting for opponent now.")
 			self.__placeShipBtn.setEnabled(False)
