@@ -195,18 +195,37 @@ class ServerHandler:
 		Special-attacks the given field.
 
 		Args:
-		    target: the address of the bottom-left field
+			target: the address of the bottom-left field
 		"""
 
 		self.__sendMessage("special_attack", {"coordinate_x": target.x, "coordinate_y": target.y})
 
 	def move(self, shipId, direction):
+		"""
+		Moves a ship on the own playing field.
+
+		Args:
+			shipId: the id of the ship
+			direction: the direction
+		"""
+
 		self.__sendMessage("move", {"ship_id": shipId, "direction": orientationCodes[direction]})
 
 	def sendChatMessage(self, msg):
+		"""
+		Sends a chat message.
+
+		Args:
+		    msg: the message
+		"""
+
 		self.__sendMessage("chat_send", {"text": msg})
 
 	def capitulate(self):
+		"""
+		The player capitulates.
+		"""
+
 		self.__sendMessage("surrender", {})
 
 	def __receiveLoop(self):
@@ -314,9 +333,19 @@ class ServerHandler:
 		self.__stopReceiveLoop = True
 
 	def isConnected(self):
+		"""
+		Returns True if the client is connected to a server or False if not.
+
+		Returns: True if the client is connected to a server or False if not.
+		"""
+
 		return self.__connected
 
 	def disconnect(self):
+		"""
+		Disconnects from the server the client is currently connected to.
+		"""
+
 		self.__stopReceiveLoop = True
 		self.leaveGame()
 		try:
