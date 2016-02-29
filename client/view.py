@@ -610,6 +610,7 @@ class MainForm(QWidget):
 			cb = Callback()
 			cb.onAction = lambda shipId: self.__onUpdateShipList(shipId)
 			self.__backend.registerShipUpdateCallback(cb)
+			self.__leaveGameBtn.setEnabled(True)
 		elif status is ClientStatus.OWNTURN:
 			self.__statusLbl.setText("It is your turn.")
 			self.__enableGamePlayButtons()
