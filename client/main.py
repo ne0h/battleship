@@ -38,7 +38,8 @@ if __name__ == "__main__":
 	hostname = None
 	port = None
 	nickname = args.devmode
-	if nickname is None:
+
+	if not nickname:
 		nickname = "BOFH"
 	if args.connect:
 		if not args.connect[1].isdigit():
