@@ -653,9 +653,7 @@ class MainForm(QWidget):
 			self.__resetClient()
 		else:
 			self.__showMessageBox("Game aborted", "Game aborted. You can now join or create another one.")
-			cb = Callback()
-			cb.onAction = lambda: self.__onLeaveGame()
-			self.__backend.leaveGame(cb)
+			self.__backend.leaveGame()
 
 	def __resetClient(self):
 		logging.info("Resetting gui...")
@@ -976,3 +974,7 @@ class MainForm(QWidget):
 		specialAttackCb = Callback()
 		specialAttackCb.onAction = lambda: self.__onSpecialAttack()
 		self.__backend.registerSpecialAttackCallback(specialAttackCb)
+
+		leaveGameCb = Callback()
+		leaveGameCb.onAction = lambda: self.__onLeaveGame()
+		self.__backend.registerLeaveGameCallback(leaveGameCb)

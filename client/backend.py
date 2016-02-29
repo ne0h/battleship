@@ -297,7 +297,10 @@ class Backend:
 		self.__capitulateCallbacks = []
 		self.__updateClientStatus(ClientStatus.YOULOSE)
 
-	def leaveGame(self, callback):
+	def registerLeaveGameCallback(self, callback):
+		self.__leaveGameCallbacks.append(callback)
+
+	def leaveGame(self):
 		"""
 		Leaves the current game and registers a callback to wait for an answer from the server.
 
@@ -305,7 +308,6 @@ class Backend:
 			callback: the callback
 		"""
 
-		self.__leaveGameCallbacks.append(callback)
 		self.__serverHandler.leaveGame()
 
 	def onLeaveGame(self):
@@ -315,7 +317,6 @@ class Backend:
 
 		for cb in self.__leaveGameCallbacks:
 			cb.onAction()
-		self.__leaveGameCallbacks = []
 		self.__updateClientStatus(ClientStatus.NOGAMERUNNING)
 
 	def onGameAborted(self):
