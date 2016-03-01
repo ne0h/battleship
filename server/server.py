@@ -276,6 +276,28 @@ class ClientHandler:
         self.__lobby_model.remove_callback(LobbyEvent.on_update, self.on_update_lobby)
         self.__lobby_model.remove_callback(LobbyEvent.on_chat, self.on_chat)
 
+        # end running game if any
+        if self.__game:
+            # remove callbacks of disconnected player
+            self.__lobby_model.get_game(self.__game).remove_callback(GameEvent.on_ship_edit, self.on_ship_edit)
+            self.__lobby_model.get_game(self.__game).remove_callback(GameEvent.on_game_start, self.on_game_start)
+            self.__lobby_model.get_game(self.__game).remove_callback(GameEvent.on_attack, self.on_attack)
+            self.__lobby_model.get_game(self.__game).remove_callback(GameEvent.on_special_attack, self.on_special_attack)
+            self.__lobby_model.get_game(self.__game).remove_callback(GameEvent.on_move, self.on_move)
+            #self.__lobby_model.get_game(self.__game).remove_callback(GameEvent.on_host_begins, self.on_host_begins)
+            #self.__lobby_model.get_game(self.__game).remove_callback(GameEvent.on_guest_begins, self.on_guest_begins)
+            self.__lobby_model.get_game(self.__game).remove_callback(GameEvent.on_game_ended, self.on_game_ended)
+            self.__lobby_model.get_game(self.__game).remove_callback(GameEvent.on_game_abort, self.on_game_abort)
+
+            # surrender
+            if self.__lobby_model.get_game(self.__game).is_ongoing():
+                logging.debug("Surrender by disconnect.")
+                self.__lobby_model.get_game(self.__game).surrender(self.__player)
+            # abort
+            elif self.__lobby_model.get_game(self.__game).is_ready():
+                logging.debug("Abort by disconnect.")
+                self.__lobby_model.get_game(self.__game).abort()
+
         # remove player from lobby
         self.__lobby_model.delete_player(self.__id)
 

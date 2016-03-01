@@ -75,6 +75,9 @@ class Game:
     def is_ongoing(self):
         return self.__status == GameStatus.ongoing
 
+    def is_ready(self):
+        return self.__status == GameStatus.ready
+
     def start(self):
         if self.__status is not GameStatus.ongoing:
             return
