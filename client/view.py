@@ -640,12 +640,16 @@ class MainForm(QWidget):
 
 			self.__leaveGameBtn.setText("New Game")
 			self.__leaveGameBtn.setEnabled(True)
+			self.__connectBtn.setEnabled(True)
+			self.__lobbyBtn.setEnabled(True)
 		elif status is ClientStatus.YOULOSE:
 			self.__statusLbl.setText("You lose!")
 			self.__disableGamePlayButtons()
 
 			self.__leaveGameBtn.setText("New Game")
 			self.__leaveGameBtn.setEnabled(True)
+			self.__connectBtn.setEnabled(True)
+			self.__lobbyBtn.setEnabled(True)
 
 	def __onLeaveGame(self):
 		logging.info("Game aborted. Preparing client for a new game.")
