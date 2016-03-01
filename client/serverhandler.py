@@ -170,7 +170,7 @@ class ServerHandler:
 		"""
 
 		params = {}
-		
+
 		i = 0
 		for ship in ships:
 			params["ship_" + str(i) + "_x"] = str(ship.rear.x)
@@ -243,6 +243,8 @@ class ServerHandler:
 					except:
 						break
 					messageType, params = self.__messageParser.decode(msg)
+
+					logging.debug("Receive: {}".format(msg))
 
 					# validate that the status code exists
 					status = int(params["status"])
@@ -372,7 +374,7 @@ class ServerHandler:
 			self.__stopReceiveLoop = False
 			Thread(target=self.__receiveLoop).start()
 			logging.info("Connected to '%s:%s'" % (hostname, port))
-			
+
 			return True
 
 		except:

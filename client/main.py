@@ -37,17 +37,14 @@ if __name__ == "__main__":
 	devmode = args.devmode
 	hostname = None
 	port = None
-	nickname = args.devmode
+	nickname = args.nick if args.nick else "BOFH"
 
-	if not nickname:
-		nickname = "BOFH"
 	if args.connect:
 		if not args.connect[1].isdigit():
 			logging.error("Wrong connection settings. Not connected so far.")
 		else:
 			hostname = args.connect[0]
 			port = int(args.connect[1])
-			nickname = args.nick
 
 	backend = Backend(fieldLength, hostname, port, nickname, devmode)
 
