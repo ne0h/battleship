@@ -90,16 +90,41 @@ class Ship:
 	"""
 
 	def addDamage(self, part):
+		"""
+		Adds a damaged part to a ship.
+
+		Args:
+		    part: the part
+		"""
+
+
 		# we do need a copy here
 		self.damages.append(Field(part.x, part.y))
 
 	def isDamaged(self, part):
+		"""
+		Validates if a part of a ship is damaged.
+
+		Args:
+		    part: the part to validate
+
+		Returns: True if the part is damaged or False if not.
+
+		"""
+
 		for damage in self.damages:
 			if damage.equals(part):
 				return True
 		return False
 
 	def getLength(self):
+		"""
+		Returns the length of the ship.
+
+		Returns:
+		    The length of the ship.
+		"""
+
 		return len(self.parts)
 
 	def __initShip(self, bow, rear):
@@ -113,6 +138,15 @@ class Ship:
 			self.middles.append(self.parts[i])
 
 	def move(self, bowNew, rearNew, direction):
+		"""
+		Moves the ship.
+
+		Args:
+		    bowNew: the field address of the new bow
+		    rearNew: the field address of the new rear
+		    direction: the direction
+		"""
+
 		self.__initShip(bowNew, rearNew)
 
 		# move damages
@@ -146,6 +180,16 @@ class ShipList:
 	"""
 
 	def getFieldStatus(self, field):
+		"""
+		Returns the status of a field.
+
+		Args:
+		    field: the field
+
+		Returns:
+			The status of the field.
+		"""
+
 		for ship in self.getShips():
 			for part in ship.parts:
 				if field.equals(part):
@@ -156,6 +200,16 @@ class ShipList:
 		return FieldStatus.WATER, None
 
 	def getShipAtPosition(self, field):
+		"""
+		Returns the id of the ship at a given position.
+
+		Args:
+		    field: the field
+
+		Returns:
+			The id of the ship or -1 if there is no ship at this position.
+		"""
+
 		ships = self.getShips()
 		for i in range(0, len(ships)):
 			for damage in ships[i].parts:
@@ -242,6 +296,16 @@ class ShipList:
 			return self.__destroyers[shipId]
 
 	def movePossible(self, shipId, direction):
+		"""
+		Validates if the move of a ship is possible.
+
+		Args:
+		    shipId: the id of the ship
+		    direction: the direction
+
+		Returns:
+			True if the move is possible or False if not.
+		"""
 
 		if not (0 <= shipId <= 9):
 			return False
@@ -391,7 +455,6 @@ class ShipList:
 			Returns the id of the newly built ship or -1 if there was any game rule violation. In addition returns if
 			the user has to place more ships.
 		"""
-		import math
 
 		if bow.x is rear.x:
 			length = abs(bow.y - rear.y) + 1
@@ -424,21 +487,64 @@ class ShipList:
 		return shipId, self.moreShipsLeftToPlace()
 
 	def getCarrierCount(self):
+		"""
+		Returns the count of carriers currently on the field.
+
+		Returns:
+			The count of carriers currently on the field.
+		"""
+
 		return len(self.__carriers)
 
 	def getBattleshipCount(self):
+		"""
+		Returns the count of carriers currently on the field.
+
+		Returns:
+			The count of carriers currently on the field.
+		"""
+
 		return len(self.__battleships)
 
 	def getCruiserCount(self):
+		"""
+		Returns the count of cruisers currently on the field.
+
+		Returns:
+			The count of cruisers currently on the field.
+		"""
+
 		return len(self.__cruisers)
 
 	def getDestroyerCount(self):
+		"""
+		Returns the count of destroyers currently on the field.
+
+		Returns:
+			The count of destroyers currently on the field.
+		"""
+
 		return len(self.__destroyers)
 
 	def getShipCount(self):
+		"""
+		Returns the count of ships currently on the field.
+
+		Returns:
+			The count of ships currently on the field.
+		"""
+
 		return self.getCarrierCount() + self.getBattleshipCount() + self.getCruiserCount() + self.getDestroyerCount()
 
 	def move(self, shipId, direction):
+		"""
+		Moves a given ship to a given direction.
+
+		Args:
+		    shipId: the id of the ship
+		    direction: the direction
+		"""
+
 		ship = self.getShip(shipId)
 		bow = ship.bow
 		rear = ship.rear
@@ -553,6 +659,17 @@ class PlayingField:
 		return updates
 
 	def movePossible(self, shipId, direction):
+		"""
+		Validates if a move of a given ship to a given direction is possible.
+
+		Args:
+		    shipId: the id of the ship
+		    direction: the direction
+
+		Returns:
+			True if the move is possible or False if not.
+		"""
+
 		return self.__ships.movePossible(shipId, direction)
 
 	def move(self, shipId, direction):
@@ -634,9 +751,26 @@ class PlayingField:
 		return self.__ships.add(bow, rear)
 
 	def moreShipsLeftToPlace(self):
+		"""
+		Checks if the player has to place more ships.
+
+		Returns:
+			True if the player has to place more ships or False if not.
+		"""
+
 		return self.__ships.moreShipsLeftToPlace()
 
 	def onAttack(self, params):
+		"""
+		Is called when there is an attack.
+
+		Args:
+		    params: some cool params
+
+		Returns:
+			True if there has been a hit or False if not.
+		"""
+
 		# TODO: validate input
 		wasSpecialAttack = True if params["was_special_attack"] == "true" else False
 		field  = Field(int(params["coordinate_x"]), int(params["coordinate_y"]))
@@ -665,20 +799,50 @@ class PlayingField:
 		return playSound
 
 	def unfog(self, field):
+		"""
+		Unfoggs a field.
+
+		Args:
+		    field: the field to unfog
+		"""
+
 		logging.debug("Unfog {}...".format(field.toString()))
 		self.__unfogged.append(field)
 
 	def isUnfogged(self, field):
-		#return field in self.__unfogged
+		"""
+		Validates if a field is unfogged.
+
+		Args:
+		    field: the field to validate
+
+		Returns:
+			True if the field is unfogged or False if not.
+		"""
+
 		for j in self.__unfogged:
 			if field.equals(j):
 				return True
 		return False
 
 	def getUnfogged(self):
+		"""
+		Returns all unfogged fields as a list.
+
+		Returns:
+			All unfogged fields as a list.
+		"""
+
 		return self.__unfogged
 
 	def isGameOver(self):
+		"""
+		Checks if all ships have been sunken.
+
+		Returns:
+			True if all ships have been sunken or False if not.
+		"""
+
 		total = 0
 		for s in self.__ships.getShips():
 			total += len(s.damages)
@@ -692,14 +856,41 @@ class PlayingField:
 		self.__allowed_attacks = 3
 
 class EnemyPlayingField:
+	"""
+	Represents the playing field of an enemy.
+
+	Args:
+	    fieldLength: the length of the field in x and y direction
+	"""
 
 	def getField(self):
+		"""
+		Returns the complete playing field as a two-dimensional list.
+
+		Returns:
+			The complete playing field as a two-dimensional list.
+		"""
+
 		return self.__fields
 
 	def getUnfogged(self):
+		"""
+		Returns all unfogged fields as a list.
+
+		Returns:
+			All unfogged fields as a list.
+		"""
+
 		return self.__unfogged
 
 	def onAttack(self, params):
+		"""
+		Is called when there is an attack.
+
+		Args:
+		    params: some cool params
+		"""
+
 		for i in range(0, int(params["number_of_updated_fields"])):
 			x = int(params["field_%s_x" % i])
 			y = int(params["field_%s_y" % i])
