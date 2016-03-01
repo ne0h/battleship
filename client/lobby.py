@@ -8,6 +8,7 @@ class Lobby:
 	def onUpdate(self, games, players):
 		"""
 		Updates everything. Is called automatically when the server sends a new Update_Lobby report.
+
 		Args:
 		    games: the games currently active
 		    players: the players currently active
