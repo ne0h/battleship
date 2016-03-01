@@ -638,12 +638,10 @@ class Backend:
 
 	def registerOpponentJoinedGameCallback(self, callback):
 		"""
-		Registers an opponent joined callback
+		Registers an opponent joined callback.
+
 		Args:
 		    callback:
-
-		Returns:
-
 		"""
 
 		self.__opponentJoinedGameCallbacks.append(callback)

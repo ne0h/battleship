@@ -24,3 +24,6 @@ Indices and tables
 * :ref:`modindex`
 * :ref:`search`
 
+Client structure
+================
+.. image:: client-structure.svg
