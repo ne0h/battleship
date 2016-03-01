@@ -241,7 +241,8 @@ class ServerHandler:
 					try:
 						msg = self.__sock.recv(size[0] * 256 + size[1]).decode()
 					except:
-						break
+						logging.error("Failed to decode report: %s" % msg)
+						continue
 					messageType, params = self.__messageParser.decode(msg)
 
 					logging.debug("Receive: {}".format(msg))
@@ -310,9 +311,10 @@ class ServerHandler:
 
 					else:
 						logging.debug("%s received with unknown status code." % (messageType))
-			except:
+			except Exception as ex:
+				logging.error("Connection error: %s" % ex)
 				logging.error("Lost connection to server! Cleaning up...")
-				self.__backend.onLostConnection()
+				#self.__backend.onLostConnection()
 
 	def __sendMessage(self, type, params):
 		if not self.__connected:
@@ -321,11 +323,13 @@ class ServerHandler:
 
 		msg = self.__messageParser.encode(type, params)
 		logging.debug("Sending message: %s"  % (msg))
+
 		try:
 			self.__sock.send(msg)
-		except:
+		except Exception as ex:
+			logging.error("Failed to send message: %s" % ex)
 			logging.error("Lost connection to server! Cleaning up...")
-			self.__backend.onLostConnection()
+			#self.__backend.onLostConnection()
 
 	def close(self):
 		"""
