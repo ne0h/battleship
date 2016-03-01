@@ -44,6 +44,9 @@ class MessageParser:
 				if tokens[0].strip() == "type":
 					messageType = tokens[1].strip()
 				else:
-					params[tokens[0].strip()] = tokens[1].strip()
+					try:
+						params[tokens[0].strip()] = tokens[1].strip()
+					except IndexError:
+						params[tokens[0].strip()] = None
 
 		return messageType, params

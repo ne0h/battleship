@@ -244,8 +244,7 @@ class ServerHandler:
 						logging.error("Failed to decode report: %s" % msg)
 						continue
 					messageType, params = self.__messageParser.decode(msg)
-
-					logging.debug("Receive: {}".format(msg))
+					#logging.debug("Receive: {}".format(msg))
 
 					# validate that the status code exists
 					status = int(params["status"])
@@ -312,9 +311,11 @@ class ServerHandler:
 					else:
 						logging.debug("%s received with unknown status code." % (messageType))
 			except Exception as ex:
+				import traceback
+				traceback.print_exc(file=sys.stdout)
 				logging.error("Connection error: %s" % ex)
 				logging.error("Lost connection to server! Cleaning up...")
-				#self.__backend.onLostConnection()
+				self.__backend.onLostConnection()
 
 	def __sendMessage(self, type, params):
 		if not self.__connected:
@@ -329,7 +330,7 @@ class ServerHandler:
 		except Exception as ex:
 			logging.error("Failed to send message: %s" % ex)
 			logging.error("Lost connection to server! Cleaning up...")
-			#self.__backend.onLostConnection()
+			self.__backend.onLostConnection()
 
 	def close(self):
 		"""
