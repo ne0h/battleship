@@ -21,6 +21,9 @@ def setupArgparse():
 if __name__ == "__main__":
 	"""
 	Starts the game client.
+
+	Author:
+		Maximilian Hess <mail@maximilianhess.com>
 	"""
 
 	import os

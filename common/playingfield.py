@@ -4,6 +4,9 @@ from enum import Enum
 class Orientation(Enum):
 	"""
 	The different directions.
+
+	Author:
+		Maximilian Hess <mail@maximilianhess.com>
 	"""
 
 	NORTH = "north"
@@ -12,6 +15,13 @@ class Orientation(Enum):
 	EAST  = "east"
 
 class FieldStatus(Enum):
+	"""
+	The different statuses a field can have.
+
+	Author:
+		Maximilian Hess <mail@maximilianhess.com>
+	"""
+
 	FOG = "fog"
 	WATER = "water"
 	SHIP = "ship"
@@ -26,6 +36,9 @@ conditionCodes = {
 class Field:
 	"""
 	Describes a single field on the playing field.
+
+	Author:
+		Maximilian Hess <mail@maximilianhess.com>
 
 	Args:
 		x: horizontal coordinate starting in the top left corner
@@ -83,6 +96,9 @@ def splitShip(bow, rear):
 class Ship:
 	"""
 	Describes a ship.
+
+	Author:
+		Maximilian Hess <mail@maximilianhess.com>
 
 	Args:
 		bow: the starting field of the ship
@@ -177,6 +193,9 @@ class Ship:
 class ShipList:
 	"""
 	Manages all ships on the playing field.
+
+	Author:
+		Maximilian Hess <mail@maximilianhess.com>
 	"""
 
 	def getFieldStatus(self, field):
@@ -583,6 +602,9 @@ class PlayingField:
 	"""
 	A complete playing field that consists of 16x16 fields.
 
+	Author:
+		Maximilian Hess <mail@maximilianhess.com>
+
 	Args:
 		length: the dimension of playing field
 	"""
@@ -858,6 +880,9 @@ class PlayingField:
 class EnemyPlayingField:
 	"""
 	Represents the playing field of an enemy.
+
+	Author:
+		Maximilian Hess <mail@maximilianhess.com>
 
 	Args:
 	    fieldLength: the length of the field in x and y direction

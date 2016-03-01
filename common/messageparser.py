@@ -4,6 +4,9 @@ from helpers import *
 class MessageParser:
 	"""
 	Commonly used parser to encode and decode communication messages.
+
+	Author:
+		Maximilian Hess <mail@maximilianhess.com>
 	"""
 
 	def encode(self, type, params):

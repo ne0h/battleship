@@ -4,6 +4,9 @@ from threading import Thread
 class UDPDiscoverer:
 	"""
 	Searches for game servers.
+
+	Author:
+		Maximilian Hess <mail@maximilianhess.com>
 	"""
 
 	def __run(self):

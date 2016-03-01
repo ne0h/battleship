@@ -40,6 +40,12 @@ orientationCodes = {
 }
 
 class ServerHandler:
+	"""
+	Communicates with the server.
+
+	Author:
+		Maximilian Hess <mail@maximilianhess.com>
+	"""
 
 	def setNickname(self, nickname):
 		"""

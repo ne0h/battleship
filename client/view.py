@@ -7,8 +7,18 @@ from PyQt5.QtMultimedia import QSound
 from playingfield import *
 
 class ViewModel:
+	"""
+	Stores some view-related data.
+
+	Author:
+		Maximilian Hess <mail@maximilianhess.com>
+	"""
 
 	def unsetAll(self):
+		"""
+		Unsets all.
+		"""
+
 		self.waitForShipPlacement = False
 		self.waitForAttack = False
 		self.waitForSpecialAttack = False
@@ -21,6 +31,9 @@ class ViewModel:
 		self.playAttackSound = False
 
 	def reset(self):
+		"""
+		Resets the model.
+		"""
 		self.specialAttacksLeft = 3
 
 	def __init__(self, app):
@@ -30,6 +43,15 @@ class ViewModel:
 		self.newShipBow = None
 
 class ConnectDialog(QDialog):
+	"""
+	Represents a connect dialog.
+
+	Author:
+		Maximilian Hess <mail@maximilianhess.com>
+
+	Args:
+	    backend: pointer to the backend
+	"""
 
 	def __showSettingsErrorBox(self, title="Connection settings wrong.", text="Enter valid connection settings."):
 		QMessageBox.about(self, title, text)
@@ -120,6 +142,15 @@ class ConnectDialog(QDialog):
 		self.__onUpdateServers(self.__backend.registerUdpDiscoveryCallback(cb))
 
 class LobbyDialog(QDialog):
+	"""
+	Represents a lobby dialog.
+
+	Author:
+		Maximilian Hess <mail@maximilianhess.com>
+
+	Args:
+	    backend: pointer to the backend
+	"""
 
 	def __interfaceEnabled(self, value):
 		self.__gamesWidget.setEnabled(value)
@@ -252,6 +283,9 @@ class LobbyDialog(QDialog):
 class PlayingFieldWidget(QWidget):
 	"""
 	Shows a playing field.
+
+	Author:
+		Maximilian Hess <mail@maximilianhess.com>
 	"""
 
 	def _setupGui(self):
@@ -329,6 +363,9 @@ class PlayingFieldWidget(QWidget):
 class OwnPlayingFieldWidget(PlayingFieldWidget):
 	"""
 	Shows the playing field of the user.
+
+	Author:
+		Maximilian Hess <mail@maximilianhess.com>
 	"""
 
 	def _getUnfogged(self):
@@ -462,6 +499,9 @@ class OwnPlayingFieldWidget(PlayingFieldWidget):
 class EnemeysPlayingFieldWidget(PlayingFieldWidget):
 	"""
 	Shows the playing field of the enemey.
+
+	Author:
+		Maximilian Hess <mail@maximilianhess.com>
 	"""
 
 	def _getUnfogged(self):
@@ -535,6 +575,14 @@ class EnemeysPlayingFieldWidget(PlayingFieldWidget):
 class MainForm(QWidget):
 	"""
 	The main form that shows the complete user interface.
+
+	Author:
+		Maximilian Hess <mail@maximilianhess.com>
+
+	Args:
+	    backend: pointer to the backend
+	    fieldLength: the count of fields in x and y direction
+	    devmode: shows if the devmode is active or not
 	"""
 
 	def __showMessageBox(self, title, text):

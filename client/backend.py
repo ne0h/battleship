@@ -6,6 +6,9 @@ from lobby import Lobby
 class ClientStatus(Enum):
 	"""
 	Encapsulates the different client statuses.
+
+	Author:
+		Maximilian Hess <mail@maximilianhess.com>
 	"""
 
 	NOTCONNECTED = "notconnected"
@@ -21,6 +24,9 @@ class ClientStatus(Enum):
 class Callback:
 	"""
 	Callback (observer pattern).
+
+	Author:
+		Maximilian Hess <mail@maximilianhess.com>
 	"""
 
 	def onAction(self):
@@ -33,6 +39,9 @@ class Callback:
 class GameInformation:
 	"""
 	Represents a game.
+
+	Author:
+		Maximilian Hess <mail@maximilianhess.com>
 
 	Args:
 		name: the name of the game
@@ -57,6 +66,9 @@ class PlayerInformation:
 	"""
 	Represents a player.
 
+	Author:
+		Maximilian Hess <mail@maximilianhess.com>
+
 	Args:
 		id: the identifier of the player
 		nickname: the nickname of the player
@@ -76,6 +88,9 @@ class PlayerInformation:
 class Backend:
 	"""
 	Game client backend that does all kind of controller stuff.
+
+	Author:
+		Maximilian Hess <mail@maximilianhess.com>
 
 	Args:
 		length: the length of the playing field

@@ -3,6 +3,9 @@ import logging
 class Lobby:
 	"""
 	Holds all game info and player's info stuff.
+
+	Author:
+		Maximilian Hess <mail@maximilianhess.com>
 	"""
 
 	def onUpdate(self, games, players):
