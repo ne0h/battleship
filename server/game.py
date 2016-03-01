@@ -1,3 +1,7 @@
+#
+# Author: Younis Bensalah <younis.bensalah@gmail.com>
+#
+
 import playingfield
 import logging
 from enum import Enum
