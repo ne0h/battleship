@@ -1,6 +1,7 @@
 import sys
 import logging
 import socketserver
+import socket
 import struct
 import threading
 import hashlib
@@ -51,7 +52,7 @@ class ClientHandler:
         while True:
             logging.debug("handle({}) loop.".format(self.__socket.getpeername()))
             # receive 2 bytes size header
-            size = self.__socket.recv(2)
+            size = self.__recv(2)
             if not size:
                 logging.debug("Did not receive 2 bytes header.")
                 break
@@ -59,11 +60,10 @@ class ClientHandler:
             logging.debug("Size: " + str(size))
 
             # receive message body
-            msg = self.__socket.recv(size)
+            msg = self.__recv(size)
             if not msg:
                 logging.debug("Did not receive {} bytes body.".format(str(size)))
                 break
-            logging.debug(b"Raw in: " + msg)
 
             # explode received data into message type and parameters
             msgtype, msgparams = self.__message_parser.decode(msg.decode())
@@ -277,7 +277,7 @@ class ClientHandler:
         self.__lobby_model.remove_callback(LobbyEvent.on_chat, self.on_chat)
 
         # end running game if any
-        if self.__game:
+        if self.__game and self.__lobby_model.get_game(self.__game) is not None:
             # remove callbacks of disconnected player
             self.__lobby_model.get_game(self.__game).remove_callback(GameEvent.on_ship_edit, self.on_ship_edit)
             self.__lobby_model.get_game(self.__game).remove_callback(GameEvent.on_game_start, self.on_game_start)
@@ -589,6 +589,19 @@ class ClientHandler:
                 return False
         return True
 
+    def __recv(self, count):
+        try:
+            msg = self.__socket.recv(count)
+        except socket.error as e:
+            logging.debug("Client already dead: ".format(repr(e)))
+            return
+        logging.debug(b"Raw in: " + msg)
+        return msg
+
     def __send(self, msg):
+        try:
+            self.__socket.sendall(msg)
+        except socket.error as e:
+            logging.debug("Client already dead: ".format(repr(e)))
+            return
         logging.debug(b"Raw out: " + msg)
-        self.__socket.sendall(msg)

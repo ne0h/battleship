@@ -258,7 +258,10 @@ class LobbyModel:
         global games_lock
 
         games_lock.acquire()
-        g = games[name]
+        if name in games:
+            g = games[name]
+        else:
+            g = None
         games_lock.release()
         return g
 
