@@ -606,6 +606,7 @@ class MainForm(QWidget):
 			self.__connectBtn.setText("Disconnect")
 			self.__connectBtn.setEnabled(True)
 			self.__leaveGameBtn.setEnabled(False)
+			self.__viewModel.reset()
 		elif status is ClientStatus.WAITINGFOROPPONENT:
 			self.__statusLbl.setText("Waiting for opponent now.")
 			self.__placeShipBtn.setEnabled(False)
