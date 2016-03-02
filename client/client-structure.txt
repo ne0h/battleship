@@ -9,24 +9,36 @@ package "Controller" {
 	[ServerHandler]
 	[MessageParser]
 
-	[Backend] --> [View] : callback.onAction(result)
 	[Backend] <--> [ServerHandler] : communicateWithServer()
 	[ServerHandler] --> Server : sendMessages()
-	Server --> [ServerHandler] : sendReports()
+	[UDPDiscoverer] --> Server : discover()
+	Server --> [ServerHandler] : receiveReports()
 	[ServerHandler] --> [MessageParser] : encodeMessages()
+	[Backend] --> [UDPDiscoverer] : findServers()
 }
 
 package "Model" {
 	[Backend] --> [OwnPlayingField] : storeOwnFieldData()
 	[Backend] --> [EnemyPlayingField] : storeEnemysFieldData()
 	[Backend] --> [Lobby] : storeLobbyData()
+	[OwnPlayingField] --> [ShipList] : manageShips()
+	[ShipList] --> [Ship] : manage()
 }
 
 package "View" {
-	[View]
+	[MainForm]
 
-	[View] --> [ViewModel] : storeViewData()
-	[View] --> [Backend] : passUserInput(params, callback)
+	[MainForm] --> [ViewModel] : storeViewData()
+	[MainForm] --> [Backend] : passUserInput(params, callback)
+	[Backend] --> [MainForm] : callback.onAction(result)
+
+	[MainForm] --> [ConnectDialog] : findServers()
+	[MainForm] --> [LobbyDialog] : findAndCreateGames()
+	[MainForm] --> [OwnPlayingFieldWidget] : showOwnPlayingField()
+	[MainForm] --> [EnemeysPlayingFieldWidget] : showEnemeysPlayingField()
+
+	[OwnPlayingFieldWidget] --> [ViewModel] : storeViewData()
+	[EnemeysPlayingFieldWidget] --> [ViewModel] : storeViewData()
 }
 
 package "ViewModel" {
