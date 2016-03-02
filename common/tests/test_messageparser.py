@@ -6,16 +6,10 @@ from messageparser import *
 
 class TestMessageParser(unittest.TestCase):
 
-	
-	
-        ###Server-Messages###
-	#----------------------------------------------------------------------------	
-	#1x Messages
-	#---------------------------------------------------------------------------
-	# 11 Begin_Turn
 	def test_beginTurnEncoding(self):
 		"""
-		Checks the Encoding of 11 Begin_Turn Message by MessageParser
+		Checks the Encoding of 11 Begin_Turn Message by MessageParser.
+
 		Format:
 			 type:report;status:11;
 		"""
@@ -25,19 +19,20 @@ class TestMessageParser(unittest.TestCase):
 
 	def test_beginTurnDecoding(self):
 		"""
-		Checks the Decoding of 11 Begin_Turn Message by MessageParser
+		Checks the Decoding of 11 Begin_Turn Message by MessageParser.
 		"""		
 		messageType, params = MessageParser().decode("type:report;status:11;")
 		self.assertEqual(messageType, "report")
 		self.assertEqual(len(params), 1)
 		self.assertEqual(params["status"],"11")	
 
-	# 16 Update_Lobby
 	def test_updateLobbyEncoding(self):
 		"""
-		Checks the Encoding of 16 Update_Lobby Message by MessageParser
+		Checks the Encoding of 16 Update_Lobby Message by MessageParser.
+
 		Format: 
 			type:report;status:16;params;
+
 		params:
 			number_of_clients:[number n];
 	   		number_of_games:[number m];
@@ -63,7 +58,7 @@ class TestMessageParser(unittest.TestCase):
 
 	def test_updateLobbyDecoding(self):
 		"""
-		Checks the Decoding of 16 Update_Lobby Message by MessageParser
+		Checks the Decoding of 16 Update_Lobby Message by MessageParser.
 		"""
 		messageType, params = MessageParser().decode("type:report;"+
 							     "status:16;number_of_clients:3;number_of_games:2;game_name_0:FCB;"+
@@ -91,14 +86,14 @@ class TestMessageParser(unittest.TestCase):
 		self.assertEqual(params["player_identifier_0"],"1000")
 		self.assertEqual(params["player_identifier_1"],"2000")
 		self.assertEqual(params["player_identifier_2"],"3000")	
-			
-		
-	#17 Game_Ended
+
 	def test_gameEndedEncoding(self):
 		"""
-		Checks the Encoding of 17 Game_Ended Message by MessageParser 	
+		Checks the Encoding of 17 Game_Ended Message by MessageParser.
+
 		Format: 
 			type:report;status:17;params;
+
 		params:	
 			timestamp : [millis] ;
 			winner : [0|1] ;
@@ -119,7 +114,7 @@ class TestMessageParser(unittest.TestCase):
 
 	def test_gameEndedDecoding(self):
 		"""
-		Checks the Decoding of 17 Game_Ended Message by MessageParser
+		Checks the Decoding of 17 Game_Ended Message by MessageParser.
 		"""		
 		messageType, params = MessageParser().decode("type:report;status:17;timestamp:1000;winner:0;name_of_game:FCB;"+
 						       	     "identifier_0:2000;identifier_1:3000;reason_for_game_end:player1 won")
@@ -133,13 +128,14 @@ class TestMessageParser(unittest.TestCase):
 		self.assertEqual(params["identifier_0"],"2000")
 		self.assertEqual(params["identifier_1"],"3000")
 		self.assertEqual(params["reason_for_game_end"],"player1 won")	
-	
-	#13 Update_Own_Field
+
 	def test_updateOwnFieldEncoding(self):
 		"""
-		Checks the Encoding of 13 Update_Own_Field Message by MessageParser
+		Checks the Encoding of 13 Update_Own_Field Message by MessageParser.
+
 		Format: 
 			type:report;status:13;params;
+
 		params:
 			was_special_attack : [true | false] ;
 			coordinate_x : [number] ;
@@ -156,7 +152,7 @@ class TestMessageParser(unittest.TestCase):
 
 	def test_updateOwnFieldDecoding(self):
 		"""
-		Checks the Decoding of 13 Update_Own_Field Message by MessageParser
+		Checks the Decoding of 13 Update_Own_Field Message by MessageParser.
 		"""		
 		messageType, params = MessageParser().decode("type:report;status:13;was_special_attack:true;"+
 							     "coordinate_x:12;coordinate_y:6;")
@@ -167,13 +163,14 @@ class TestMessageParser(unittest.TestCase):
 		self.assertEqual(params["was_special_attack"],"true")
 		self.assertEqual(params["coordinate_x"],"12")
 		self.assertEqual(params["coordinate_y"],"6")
-	
-	#14 Update_Enemy_Field
+
 	def test_updateEnemyFieldEncoding(self):
 		"""
-		Checks the Encoding of 14 Update_Enemy_Field Message by MessageParser
+		Checks the Encoding of 14 Update_Enemy_Field Message by MessageParser.
+
 		Format: 
 			type:report;status:14;params;
+
 		params:
 			number_of_updated_fields : [number n] ;
 			field_0_x : [number]; ... ; field_n_x : [number];
@@ -195,7 +192,7 @@ class TestMessageParser(unittest.TestCase):
 
 	def test_updateEnemyFieldDecoding(self):
 		"""
-		Checks the Decoding of 14 Update_Enemy_Field Message by MessageParser
+		Checks the Decoding of 14 Update_Enemy_Field Message by MessageParser.
 		"""	
 		messageType, params = MessageParser().decode("type:report;status:14;number_of_updated_fields:5;field_0_x:3;"+
 							     "field_1_x:2;field_2_x:10;field_3_x:6;field_4_x:7;field_0_y:4;"+
@@ -223,12 +220,13 @@ class TestMessageParser(unittest.TestCase):
 		self.assertEqual(params["field_3_condition"],"free")
 		self.assertEqual(params["field_4_condition"],"free")
 
-	#15 Chat_Broadcast
 	def test_chatBroadcastEncoding(self):
 		"""
-		Checks the Encoding of 15 Chat_Broadcast Message by MessageParser	
+		Checks the Encoding of 15 Chat_Broadcast Message by MessageParser.
+
 		Format: 
 			type:report;status:15;params;
+
 		params:
 			author_id : [identifier];
 			timestamp : [millis] ;
@@ -245,7 +243,7 @@ class TestMessageParser(unittest.TestCase):
 	
 	def test_chatBroadcastDecoding(self):
 		"""
-		Checks the Decoding of 15 Chat_Broadcasr Message by MessageParser
+		Checks the Decoding of 15 Chat_Broadcasr Message by MessageParser.
 		"""
 		messageType, params = MessageParser().decode("type:report;status:15;author_id:2000;timestamp:1000;"+
 							     "message_content:Hi All! How are you?")
@@ -257,10 +255,10 @@ class TestMessageParser(unittest.TestCase):
 		self.assertEqual(params["timestamp"],"1000")
 		self.assertEqual(params["message_content"],"Hi All! How are you?")
 
-	#18 Begin_Ship_Placing
 	def test_beginShipPlacingEncoding(self):
 		""" 	
-		Checks the Encoding of 18 Begin_Ship_Placing Message by MessageParser
+		Checks the Encoding of 18 Begin_Ship_Placing Message by MessageParser.
+
 		Format: 
 			type:report;status:18;
 		"""
@@ -272,18 +270,18 @@ class TestMessageParser(unittest.TestCase):
 
 	def test_beginShipPlacingDecoding(self):
 		"""
-		Checks the Decoding of 18 Begin_Ship_Placing Message by MessageParser
+		Checks the Decoding of 18 Begin_Ship_Placing Message by MessageParser.
 		"""
 		messageType, params = MessageParser().decode("type:report;status:18;")
 
 		self.assertEqual(messageType, "report")
 		self.assertEqual(len(params), 1)
 		self.assertEqual(params["status"],"18")	
-	
-	#19 Game_Aborted
+
 	def test_gameAbortedEncoding(self):
 		"""	
-		Checks the Encoding of 19 Gama_Aborted Message by MessageParser
+		Checks the Encoding of 19 Gama_Aborted Message by MessageParser.
+
 		Format: 
 			type:report;status:19;
 		"""
@@ -293,20 +291,18 @@ class TestMessageParser(unittest.TestCase):
 
 	def test_gameAbortedDecoding(self):
 		"""	
-		Checks the Decoding of 19 Gama_Aborted Message by MessageParser
+		Checks the Decoding of 19 Gama_Aborted Message by MessageParser.
 		"""
 		messageType, params = MessageParser().decode("type:report;status:19;")
 
 		self.assertEqual(messageType, "report")
 		self.assertEqual(len(params), 1)
 		self.assertEqual(params["status"],"19")
-	#----------------------------------------------------------------------------	
-	#2x Messages
-	#---------------------------------------------------------------------------
-	# 21 Successful_Move
+
 	def test_successfulMoveEncoding(self):
 		"""	
-		Checks the Encoding of 21 Successful_Move Message by MessageParser
+		Checks the Encoding of 21 Successful_Move Message by MessageParser.
+
 		Format: 
 			type:report;status:21;
 		"""
@@ -317,7 +313,7 @@ class TestMessageParser(unittest.TestCase):
 
 	def test_successfulMoveDecoding(self):
 		"""	
-		Checks the Decoding of 21 Successful_Move Message by MessageParser
+		Checks the Decoding of 21 Successful_Move Message by MessageParser.
 		"""
 		messageType, params = MessageParser().decode("type:report;status:21;")
 
@@ -325,10 +321,10 @@ class TestMessageParser(unittest.TestCase):
 		self.assertEqual(len(params), 1)
 		self.assertEqual(params["status"],"21")
 
-	# 22 Successful_Attack
 	def test_successfulAttackEncoding(self):
 		"""	
-		Checks the Encoding of 22 Successful_Attack Message by MessageParser
+		Checks the Encoding of 22 Successful_Attack Message by MessageParser.
+
 		Format: 
 			type:report;status:22;
 		"""
@@ -339,7 +335,7 @@ class TestMessageParser(unittest.TestCase):
 
 	def test_successfulAttackDecoding(self):
 		"""	
-		Checks the Decoding of 22 Successful_Attack Message by MessageParser
+		Checks the Decoding of 22 Successful_Attack Message by MessageParser.
 		"""	
 		messageType, params = MessageParser().decode("type:report;status:22;")
 
@@ -350,7 +346,8 @@ class TestMessageParser(unittest.TestCase):
 	# 23 Surrender_Accepted
 	def test_surrenderAcceptedEncoding(self):
 		"""	
-		Checks the Encoding of 23 Surrender_Accepted Message by MessageParser
+		Checks the Encoding of 23 Surrender_Accepted Message by MessageParser.
+
 		Format: 
 			type:report;status:23;
 		"""
@@ -361,7 +358,7 @@ class TestMessageParser(unittest.TestCase):
 
 	def test_surrenderAcceptedDecoding(self):
 		"""	
-		Checks the Decoding of 23 Surrender_Accepted Message by MessageParser
+		Checks the Decoding of 23 Surrender_Accepted Message by MessageParser.
 		"""		
 		messageType, params = MessageParser().decode("type:report;status:23;")
 
@@ -369,10 +366,10 @@ class TestMessageParser(unittest.TestCase):
 		self.assertEqual(len(params), 1)
 		self.assertEqual(params["status"],"23")
 
-	# 24 Successful_Special_Attack
 	def test_successfulSpecialAttackEncoding(self):
 		"""
-		Checks the Encoding of 24 Successful_Special_Attack Message by MessageParser
+		Checks the Encoding of 24 Successful_Special_Attack Message by MessageParser.
+
 		Format: 
 			type:report;status:24;
 		"""
@@ -383,7 +380,7 @@ class TestMessageParser(unittest.TestCase):
 
 	def test_successfulSpecialAttackDecoding(self):
 		"""
-		Checks the Decoding of 24 Successful_Special_Attack Message by MessageParser
+		Checks the Decoding of 24 Successful_Special_Attack Message by MessageParser.
 		"""		
 		messageType, params = MessageParser().decode("type:report;status:24;")
 
@@ -391,10 +388,10 @@ class TestMessageParser(unittest.TestCase):
 		self.assertEqual(len(params), 1)
 		self.assertEqual(params["status"],"24")
 
-	# 27 Successful_Game_Join
 	def test_successfulGameJoinEncoding(self):
 		"""
-		Checks the Encoding of 27 Successful_Game_Join Message by MessageParser
+		Checks the Encoding of 27 Successful_Game_Join Message by MessageParser.
+
 		Format: 
 			type:report;status:27;
 		"""
@@ -405,7 +402,7 @@ class TestMessageParser(unittest.TestCase):
 
 	def test_successfulGameJoinDecoding(self):
 		"""
-		Checks the Decoding of 27 Successful_Game_Join Message by MessageParser
+		Checks the Decoding of 27 Successful_Game_Join Message by MessageParser.
 		"""	
 		messageType, params = MessageParser().decode("type:report;status:27;")
 
@@ -413,10 +410,10 @@ class TestMessageParser(unittest.TestCase):
 		self.assertEqual(len(params), 1)
 		self.assertEqual(params["status"],"27")
 
-	# 28 Successful_Game_Create
 	def test_successfulGameCreateEncoding(self):
 		"""
-		Checks the Encoding of 28 Successful_Game_Create Message by MessageParser
+		Checks the Encoding of 28 Successful_Game_Create Message by MessageParser.
+
 		Format: 
 			type:report;status:28;
 		"""
@@ -427,7 +424,7 @@ class TestMessageParser(unittest.TestCase):
 
 	def test_successfulGameCreateDecoding(self):
 		"""
-		Checks the Decoding of 28 Successful_Game_Create Message by MessageParser
+		Checks the Decoding of 28 Successful_Game_Create Message by MessageParser.
 		"""	
 		messageType, params = MessageParser().decode("type:report;status:28;")
 
@@ -435,10 +432,10 @@ class TestMessageParser(unittest.TestCase):
 		self.assertEqual(len(params), 1)
 		self.assertEqual(params["status"],"28")
 
-	# 29 Successful_Ship_Placement
 	def test_successfulShipPlacementEncoding(self):
 		"""
-		Checks the Encoding of 29 Successful_Ship_Placement Message by MessageParser
+		Checks the Encoding of 29 Successful_Ship_Placement Message by MessageParser.
+
 		Format: 
 			type:report;status:29;
 		"""
@@ -449,20 +446,18 @@ class TestMessageParser(unittest.TestCase):
 
 	def test_successfulShipPlacementDecoding(self):
 		"""
-		Checks the Decoding of 29 Successful_Ship_Placement Message by MessageParser
+		Checks the Decoding of 29 Successful_Ship_Placement Message by MessageParser.
 		"""	
 		messageType, params = MessageParser().decode("type:report;status:29;")
 
 		self.assertEqual(messageType, "report")
 		self.assertEqual(len(params), 1)
 		self.assertEqual(params["status"],"29")
-	#----------------------------------------------------------------------------	
-	#3x Messages
-	#---------------------------------------------------------------------------
-	#31 Illegal_Move
+
 	def test_illegalMoveEncoding(self):
 		"""
-		Checks the Encoding of 31 Illegal_Move Message by MessageParser
+		Checks the Encoding of 31 Illegal_Move Message by MessageParser.
+
 		Format: 
 			type:report;status:31;
 		"""
@@ -473,7 +468,7 @@ class TestMessageParser(unittest.TestCase):
 
 	def test_illegalMoveDecoding(self):
 		"""
-		Checks the Decoding of 31 Illegal_Move Message by MessageParser
+		Checks the Decoding of 31 Illegal_Move Message by MessageParser.
 		"""	
 		messageType, params = MessageParser().decode("type:report;status:31;")
 
@@ -481,10 +476,10 @@ class TestMessageParser(unittest.TestCase):
 		self.assertEqual(len(params), 1)
 		self.assertEqual(params["status"],"31")
 
-	#32 Illegal_Special_Attack	
 	def test_illegalSpecialAttackEncoding(self):
 		"""
-		Checks the Encoding of 32 Illegal_Special_Attack Message by MessageParser
+		Checks the Encoding of 32 Illegal_Special_Attack Message by MessageParser.
+
 		Format: 
 			type:report;status:32;
 		"""
@@ -495,17 +490,18 @@ class TestMessageParser(unittest.TestCase):
 
 	def test_illegalSpecialAttackDecoding(self):
 		"""
-		Checks the Decoding of 32 Illegal_Special_Attack Message by MessageParser
+		Checks the Decoding of 32 Illegal_Special_Attack Message by MessageParser.
 		"""	
 		messageType, params = MessageParser().decode("type:report;status:32;")
 
 		self.assertEqual(messageType, "report")
 		self.assertEqual(len(params), 1)
 		self.assertEqual(params["status"],"32")
-	#36 Illegal_Nickname
+
 	def test_illegalNicknameEncoding(self):
 		"""
-		Checks the Encoding of 36 Illegal_Nickname Message by MessageParser
+		Checks the Encoding of 36 Illegal_Nickname Message by MessageParser.
+
 		Format: 
 			type:report;status:36;
 		"""
@@ -523,11 +519,11 @@ class TestMessageParser(unittest.TestCase):
 		self.assertEqual(messageType, "report")
 		self.assertEqual(len(params), 1)
 		self.assertEqual(params["status"],"36")
-		
-	#37 Illegal_Game_Definition	
+
 	def test_illegalGameDefinitionEncoding(self):
 		"""
-		Checks the Encoding of 37 Illegal_Game_Definition Message by MessageParser
+		Checks the Encoding of 37 Illegal_Game_Definition Message by MessageParser.
+
 		Format: 
 			type:report;status:37;
 		"""
@@ -538,18 +534,18 @@ class TestMessageParser(unittest.TestCase):
 
 	def test_illegalGameDefinitionDecoding(self):
 		"""
-		Checks the Decoding of 37 Illegal_Game_Definition Message by MessageParser
+		Checks the Decoding of 37 Illegal_Game_Definition Message by MessageParser.
 		"""
 		messageType, params = MessageParser().decode("type:report;status:37;")
 
 		self.assertEqual(messageType, "report")
 		self.assertEqual(len(params), 1)
 		self.assertEqual(params["status"],"37")
-	
-	#38 Illegal_Ship_Placement	
+
 	def test_illegalShipPlacementEncoding(self):
 		"""
-		Checks the Encoding of 38 Illegal_Ship_Placement Message by MessageParser
+		Checks the Encoding of 38 Illegal_Ship_Placement Message by MessageParser.
+
 		Format:
 			 type:report;status:38;
 		"""
@@ -567,11 +563,11 @@ class TestMessageParser(unittest.TestCase):
 		self.assertEqual(messageType, "report")
 		self.assertEqual(len(params), 1)
 		self.assertEqual(params["status"],"38")
-	
-	#39 Illegal_Attack
+
 	def test_illegalAttackEncoding(self):
 		"""
-		Checks the Encoding of 39 Illegal_Attack Message by MessageParser
+		Checks the Encoding of 39 Illegal_Attack Message by MessageParser.
+
 		Format: 
 			type:report;status:39;
 		"""
@@ -582,20 +578,18 @@ class TestMessageParser(unittest.TestCase):
 
 	def test_illegalAttackDecoding(self):
 		"""
-		Checks the Decoding of 39 Illegal_Attack Message by MessageParser
+		Checks the Decoding of 39 Illegal_Attack Message by MessageParser.
 		"""
 		messageType, params = MessageParser().decode("type:report;status:39;")
 
 		self.assertEqual(messageType, "report")
 		self.assertEqual(len(params), 1)
 		self.assertEqual(params["status"],"39")
-	#----------------------------------------------------------------------------	
-	#4x Messages
-	#---------------------------------------------------------------------------
-	#40 Message_Not_Recognized	
+
 	def test_messageNotRecongnizedEncoding(self):
 		"""
-		Checks the Encoding of 40 Message_Not_Recognized Message by MessageParser
+		Checks the Encoding of 40 Message_Not_Recognized Message by MessageParser.
+
 		Format: 
 			type:report;status:40;
 		"""
@@ -606,7 +600,7 @@ class TestMessageParser(unittest.TestCase):
 
 	def test_messageNotRecongnizedDecoding(self):
 		"""
-		Checks the Decoding of 40 Message_Not_Recognized Message by MessageParser
+		Checks the Decoding of 40 Message_Not_Recognized Message by MessageParser.
 		"""		
 		messageType, params = MessageParser().decode("type:report;status:40;")
 
@@ -617,7 +611,8 @@ class TestMessageParser(unittest.TestCase):
 	#41 Not_Your_Turn	
 	def test_notYourTurnEncoding(self):
 		"""
-		Checks the Encoding of 41 Not_Your_Turn Message by MessageParser
+		Checks the Encoding of 41 Not_Your_Turn Message by MessageParser.
+
 		Format: 
 			type:report;status:41;
 		"""
@@ -628,7 +623,7 @@ class TestMessageParser(unittest.TestCase):
 
 	def test_notYourTurnDecoding(self):
 		"""
-		Checks the Decoding of 41 Not_Your_Turn Message by MessageParser
+		Checks the Decoding of 41 Not_Your_Turn Message by MessageParser.
 		"""
 		messageType, params = MessageParser().decode("type:report;status:41;")
 
@@ -639,7 +634,8 @@ class TestMessageParser(unittest.TestCase):
 	#43 Not_In_Any_Game
 	def test_notInAnyGameEncoding(self):
 		"""
-		Checks the Encoding of 43 Not_In_Any_Game Message by MessageParser
+		Checks the Encoding of 43 Not_In_Any_Game Message by MessageParser.
+
 		Format: 
 			type:report;status:43;
 		"""
@@ -650,7 +646,7 @@ class TestMessageParser(unittest.TestCase):
 
 	def test_notInAnyGameDecoding(self):
 		"""
-		Checks the Decoding of 43 Not_In_Any_Game Message by MessageParser
+		Checks the Decoding of 43 Not_In_Any_Game Message by MessageParser.
 		"""	
 		messageType, params = MessageParser().decode("type:report;status:43;")
 
@@ -661,7 +657,8 @@ class TestMessageParser(unittest.TestCase):
 	#47 Game_Join_Denied	
 	def test_gameJoinDeniedEncoding(self):
 		"""
-		Checks the Encoding of 47 Game_Join_Denied Message by MessageParser
+		Checks the Encoding of 47 Game_Join_Denied Message by MessageParser.
+
 		Format: 
 			type:report;status:47;
 		"""
@@ -672,7 +669,7 @@ class TestMessageParser(unittest.TestCase):
 
 	def test_gameJoinDeniedDecoding(self):
 		"""
-		Checks the Decoding of 47 Game_Join_Denied Message by MessageParser
+		Checks the Decoding of 47 Game_Join_Denied Message by MessageParser.
 		"""	
 		messageType, params = MessageParser().decode("type:report;status:47;")
 
@@ -683,7 +680,8 @@ class TestMessageParser(unittest.TestCase):
 	#48 Game_Preparation_Ended	
 	def test_gamePreparationEndedEncoding(self):
 		"""
-		Checks the Encoding of 48 Game_Preparation_Ended Message by MessageParser
+		Checks the Encoding of 48 Game_Preparation_Ended Message by MessageParser.
+
 		Format: 
 			type:report;status:48;
 		"""
@@ -694,24 +692,18 @@ class TestMessageParser(unittest.TestCase):
 
 	def test_gamePreparationEndedDecoding(self):
 		"""
-		Checks the Decoding of 48 Game_Preparation_Ended Message by MessageParser
+		Checks the Decoding of 48 Game_Preparation_Ended Message by MessageParser.
 		"""	
 		messageType, params = MessageParser().decode("type:report;status:48;")
 
 		self.assertEqual(messageType, "report")
 		self.assertEqual(len(params), 1)
 		self.assertEqual(params["status"],"48")
-	
-	
-		
-	###Client-Messages###
-	#----------------------------------------------------------------------------------------	
-	#Lobby Related Messages
-	#----------------------------------------------------------------------------------------
-	#nickname_set
+
 	def test_nickNameSetEncoding(self):
 		"""
-		Checks the Encoding of nickname_set Message by MessageParser
+		Checks the Encoding of nickname_set Message by MessageParser.
+
 		Format: 
 			type:nickname_set;name:[nickname];
 		"""
@@ -722,7 +714,7 @@ class TestMessageParser(unittest.TestCase):
 
 	def test_nickNameSetDecoding(self):
 		"""
-		Checks the Decoding of nickname_set Message by MessageParser
+		Checks the Decoding of nickname_set Message by MessageParser.
 		"""	
 		messageType, params = MessageParser().decode("type:nickname_set;name:Dari;")
 
@@ -733,7 +725,8 @@ class TestMessageParser(unittest.TestCase):
 	#game_create
 	def test_gameCreateEncoding(self):
 		"""
-		Checks the Encoding of game_create Message by MessageParser
+		Checks the Encoding of game_create Message by MessageParser.
+
 		Format: 
 			type:game_create;name:[name];
 		"""
@@ -744,18 +737,18 @@ class TestMessageParser(unittest.TestCase):
 
 	def test_gameCreateDecoding(self):
 		"""
-		Checks the Decoding of game_create Message by MessageParser
+		Checks the Decoding of game_create Message by MessageParser.
 		"""	
 		messageType, params = MessageParser().decode("type:game_create;name:FCB;")
 
 		self.assertEqual(messageType, "game_create")
 		self.assertEqual(len(params), 1)
 		self.assertEqual(params["name"],"FCB")
-	
-	#game_join	
+
 	def test_gameJoinEncoding(self):
 		"""
-		Checks the Encoding of game_join Message by MessageParser
+		Checks the Encoding of game_join Message by MessageParser.
+
 		Format: 
 			type:game_join;name:[name];
 		"""
@@ -766,7 +759,7 @@ class TestMessageParser(unittest.TestCase):
 
 	def test_gameJoinDecoding(self):
 		"""
-		Checks the Decoding of game_join Message by MessageParser
+		Checks the Decoding of game_join Message by MessageParser.
 		"""
 		messageType, params = MessageParser().decode("type:game_join;name:FCB;")
 
@@ -777,7 +770,8 @@ class TestMessageParser(unittest.TestCase):
 	#game_abort
 	def test_gameAbortEncoding(self):
 		"""
-		Checks the Encoding of game_abort Message by MessageParser
+		Checks the Encoding of game_abort Message by MessageParser.
+
 		Format: 
 			type:game_abort;
 		"""
@@ -794,15 +788,11 @@ class TestMessageParser(unittest.TestCase):
 
 		self.assertEqual(messageType, "game_abort")
 		self.assertEqual(len(params), 0)
-	
-				
-	#-----------------------------------------------------------------------------------------------------------------------	
-	#Game-Related Messages
-	#-----------------------------------------------------------------------------------------------------------------------	
-	#board_init	
+
 	def test_boardInitEncoding(self):
 		"""
-		Checks the Encoding of board_init Message by MessageParser
+		Checks the Encoding of board_init Message by MessageParser.
+
 		Format: 
 			type:board_init; ship_0_x:[number];ship_0_y:[number];ship_0_direction: [W|E|S|N];...;
 			ship_9_x:[number];ship_9_y:[number];ship_9_direction: [W|E|S|N];
@@ -831,7 +821,7 @@ class TestMessageParser(unittest.TestCase):
 
 	def test_boardInitDecoding(self):
 		"""
-		Checks the Decoding of board_init Message by MessageParser
+		Checks the Decoding of board_init Message by MessageParser.
 		"""
 		messageType, params = MessageParser().decode("type:board_init;"+
 							    "ship_0_x:5;ship_0_y:3;ship_0_direction:W;"+ 
@@ -891,7 +881,8 @@ class TestMessageParser(unittest.TestCase):
 	#surrender
 	def test_surrenderEncoding(self):
 		"""
-		Checks the Encoding of surrender Message by MessageParser
+		Checks the Encoding of surrender Message by MessageParser.
+
 		Format: 
 			type:surrender; 
 		"""
@@ -909,11 +900,11 @@ class TestMessageParser(unittest.TestCase):
 
 		self.assertEqual(messageType, "surrender")
 		self.assertEqual(len(params), 0)
-		
-	#move
+
 	def test_moveEncoding(self):
 		"""
-		Checks the Encoding of move Message by MessageParser
+		Checks the Encoding of move Message by MessageParser.
+
 		Format:
 			 type:move; ship_id:[id];direction:[W|E|S|N]; 
 		"""
@@ -927,7 +918,7 @@ class TestMessageParser(unittest.TestCase):
 
 	def test_moveDecoding(self):
 		"""
-		Checks the Decoding of move Message by MessageParser 
+		Checks the Decoding of move Message by MessageParser.
 		"""		
 		messageType, params = MessageParser().decode("type:move;ship_id:5;direction:W;")
 
@@ -936,12 +927,12 @@ class TestMessageParser(unittest.TestCase):
 		self.assertEqual(params["ship_id"], "5")		# integers are strings at this step
 		self.assertEqual(params["direction"], "W")	
 
-	#attack
 	def test_attackEncoding(self):
 		"""
-		Checks the Encoding of attack Message by MessageParser
+		Checks the Encoding of attack Message by MessageParser.
+
 		Format:
-			 type:attack;coordinate_x:[number];coordinate_y:[number];
+			 type: attack;coordinate_x:[number];coordinate_y:[number];
 		"""
 		msg = MessageParser().encode("attack", {"coordinate_x": "5", "coordinate_y": "14"})
 		msg=msg[2:].decode('utf-8') # decode it from bytes to string
@@ -961,11 +952,11 @@ class TestMessageParser(unittest.TestCase):
 		self.assertEqual(len(params), 2)
 		self.assertEqual(params["coordinate_x"], "5")		# integers are strings at this step
 		self.assertEqual(params["coordinate_y"], "14")
-	
-	# special_attack 
+
 	def test_attackSpecialEncoding(self):
 		"""
-		Checks the Encoding of special_attack Message by MessageParser
+		Checks the Encoding of special_attack Message by MessageParser.
+
 		Format: 
 			type:special_attack;coordinate_x:[number];coordinate_y:[number];
 		"""
@@ -979,7 +970,7 @@ class TestMessageParser(unittest.TestCase):
 
 	def test_attackSpecialDecoding(self):
 		"""
-		Checks the Decoding of special_attack Message by MessageParser
+		Checks the Decoding of special_attack Message by MessageParser.
 		"""	
 		messageType, params = MessageParser().decode("type:special_attack;coordinate_x:5;coordinate_y:14;")
 
@@ -987,11 +978,11 @@ class TestMessageParser(unittest.TestCase):
 		self.assertEqual(len(params), 2)
 		self.assertEqual(params["coordinate_x"], "5")		# integers are strings at this step
 		self.assertEqual(params["coordinate_y"], "14")
-	
-	#chat_send	
+
 	def test_chatSendEncoding(self):
 		"""
-		Checks the Encoding of chat_send Message by MessageParser
+		Checks the Encoding of chat_send Message by MessageParser.
+
 		Format:
 			type:chat_send;text:[text];
 		"""
@@ -1003,7 +994,7 @@ class TestMessageParser(unittest.TestCase):
 	
 	def test_chatSendDecoding(self):
 		"""
-		Checks the Decoding of chat_send Message by MessageParser
+		Checks the Decoding of chat_send Message by MessageParser.
 		"""
 		messageType, params = MessageParser().decode("type:chat_send;text:Hello, How are you?;")
 
